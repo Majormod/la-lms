@@ -1,3 +1,5 @@
+server.js (4:20pm):
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -230,6 +232,37 @@ app.get('/api/instructor/my-courses-status', auth, async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching instructor courses:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+// In server.js
+
+app.get('/api/instructor/announcements', auth, async (req, res) => {
+    try {
+        // For now, we'll return mock data. Later, you can fetch this from your database.
+        const announcements = [
+            {
+                date: new Date('2025-08-16T10:00:00Z'),
+                title: 'New Content Added to Module 3!',
+                course: 'Full-Stack Web Development'
+            },
+            {
+                date: new Date('2025-08-12T15:30:00Z'),
+                title: 'Live Q&A Session This Friday',
+                course: 'Advanced React and Redux'
+            },
+            {
+                date: new Date('2025-08-10T09:00:00Z'),
+                title: 'Welcome to the Course!',
+                course: 'Data Science with Python'
+            }
+        ];
+
+        res.status(200).json({ success: true, announcements: announcements });
+
+    } catch (error) {
+        console.error('Error fetching instructor announcements:', error);
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
