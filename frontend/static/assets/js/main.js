@@ -1412,18 +1412,27 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchAndDisplayCoursesByStatus();
             }
-            if (window.location.pathname.includes('instructor-announcements.html')) {
+if (window.location.pathname.includes('instructor-announcements.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('token');
-        const userString = localStorage.getItem('user');
+        // Use the correct keys to get data from localStorage
+        const token = localStorage.getItem('lmsToken');
+        const userString = localStorage.getItem('lmsUser');
 
         if (!token || !userString) {
             window.location.href = 'login.html';
             return;
         }
 
-        // Call the function to populate the dynamic header
-        populateInstructorHeader();
+        const user = JSON.parse(userString);
+
+        // This authorization check will now work correctly
+        if (user.role !== 'instructor') {
+            alert('Access Denied: You must be an instructor to view this page.');
+            window.location.href = 'index.html'; // Redirect to homepage
+            return;
+        }
+
+        populateInstructorHeader(); // This function will also need the same fix
 
         const fetchAnnouncements = () => {
             const tableBody = document.getElementById('announcements-table-body');
@@ -1437,7 +1446,7 @@ const renderCourses = (containerSelector, courseList) => {
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    tableBody.innerHTML = ''; // Clear loading message
+                    tableBody.innerHTML = '';
                     if (result.announcements.length === 0) {
                         tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No announcements found.</td></tr>';
                     } else {
