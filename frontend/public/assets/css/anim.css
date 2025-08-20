@@ -1,0 +1,279 @@
+/* Style for the parent container of main-block */
+.my-container {
+    min-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.graph-banner {
+background-color: #ffffff;
+    /* This creates tiny gray dots that repeat */
+    background-image: radial-gradient(#dee2e6 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+/* Initially hide elements for Intersection Observer */
+.my-container.hidden .curve,
+.my-container.hidden .axes,
+.my-container.hidden .circle-item,
+.my-container.hidden .line,
+.my-container.hidden .tooltip-item {
+    -webkit-animation: none !important;
+    animation: none !important;
+    opacity: 0;
+    stroke-dashoffset: 10000;
+}
+
+.main-block {
+    background-color: transparent; /* Makes the background see-through */
+    width: 840px;
+    position: relative;
+    overflow: hidden;
+    padding: 250px 50px 0 0;
+    margin-top: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.curve,
+.axes {
+    stroke-dasharray: 10000;
+    stroke-dashoffset: 10000;
+    animation: dash 4s linear forwards;
+}
+
+#lines {
+    position: absolute;
+    bottom: 52px;
+    right: -20px;
+    width: 92%;
+}
+
+.circle-main {
+    position: absolute;
+    bottom: 71px;
+    left: 198px;
+    display: flex;
+    width: 100%;
+}
+
+.circle {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: #007BFF; /* Blue circles */
+    display: block;
+}
+
+.circle-item {
+    position: absolute;
+    bottom: 0;
+    opacity: 0;
+}
+
+/* --- FASTER DOT ANIMATION --- */
+.circle-item--1 {
+    left: -48px;
+    animation: circle 0.5s linear 3.0s forwards;
+}
+.circle-item--1 .circle-2 {
+    margin-top: 3px;
+}
+.circle-item--3 {
+    left: 105px;
+    animation: circle 0.5s linear 3.1s forwards;
+}
+.circle-item--3 .circle-2 {
+    margin-top: 10px;
+}
+.circle-item--5 {
+    left: 256.5px;
+    animation: circle 0.5s linear 3.2s forwards;
+}
+.circle-item--5 .circle-2 {
+    margin-top: 40px;
+}
+.circle-item--7 {
+    left: 411.5px;
+    animation: circle 0.5s linear 3.3s forwards;
+}
+.circle-item--7 .circle-2 {
+    margin-top: 145px;
+}
+.circle-item--8 {
+    left: 565px;
+    animation: circle 0.5s linear 3.4s forwards;
+}
+.circle-item--8 .circle-2 {
+    margin-top: 349px;
+}
+
+/* Line (Bar) Animations - Unchanged */
+.line1 {
+    stroke-dasharray: 153;
+    stroke-dashoffset: 153;
+    animation: line 1s linear 4.0s forwards;
+}
+.line3 {
+    stroke-dasharray: 397.7;
+    stroke-dashoffset: 397.7;
+    animation: line 1s linear 4.3s forwards;
+}
+.line5 {
+    stroke-dasharray: 590.9;
+    stroke-dashoffset: 590.9;
+    animation: line 1s linear 4.6s forwards;
+}
+.line7 {
+    stroke-dasharray: 825;
+    stroke-dashoffset: 825;
+    animation: line 1s linear 4.9s forwards;
+}
+.line8 {
+    stroke-dasharray: 920;
+    stroke-dashoffset: 920;
+    animation: line 1s linear 5.2s forwards;
+}
+
+/* --- TOOLTIP STYLES --- */
+.tooltip-list {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 151px;
+    width: 100%;
+}
+.tooltip-item {
+    width: 115px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 12.5px;
+    font-family: Arial;
+    position: absolute;
+    box-shadow: 3px 10px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+}
+.tooltip-item h4 {
+    font-size: 12px;
+    line-height: 12.5px;
+    font-family: Arial;
+    margin-bottom: 0 !important;
+}
+.tooltip-item span {
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Original Tooltip Colors */
+.tooltip-item::after {
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    content: "";
+    border-top: 10px solid red;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-bottom: 0;
+}
+.tooltip-item:first-child .tooltip-price,
+.tooltip-item:nth-child(5) .tooltip-price {
+    background-color: #BFE4FF;
+    color: #000;
+}
+.tooltip-item:first-child::after,
+.tooltip-item:nth-child(5)::after {
+    border-top-color: #BFE4FF;
+}
+.tooltip-item:nth-child(2) .tooltip-price,
+.tooltip-item:nth-child(6) .tooltip-price {
+    background-color: #FBC932;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+.tooltip-item:nth-child(2)::after,
+.tooltip-item:nth-child(6)::after {
+    border-top-color: #FBC932;
+}
+.tooltip-item:nth-child(3) .tooltip-price,
+.tooltip-item:nth-child(7) .tooltip-price {
+    background-color: #FF5063;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+.tooltip-item:nth-child(3)::after,
+.tooltip-item:nth-child(7)::after {
+    border-top-color: #FF5063;
+}
+.tooltip-item:nth-child(4) .tooltip-price, 
+.tooltip-item:nth-child(8) .tooltip-price {
+    background-color: #00DF96;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+.tooltip-item:nth-child(4)::after,
+.tooltip-item:nth-child(8)::after {
+    border-top-color: #00DF96;
+}
+
+/* Tooltip Animations - Unchanged */
+.tooltip-item--1 {
+    bottom: 155px;
+    left: -52px;
+    animation: circle 0.8s linear 5.0s forwards;
+}
+.tooltip-item--3 {
+    bottom: 255px;
+    left: 100px;
+    animation: circle 0.8s linear 5.3s forwards;
+}
+.tooltip-item--5 {
+    bottom: 333px;
+    left: 252px;
+    animation: circle 0.8s linear 5.6s forwards;
+}
+.tooltip-item--7 {
+    bottom: 430px;
+    left: 407px;
+    animation: circle 0.8s linear 5.9s forwards;
+}
+.tooltip-item--8 {
+    bottom: 460px;
+    left: 560px;
+    animation: circle 0.8s linear 6.2s forwards;
+}
+.tooltip-name {
+    background-color: #fff;
+    padding: 7px 2px;
+    border-radius: 5px 5px 0 0;
+}
+.tooltip-price {
+    vertical-align: middle;
+    padding: 10px 5px;
+    border-radius: 0 0 5px 5px;
+}
+.tooltip-price span {
+    font-size: 20px;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* --- KEYFRAME ANIMATIONS --- */
+@keyframes dash {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+@keyframes circle {
+    to {
+        opacity: 1;
+    }
+}
+@keyframes line {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
