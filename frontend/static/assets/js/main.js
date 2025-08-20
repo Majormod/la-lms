@@ -2931,117 +2931,26 @@ if (window.location.pathname.includes('lesson.html')) {
         };
 
 if (window.location.pathname.includes('explore-courses.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('Explore courses page loaded');
-        const courseListContainer = document.getElementById('course-list-container');
-        const courseCountBadge = document.getElementById('course-count-badge');
-        const courseResultCount = document.getElementById('course-result-count');
-
-        // Use relative URLs since frontend/backend are on same domain
-        const API_BASE = ''; // Empty string for relative URLs
-
-        // --- Function to Create a Single Course Card ---
-        const createCourseCard = (course) => {
-            const priceHtml = course.price > 0 
-                ? `<span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>` 
-                : '<span class="current-price">Free</span>';
-
-            const instructorName = course.instructor 
-                ? `${course.instructor.firstName} ${course.instructor.lastName}` 
-                : 'Unknown Instructor';
-
-            const thumbnail = course.thumbnail 
-                ? `/${course.thumbnail}` 
-                : 'assets/images/course/default-thumbnail.jpg';
-
-            const lessonCount = course.episodes 
-                ? course.episodes.reduce((acc, ep) => acc + (ep.lessons?.length || 0), 0) 
-                : 0;
-
-            return `
-                <div class="col-lg-4 col-md-6 col-sm-6 col-12">
-                    <div class="rbt-card variation-01 rbt-hover">
-                        <div class="rbt-card-img">
-                            <a href="course-details.html?courseId=${course._id}">
-                                <img src="${thumbnail}" alt="Course thumbnail">
-                            </a>
-                        </div>
-                        <div class="rbt-card-body">
-                            <h4 class="rbt-card-title">
-                                <a href="course-details.html?courseId=${course._id}">${course.title || 'Untitled Course'}</a>
-                            </h4>
-                            <ul class="rbt-meta">
-                                <li><i class="feather-book"></i>${lessonCount} Lessons</li>
-                            </ul>
-                            <p class="rbt-card-text">${course.description ? course.description.substring(0, 100) + '...' : 'No description available.'}</p>
-                            <div class="rbt-author-meta mb--10">
-                                <div class="rbt-avater">
-                                    <a href="#">
-                                        <img src="assets/images/client/avatar-02.png" alt="Instructor">
-                                    </a>
-                                </div>
-                                <div class="rbt-author-info">
-                                    By <a href="#">${instructorName}</a>
-                                </div>
-                            </div>
-                            <div class="rbt-card-bottom">
-                                <div class="rbt-price">${priceHtml}</div>
-                                <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        };
-
-        // --- Main Function to Fetch and Display Courses ---
-        const fetchAndDisplayCourses = async () => {
-            try {
-                courseListContainer.innerHTML = '<p>Loading courses...</p>';
-
-                // Use relative URL
-                const response = await fetch('/api/courses', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Courses data received:', data);
-
-                if (data.success && Array.isArray(data.courses)) {
-                    courseListContainer.innerHTML = '';
-
-                    if (data.courses.length > 0) {
-                        data.courses.forEach(course => {
-                            courseListContainer.innerHTML += createCourseCard(course);
-                        });
-                    } else {
-                        courseListContainer.innerHTML = '<p>No courses found matching your criteria.</p>';
-                    }
-
-                    // Update counts
-                    if (courseCountBadge) {
-                        courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination?.totalCourses || 0} Courses`;
-                    }
-                    if (courseResultCount) {
-                        courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination?.totalCourses || 0} results`;
-                    }
-                } else {
-                    throw new Error('Invalid API response structure');
-                }
-            } catch (error) {
-                console.error('Error fetching courses:', error);
-                courseListContainer.innerHTML = '<p>There was an error loading the courses. Please try again later.</p>';
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            console.log('Testing API call...');
+            const response = await fetch('/api/courses');
+            const data = await response.json();
+            console.log('API test successful:', data);
+            
+            // Simple test - just show course titles
+            const container = document.getElementById('course-list-container');
+            if (container) {
+                container.innerHTML = data.courses.map(course => 
+                    `<div style="border: 1px solid #ccc; padding: 10px; margin: 10px;">
+                        <h3>${course.title}</h3>
+                        <p>${course.description?.substring(0, 100)}...</p>
+                    </div>`
+                ).join('');
             }
-        };
-
-        // --- Initial Fetch on Page Load ---
-        fetchAndDisplayCourses();
+        } catch (error) {
+            console.error('Simple test failed:', error);
+        }
     });
 }
 
