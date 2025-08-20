@@ -1902,7 +1902,7 @@ formData.append('isQAEnabled', document.getElementById('flexSwitchCheckDefault2'
 
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-if (window.location.pathname.endsWith('edit-course')) {
+if (window.location.pathname.endsWith('edit-course.html')) {
 $(document).ready(function () {
     $('#language').selectpicker();
 });
@@ -2502,7 +2502,7 @@ if (editCourseForm) {
     }; // End of window.onload
 }
 
-if (window.location.pathname.endsWith('course-details')) {
+if (window.location.pathname.endsWith('course-details.html')) {
 
     // These functions are now defined outside for better structure.
     // They are no longer hidden inside another function.
@@ -2728,7 +2728,7 @@ if (instructor) {
 // =================================================================
 // REFACTORED lesson SCRIPT
 // =================================================================
-if (window.location.pathname.endsWith('lesson')) {
+if (window.location.pathname.endsWith('lesson.html')) {
     
     // Use a single global variable to hold the course data.
     // This prevents us from having to pass it between every function.
@@ -2930,7 +2930,7 @@ if (window.location.pathname.endsWith('lesson')) {
 }
         };
 
-if (window.location.pathname.endsWith('explore-courses')) {
+if (window.location.pathname.endsWith('explore-courses.html')) {
 
     document.addEventListener('DOMContentLoaded', () => {
         // --- Get DOM Elements ---
