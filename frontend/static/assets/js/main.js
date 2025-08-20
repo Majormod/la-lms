@@ -1432,7 +1432,50 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
             return;
         }
 
-        populateInstructorHeader(); // This function will also need the same fix
+       function populateInstructorHeader() {
+    const token = localStorage.getItem('lmsToken');
+    const userString = localStorage.getItem('lmsUser');
+
+    if (!token || !userString) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const localUser = JSON.parse(userString);
+    
+    // --- Find the HTML elements ---
+    const bannerImageEl = document.getElementById('dashboard-banner-image');
+    const profileAvatarEl = document.getElementById('dashboard-profile-avatar');
+    const instructorNameEl = document.getElementById('dashboard-instructor-name');
+    
+    // 1. Immediately update the name from the basic data we already have
+    if (instructorNameEl) {
+        instructorNameEl.textContent = localUser.name || 'Instructor';
+    }
+
+    // 2. Fetch the full user profile from the server to get the image URLs
+    fetch(`${API_BASE_URL}/api/user/profile`, {
+        headers: {
+            'x-auth-token': token
+        }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success && result.data) {
+            const fullProfile = result.data;
+            
+            // 3. Update the images with the data from the API
+            if (profileAvatarEl && fullProfile.avatar) {
+                profileAvatarEl.src = `/${fullProfile.avatar}`;
+            }
+            
+            if (bannerImageEl && fullProfile.coverPhoto) {
+                bannerImageEl.style.backgroundImage = `url('/${fullProfile.coverPhoto}')`;
+            }
+        }
+    })
+    .catch(error => console.error('Error fetching full user profile:', error));
+}// This function will also need the same fix
 
         const fetchAnnouncements = () => {
             const tableBody = document.getElementById('announcements-table-body');
