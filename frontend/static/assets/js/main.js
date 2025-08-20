@@ -1475,8 +1475,11 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         }
     })
     .catch(error => console.error('Error fetching full user profile:', error));
-}// This function will also need the same fix
-
+}
+// This block tells the browser to run the function on the correct pages
+if (window.location.pathname.includes('/instructor-')) {
+    document.addEventListener('DOMContentLoaded', populateInstructorHeader);
+}
         const fetchAnnouncements = () => {
             const tableBody = document.getElementById('announcements-table-body');
             if (!tableBody) return;
