@@ -1249,54 +1249,6 @@ const renderCourseDetailsCurriculum = (episodes) => {
                     });
                 }
             }
-                   function populateInstructorHeader() {
-    const token = localStorage.getItem('lmsToken');
-    const userString = localStorage.getItem('lmsUser');
-
-    if (!token || !userString) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const localUser = JSON.parse(userString);
-    
-    // --- Find the HTML elements ---
-    const bannerImageEl = document.getElementById('dashboard-banner-image');
-    const profileAvatarEl = document.getElementById('dashboard-profile-avatar');
-    const instructorNameEl = document.getElementById('dashboard-instructor-name');
-    
-    // 1. Immediately update the name from the basic data we already have
-    if (instructorNameEl) {
-        instructorNameEl.textContent = localUser.name || 'Instructor';
-    }
-
-    // 2. Fetch the full user profile from the server to get the image URLs
-    fetch(`${API_BASE_URL}/api/user/profile`, {
-        headers: {
-            'x-auth-token': token
-        }
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success && result.data) {
-            const fullProfile = result.data;
-            
-            // 3. Update the images with the data from the API
-            if (profileAvatarEl && fullProfile.avatar) {
-                profileAvatarEl.src = `/${fullProfile.avatar}`;
-            }
-            
-            if (bannerImageEl && fullProfile.coverPhoto) {
-                bannerImageEl.style.backgroundImage = `url('/${fullProfile.coverPhoto}')`;
-            }
-        }
-    })
-    .catch(error => console.error('Error fetching full user profile:', error));
-}
-// This universal trigger runs the header function on ALL instructor pages
-if (window.location.pathname.includes('/instructor-')) {
-    document.addEventListener('DOMContentLoaded', populateInstructorHeader);
-}
             if (path.includes('instructor-dashboard.html')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
@@ -1460,21 +1412,126 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchAndDisplayCoursesByStatus();
             }
-// This block is now clean and only does its specific job
 if (window.location.pathname.includes('instructor-announcements.html')) {
     document.addEventListener('DOMContentLoaded', () => {
+        // Use the correct keys to get data from localStorage
         const token = localStorage.getItem('lmsToken');
         const userString = localStorage.getItem('lmsUser');
-        const user = JSON.parse(userString || '{}');
 
-        if (!token || user.role !== 'instructor') {
+        if (!token || !userString) {
             window.location.href = 'login.html';
             return;
         }
+// ADD THIS LINE TO FIX THE HEADER
+        updateUserDataOnPage(); 
         
-        // The header is now handled by the universal trigger,
-        // so we just need to fetch the announcements here.
-        fetchAnnouncements(token); 
+        const user = JSON.parse(userString);
+
+        // This authorization check will now work correctly
+        if (user.role !== 'instructor') {
+            alert('Access Denied: You must be an instructor to view this page.');
+            window.location.href = 'index.html'; // Redirect to homepage
+            return;
+        }
+
+       function populateInstructorHeader() {
+    const token = localStorage.getItem('lmsToken');
+    const userString = localStorage.getItem('lmsUser');
+
+    if (!token || !userString) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const localUser = JSON.parse(userString);
+    
+    // --- Find the HTML elements ---
+    const bannerImageEl = document.getElementById('dashboard-banner-image');
+    const profileAvatarEl = document.getElementById('dashboard-profile-avatar');
+    const instructorNameEl = document.getElementById('dashboard-instructor-name');
+    
+    // 1. Immediately update the name from the basic data we already have
+    if (instructorNameEl) {
+        instructorNameEl.textContent = localUser.name || 'Instructor';
+    }
+
+    // 2. Fetch the full user profile from the server to get the image URLs
+    fetch(`${API_BASE_URL}/api/user/profile`, {
+        headers: {
+            'x-auth-token': token
+        }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success && result.data) {
+            const fullProfile = result.data;
+            
+            // 3. Update the images with the data from the API
+            if (profileAvatarEl && fullProfile.avatar) {
+                profileAvatarEl.src = `/${fullProfile.avatar}`;
+            }
+            
+            if (bannerImageEl && fullProfile.coverPhoto) {
+                bannerImageEl.style.backgroundImage = `url('/${fullProfile.coverPhoto}')`;
+            }
+        }
+    })
+    .catch(error => console.error('Error fetching full user profile:', error));
+}
+// This block tells the browser to run the function on the correct pages
+if (window.location.pathname.includes('/instructor-')) {
+    document.addEventListener('DOMContentLoaded', populateInstructorHeader);
+}
+        const fetchAnnouncements = () => {
+            const tableBody = document.getElementById('announcements-table-body');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Loading announcements...</td></tr>';
+
+            fetch(`${API_BASE_URL}/api/instructor/announcements`, {
+                headers: { 'x-auth-token': token }
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    tableBody.innerHTML = '';
+                    if (result.announcements.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No announcements found.</td></tr>';
+                    } else {
+                        result.announcements.forEach(announcement => {
+                            const announcementDate = new Date(announcement.date);
+                            const formattedDate = announcementDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                            const formattedTime = announcementDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                            tableBody.innerHTML += `
+                                <tr>
+                                    <th>
+                                        <span class="h6 mb--5">${formattedDate}</span>
+                                        <p class="b3">${formattedTime}</p>
+                                    </th>
+                                    <td>
+                                        <span class="h6 mb--5">${announcement.title}</span>
+                                        <p class="b3">Course: ${announcement.course}</p>
+                                    </td>
+                                    <td>
+                                        <div class="rbt-button-group justify-content-end">
+                                            <a class="rbt-btn-link left-icon" href="#"><i class="feather-edit"></i> Edit</a>
+                                            <a class="rbt-btn-link left-icon" href="#"><i class="feather-trash-2"></i> Delete</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching announcements:', error);
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Failed to load announcements.</td></tr>';
+            });
+        };
+
+        fetchAnnouncements();
     });
 }
             if (path.includes('instructor-quiz-attempts.html')) {
