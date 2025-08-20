@@ -1069,7 +1069,7 @@
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
-        const API_BASE_URL = 'http://54.221.189.159';
+        const API_BASE_URL = '';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
@@ -2929,7 +2929,7 @@ if (window.location.pathname.includes('lesson.html')) {
     }
 }
         };
-
+console.log('Current pathname:', window.location.pathname);
 if (window.location.pathname.includes('explore-courses.html')) {
     document.addEventListener('DOMContentLoaded', () => {
         const courseListContainer = document.getElementById('course-list-container');
