@@ -1,3 +1,5 @@
+server.js (2:05am):
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -323,78 +325,11 @@ const { title, slug, description, price, originalPrice, difficultyLevel, maxStud
 });
 
 // In server.js
-// =================================================================
-// --- API ROUTES ---
-// =================================================================
 
-// ADD THIS NEW ROUTE FOR THE EXPLORE COURSES PAGE
-// In server.js, replace your existing GET /api/courses route with this one
-
-app.get('/api/courses', async (req, res) => {
-    try {
-        const filters = { status: 'Published' };
-        let sortOptions = { createdAt: -1 }; // Default sort is 'latest'
-
-        // --- Search Filter ---
-        if (req.query.search) {
-            filters.$or = [
-                { title: { $regex: req.query.search, $options: 'i' } },
-                { description: { $regex: req.query.search, $options: 'i' } }
-            ];
-        }
-
-        // --- Category Filter ---
-        if (req.query.category) {
-            filters.category = req.query.category;
-        }
-
-        // --- Price Type Filter (from dropdown) ---
-        if (req.query.price === 'free') {
-            filters.price = 0;
-        } else if (req.query.price === 'paid') {
-            filters.price = { $gt: 0 };
-        }
-
-        // --- Price Range Slider Filter ---
-        const minPrice = parseInt(req.query.minPrice);
-        const maxPrice = parseInt(req.query.maxPrice);
-        // This will override the simple price filter if a range is provided
-        if (!isNaN(minPrice) && !isNaN(maxPrice)) {
-            filters.price = { $gte: minPrice, $lte: maxPrice };
-        }
-
-        // --- Sorting Filter ---
-        switch (req.query.sortBy) {
-            case 'price_asc':
-                sortOptions = { price: 1 };
-                break;
-            case 'price_desc':
-                sortOptions = { price: -1 };
-                break;
-        }
-
-        // --- Final Database Query ---
-        const courses = await Course.find(filters)
-            .populate('instructor', 'firstName lastName avatar')
-            .sort(sortOptions);
-        
-        const totalCourses = await Course.countDocuments(filters);
-
-        res.json({
-            success: true,
-            courses: courses,
-            pagination: { totalCourses: totalCourses }
-        });
-
-    } catch (error) {
-        console.error('Error fetching all courses:', error);
-        res.status(500).json({ success: false, message: 'Server Error' });
-    }
-});
 // PUBLIC: For the course-details.html page (Preview)
 app.get('/api/courses/:id', async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id).populate('instructor', 'firstName lastName avatar occupation bio social');
+        const course = await Course.findById(req.params.id).populate('instructor', 'firstName lastName');
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
@@ -748,35 +683,27 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     }
 });
 
-app.use(express.static(staticPath, { extensions: ['html'] }));
+app.use(express.static(staticPath));
 
 
 // --- CATCH-ALL ROUTE for Clean URLs (This must come AFTER all API routes) ---
-// --- CATCH-ALL ROUTE for Clean URLs ---
-// --- CATCH-ALL ROUTE for Clean URLs ---
 app.get('*', (req, res) => {
+    // Exclude API calls from this catch-all
     if (req.path.startsWith('/api')) {
-        return res.status(404).json({ success: false, message: 'API route not found' });
+        return res.status(404).sendFile(path.join(staticPath, '404.html'));
     }
 
-    const requestedPath = req.path === '/' ? '/index' : req.path;
+    const requestedPath = req.path === '/' ? '/index.html' : `${req.path}.html`;
     const filePath = path.join(staticPath, requestedPath);
 
-    // Add the options object to set the Content-Type header
-    res.sendFile(filePath, { headers: { 'Content-Type': 'text/html' } }, (err) => {
+    res.sendFile(filePath, (err) => {
         if (err) {
-            // Also set the header for the 404 page
-            res.status(404).sendFile(path.join(staticPath, '404'), { headers: { 'Content-Type': 'text/html' } });
+            // If the requested .html file is not found, send the 404 page
+            res.status(404).sendFile(path.join(staticPath, '404.html'));
         }
     });
 });
-// In server.js
 
-
-
-
-// Your other existing routes like app.post('/api/register', ...) etc. can remain as they are.
-// ...
 // --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`✅ Backend server is running on http://localhost:${PORT}`);
