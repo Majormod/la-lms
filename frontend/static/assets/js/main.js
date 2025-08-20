@@ -1069,7 +1069,7 @@
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
-        const API_BASE_URL = '';
+        const API_BASE_URL = 'http://54.221.189.159';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
@@ -2929,13 +2929,15 @@ if (window.location.pathname.includes('lesson.html')) {
     }
 }
         };
-console.log('main.js loaded at:', new Date().toISOString());
-console.log('Current pathname:', window.location.pathname);
+
 if (window.location.pathname.includes('explore-courses.html')) {
     document.addEventListener('DOMContentLoaded', () => {
         const courseListContainer = document.getElementById('course-list-container');
         const courseCountBadge = document.getElementById('course-count-badge');
         const courseResultCount = document.getElementById('course-result-count');
+
+        // Use relative URLs since frontend/backend are on same domain
+        const API_BASE = ''; // Empty string for relative URLs
 
         // --- Function to Create a Single Course Card ---
         const createCourseCard = (course) => {
@@ -2949,7 +2951,7 @@ if (window.location.pathname.includes('explore-courses.html')) {
 
             const thumbnail = course.thumbnail 
                 ? `/${course.thumbnail}` 
-                : 'assets/images/course/default-thumbnail.jpg'; // Fallback image
+                : 'assets/images/course/default-thumbnail.jpg';
 
             const lessonCount = course.episodes 
                 ? course.episodes.reduce((acc, ep) => acc + (ep.lessons?.length || 0), 0) 
@@ -2993,10 +2995,10 @@ if (window.location.pathname.includes('explore-courses.html')) {
         // --- Main Function to Fetch and Display Courses ---
         const fetchAndDisplayCourses = async () => {
             try {
-                // Show loading state
                 courseListContainer.innerHTML = '<p>Loading courses...</p>';
 
-                const response = await fetch(`${API_BASE_URL}/api/courses`, {
+                // Use relative URL
+                const response = await fetch('/api/courses', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -3008,9 +3010,9 @@ if (window.location.pathname.includes('explore-courses.html')) {
                 }
 
                 const data = await response.json();
+                console.log('Courses data received:', data);
 
                 if (data.success && Array.isArray(data.courses)) {
-                    // Clear previous results
                     courseListContainer.innerHTML = '';
 
                     if (data.courses.length > 0) {
@@ -3022,8 +3024,12 @@ if (window.location.pathname.includes('explore-courses.html')) {
                     }
 
                     // Update counts
-                    courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination?.totalCourses || 0} Courses`;
-                    courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination?.totalCourses || 0} results`;
+                    if (courseCountBadge) {
+                        courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination?.totalCourses || 0} Courses`;
+                    }
+                    if (courseResultCount) {
+                        courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination?.totalCourses || 0} results`;
+                    }
                 } else {
                     throw new Error('Invalid API response structure');
                 }
