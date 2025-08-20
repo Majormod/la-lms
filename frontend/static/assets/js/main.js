@@ -2179,13 +2179,19 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
 
         // --- EVENT LISTENERS ---
 
-        // Preview Button
-        if (previewButton) {
-            previewButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.open(`course-details.html?courseId=${courseId}`, '_blank');
-            });
-        }
+const previewButton = document.getElementById('preview-course-btn');
+if (previewButton) {
+    previewButton.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const previewUrl = `course-details.html?courseId=${courseId}`;
+
+        // This will show us the exact URL being generated
+        alert('Previewing URL: ' + previewUrl); 
+
+        window.open(previewUrl, '_blank');
+    });
+}
 
         // Lesson Modal Setup
         if (lessonModal) {
