@@ -2931,26 +2931,161 @@ if (window.location.pathname.includes('lesson.html')) {
         };
 
 if (window.location.pathname.includes('explore-courses.html')) {
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            console.log('Testing API call...');
-            const response = await fetch('/api/courses');
-            const data = await response.json();
-            console.log('API test successful:', data);
-            
-            // Simple test - just show course titles
-            const container = document.getElementById('course-list-container');
-            if (container) {
-                container.innerHTML = data.courses.map(course => 
-                    `<div style="border: 1px solid #ccc; padding: 10px; margin: 10px;">
-                        <h3>${course.title}</h3>
-                        <p>${course.description?.substring(0, 100)}...</p>
-                    </div>`
-                ).join('');
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Explore courses page loaded');
+        const courseListContainer = document.getElementById('course-list-container');
+        const courseCountBadge = document.getElementById('course-count-badge');
+        const courseResultCount = document.getElementById('course-result-count');
+
+        // Use relative URLs since frontend/backend are on same domain
+        const API_BASE = ''; // Empty string for relative URLs
+
+        // --- Function to Create a Single Course Card ---
+// --- Function to Create a Single Course Card ---
+const createCourseCard = (course) => {
+    const priceHtml = course.price > 0 
+        ? `<span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>` 
+        : '<span class="current-price">Free</span>';
+
+    const originalPriceHtml = course.originalPrice > course.price 
+        ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` 
+        : '';
+
+    const discountBadge = course.originalPrice > course.price 
+        ? `<div class="rbt-badge-3 bg-white">
+            <span>-${Math.round((1 - course.price/course.originalPrice) * 100)}%</span>
+            <span>Off</span>
+           </div>` 
+        : '';
+
+    const instructorName = course.instructor 
+        ? `${course.instructor.firstName} ${course.instructor.lastName}` 
+        : 'Unknown Instructor';
+
+    const thumbnail = course.thumbnail 
+        ? `/${course.thumbnail}` 
+        : 'assets/images/course/default-thumbnail.jpg';
+
+    const lessonCount = course.episodes 
+        ? course.episodes.reduce((acc, ep) => acc + (ep.lessons?.length || 0), 0) 
+        : 0;
+
+    // Get categories - assuming your course model has categories array
+    const categories = course.categories && course.categories.length > 0 
+        ? course.categories.map(cat => `<a href="#">${cat}</a>`).join(', ') 
+        : '<a href="#">Development</a>';
+
+    return `
+        <div class="course-grid-3">
+            <div class="rbt-card variation-01 rbt-hover">
+                <div class="rbt-card-img">
+                    <a href="course-details.html?courseId=${course._id}">
+                        <img src="${thumbnail}" alt="${course.title}" onerror="this.src='assets/images/course/default-thumbnail.jpg'">
+                        ${discountBadge}
+                    </a>
+                </div>
+                <div class="rbt-card-body">
+                    <div class="rbt-card-top">
+                        <div class="rbt-review">
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="rating-count"> (15 Reviews)</span>
+                        </div>
+                        <div class="rbt-bookmark-btn">
+                            <a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                        </div>
+                    </div>
+
+                    <h4 class="rbt-card-title">
+                        <a href="course-details.html?courseId=${course._id}">${course.title || 'Untitled Course'}</a>
+                    </h4>
+
+                    <ul class="rbt-meta">
+                        <li><i class="feather-book"></i>${lessonCount} Lessons</li>
+                        <li><i class="feather-users"></i>${course.maxStudents || 0} Students</li>
+                    </ul>
+
+                    <p class="rbt-card-text">${course.description ? course.description.substring(0, 100) + '...' : 'No description available.'}</p>
+                    
+                    <div class="rbt-author-meta mb--10">
+                        <div class="rbt-avater">
+                            <a href="#">
+                                <img src="${course.instructor?.avatar || 'assets/images/client/avatar-02.png'}" alt="${instructorName}">
+                            </a>
+                        </div>
+                        <div class="rbt-author-info">
+                            By <a href="profile.html">${instructorName}</a> In ${categories}
+                        </div>
+                    </div>
+                    
+                    <div class="rbt-card-bottom">
+                        <div class="rbt-price">
+                            ${priceHtml}
+                            ${originalPriceHtml}
+                        </div>
+                        <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">
+                            Learn More<i class="feather-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+};
+
+        // --- Main Function to Fetch and Display Courses ---
+        const fetchAndDisplayCourses = async () => {
+            try {
+                courseListContainer.innerHTML = '<p>Loading courses...</p>';
+
+                // Use relative URL
+                const response = await fetch('/api/courses', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Courses data received:', data);
+
+                if (data.success && Array.isArray(data.courses)) {
+                    courseListContainer.innerHTML = '';
+
+                    if (data.courses.length > 0) {
+                        data.courses.forEach(course => {
+                            courseListContainer.innerHTML += createCourseCard(course);
+                        });
+                    } else {
+                        courseListContainer.innerHTML = '<p>No courses found matching your criteria.</p>';
+                    }
+
+                    // Update counts
+                    if (courseCountBadge) {
+                        courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination?.totalCourses || 0} Courses`;
+                    }
+                    if (courseResultCount) {
+                        courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination?.totalCourses || 0} results`;
+                    }
+                } else {
+                    throw new Error('Invalid API response structure');
+                }
+            } catch (error) {
+                console.error('Error fetching courses:', error);
+                courseListContainer.innerHTML = '<p>There was an error loading the courses. Please try again later.</p>';
             }
-        } catch (error) {
-            console.error('Simple test failed:', error);
-        }
+        };
+
+        // --- Initial Fetch on Page Load ---
+        fetchAndDisplayCourses();
     });
 }
 
