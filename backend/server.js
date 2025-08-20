@@ -758,7 +758,7 @@ app.get('*', (req, res) => {
         return res.status(404).sendFile(path.join(staticPath, '404.html'));
     }
 
-    const requestedPath = req.path === '/' ? '/index.html' : `${req.path}.html`;
+    const requestedPath = req.path === '/' ? '/index' : req.path;
     const filePath = path.join(staticPath, requestedPath);
 
     res.sendFile(filePath, (err) => {
