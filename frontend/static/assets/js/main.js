@@ -1069,7 +1069,7 @@
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
-        const API_BASE_URL = '';
+        const API_BASE_URL = 'http://54.221.189.159';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
