@@ -2932,6 +2932,7 @@ if (window.location.pathname.includes('lesson.html')) {
 
 if (window.location.pathname.includes('explore-courses.html')) {
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('Explore courses page loaded');
         const courseListContainer = document.getElementById('course-list-container');
         const courseCountBadge = document.getElementById('course-count-badge');
         const courseResultCount = document.getElementById('course-result-count');
