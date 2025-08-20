@@ -752,18 +752,18 @@ app.use(express.static(staticPath));
 
 
 // --- CATCH-ALL ROUTE for Clean URLs (This must come AFTER all API routes) ---
+// --- CATCH-ALL ROUTE for Clean URLs ---
 app.get('*', (req, res) => {
-    // Exclude API calls from this catch-all
     if (req.path.startsWith('/api')) {
-        return res.status(404).sendFile(path.join(staticPath, '404.html'));
+        return res.status(404).json({ success: false, message: 'API route not found' });
     }
 
-    const requestedPath = req.path === '/' ? '/index' : req.path;
+    const requestedPath = req.path === '/' ? '/index.html' : `${req.path}.html`;
     const filePath = path.join(staticPath, requestedPath);
 
     res.sendFile(filePath, (err) => {
         if (err) {
-            // If the requested .html file is not found, send the 404 page
+            // If the file is not found, send the 404 page
             res.status(404).sendFile(path.join(staticPath, '404.html'));
         }
     });
