@@ -2933,87 +2933,161 @@ if (window.location.pathname.includes('lesson.html')) {
 if (window.location.pathname.includes('explore-courses.html')) {
 
     document.addEventListener('DOMContentLoaded', () => {
+        // --- Get DOM Elements ---
         const courseListContainer = document.getElementById('course-list-container');
         const courseCountBadge = document.getElementById('course-count-badge');
         const courseResultCount = document.getElementById('course-result-count');
+        const searchForm = document.getElementById('course-search-form'); // Assumes your form has this ID
+        const searchInput = document.getElementById('course-search-input'); // Assumes your input has this ID
+        const sortBySelect = document.getElementById('sort-by-select'); // Assumes your select has this ID
+// In main.js, inside the 'explore-courses.html' block and 'DOMContentLoaded'
+
+// --- Initialize Price Range Slider ---
+if (typeof $ !== 'undefined' && $.ui) {
+    const sliderRange = $("#slider-range");
+    const amount = $("#amount");
+    const filterBtn = $("#price-range-filter-btn");
+
+    sliderRange.slider({
+        range: true,
+        min: 0,
+        max: 5000, // You can adjust this max value
+        values: [0, 5000], // Initial range
+        slide: function(event, ui) {
+            amount.val("₹" + ui.values[0] + " - ₹" + ui.values[1]);
+        }
+    });
+
+    // Set the initial value in the input field
+    amount.val("₹" + sliderRange.slider("values", 0) + " - ₹" + sliderRange.slider("values", 1));
+
+    // Add click listener to the filter button
+    filterBtn.on('click', function(e) {
+        e.preventDefault();
         
-        // --- Function to Create a Single Course Card ---
+        // Get the current min and max values from the slider
+        const minPrice = sliderRange.slider("values", 0);
+        const maxPrice = sliderRange.slider("values", 1);
+        
+        // Get other existing filter values
+        const currentParams = {
+            sortBy: document.getElementById('sort-by-select')?.value,
+            search: document.getElementById('course-search-input')?.value,
+            category: document.getElementById('category-select')?.value,
+            price: document.getElementById('offer-select')?.value,
+            minPrice: minPrice, // Add min price
+            maxPrice: maxPrice  // Add max price
+        };
+
+        fetchAndDisplayCourses(currentParams);
+    });
+}
+        // --- Function to Create a Single Course Card (from previous step) ---
         const createCourseCard = (course) => {
-            const priceHtml = course.price > 0 
-                ? `<span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>` 
-                : '<span class="current-price">Free</span>';
-
+            // ... (Your complete createCourseCard function is here) ...
+            // (The detailed function from our last step that creates the full card)
+            let priceHtml = '';
+            if (course.isFree || course.price === 0) {
+                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+            } else {
+                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+            }
+            let discountBadgeHtml = '';
+            if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
+                const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
+                discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
+            }
             const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
-
-            return `
-                <div class="col-lg-4 col-md-6 col-sm-6 col-12">
-                    <div class="rbt-card variation-01 rbt-hover">
-                        <div class="rbt-card-img">
-                            <a href="course-details.html?courseId=${course._id}">
-                                <img src="/${course.thumbnail}" alt="Course thumbnail">
-                            </a>
-                        </div>
-                        <div class="rbt-card-body">
-                            <h4 class="rbt-card-title">
-                                <a href="course-details.html?courseId=${course._id}">${course.title}</a>
-                            </h4>
-                            <ul class="rbt-meta">
-                                <li><i class="feather-book"></i>${course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0)} Lessons</li>
-                            </ul>
-                            <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
-                            <div class="rbt-author-meta mb--10">
-                                <div class="rbt-avater">
-                                    <a href="#">
-                                        <img src="assets/images/client/avatar-02.png" alt="Instructor">
-                                    </a>
-                                </div>
-                                <div class="rbt-author-info">
-                                    By <a href="#">${instructorName}</a>
-                                </div>
-                            </div>
-                            <div class="rbt-card-bottom">
-                                <div class="rbt-price">${priceHtml}</div>
-                                <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
+            const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
+            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+            return `<div class="course-grid-3"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
         };
 
         // --- Main Function to Fetch and Display Courses ---
-        const fetchAndDisplayCourses = async () => {
+        const fetchAndDisplayCourses = async (queryParams = {}) => {
+            // Remove empty query parameters
+            Object.keys(queryParams).forEach(key => {
+                if (queryParams[key] === '' || queryParams[key] === null) {
+                    delete queryParams[key];
+                }
+            });
+            
+            const queryString = new URLSearchParams(queryParams).toString();
+            const fetchUrl = `${API_BASE_URL}/api/courses?${queryString}`;
+
             try {
-                // We'll add filter logic here later
-                const response = await fetch(`${API_BASE_URL}/api/courses`);
+                const response = await fetch(fetchUrl);
                 const data = await response.json();
 
                 if (data.success) {
-                    // Clear previous results
                     courseListContainer.innerHTML = ''; 
-                    
                     if (data.courses.length > 0) {
-                        data.courses.forEach(course => {
-                            courseListContainer.innerHTML += createCourseCard(course);
-                        });
+                        data.courses.forEach(course => courseListContainer.innerHTML += createCourseCard(course));
                     } else {
-                        courseListContainer.innerHTML = '<p>No courses found matching your criteria.</p>';
+                        courseListContainer.innerHTML = '<div class="col-12 text-center"><p>No courses found matching your criteria.</p></div>';
                     }
-
                     // Update counts
                     courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination.totalCourses} Courses`;
                     courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination.totalCourses} results`;
-                    
                 }
             } catch (error) {
                 console.error('Error fetching courses:', error);
-                courseListContainer.innerHTML = '<p>There was an error loading the courses. Please try again later.</p>';
+                courseListContainer.innerHTML = '<p>There was an error loading the courses.</p>';
             }
         };
 
-        // --- Initial Fetch on Page Load ---
-        fetchAndDisplayCourses();
+        // --- Function to Handle Filter Changes ---
+// In main.js, inside the 'explore-courses.html' block
 
-        // We will add event listeners for filters here in the next step.
+// --- Function to Handle Filter Changes ---
+const handleFilterChange = () => {
+    // Get the DOM elements again inside the handler
+    const sortBySelect = document.getElementById('sort-by-select');
+    const searchInput = document.getElementById('course-search-input');
+    const categorySelect = document.getElementById('category-select'); // New
+    const priceSelect = document.getElementById('offer-select');      // New
+
+    const params = {
+        sortBy: sortBySelect ? sortBySelect.value : 'latest',
+        search: searchInput ? searchInput.value : '',
+        category: categorySelect ? categorySelect.value : '',
+        price: priceSelect ? priceSelect.value : ''
+    };
+    fetchAndDisplayCourses(params);
+};
+
+// --- Add Event Listeners ---
+document.getElementById('course-search-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleFilterChange();
+});
+
+// Attach the handler to all filter dropdowns
+document.getElementById('sort-by-select')?.addEventListener('change', handleFilterChange);
+document.getElementById('school-select')?.addEventListener('change', handleFilterChange);
+document.getElementById('author-select')?.addEventListener('change', handleFilterChange);
+document.getElementById('offer-select')?.addEventListener('change', handleFilterChange);
+document.getElementById('category-select')?.addEventListener('change', handleFilterChange);
+
+
+// --- Initial Fetch on Page Load ---
+fetchAndDisplayCourses();
+        
+        // --- Add Event Listeners ---
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault(); // Prevent page from reloading on form submit
+                handleFilterChange();
+            });
+        }
+        if (sortBySelect) {
+            sortBySelect.addEventListener('change', handleFilterChange);
+        }
+
+        // --- Initial Fetch on Page Load ---
+        fetchAndDisplayCourses(); 
     });
 }
 
