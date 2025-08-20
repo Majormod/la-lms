@@ -2929,7 +2929,7 @@ if (window.location.pathname.includes('lesson.html')) {
     }
 }
         };
-console.log('main.js loaded');
+console.log('main.js loaded at:', new Date().toISOString());
 console.log('Current pathname:', window.location.pathname);
 if (window.location.pathname.includes('explore-courses.html')) {
     document.addEventListener('DOMContentLoaded', () => {
