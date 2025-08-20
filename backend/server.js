@@ -1,5 +1,3 @@
-server.js (4:20pm):
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
