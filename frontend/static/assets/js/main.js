@@ -224,9 +224,9 @@
             function markQuestionAsComplete(questionNumber) {
                 const buttonSelector = `.quiz-modal-btn:nth-child(${questionNumber})`;
                 const button = $(buttonSelector);
-                button.html('<i class="feather-check"></i>');
+                button('<i class="feather-check"></i>');
                 button.addClass("quiz-modal__active");
-                if (questionNumber == 3) { button.html('<i class="feather-check"></i>'); button.addClass("quiz-modal__active"); }
+                if (questionNumber == 3) { button('<i class="feather-check"></i>'); button.addClass("quiz-modal__active"); }
             }
             $("#quiz-form").submit(function (event) { event.preventDefault(); });
         },
@@ -573,7 +573,7 @@
             odo.each(function () {
                 $(".odometer").appear(function (e) {
                     var countNumber = $(this).attr("data-count");
-                    $(this).html(countNumber);
+                    $(this)(countNumber);
                 });
             });
         },
@@ -1190,9 +1190,9 @@ const renderCourseDetailsCurriculum = (episodes) => {
                                 localStorage.setItem('lmsToken', result.token);
                                 localStorage.setItem('lmsUser', JSON.stringify(result.user));
                                 if (result.user.role === 'instructor') {
-                                    window.location.href = '/instructor-dashboard.html';
+                                    window.location.href = '/instructor-dashboard';
                                 } else {
-                                    window.location.href = '/student-dashboard.html';
+                                    window.location.href = '/student-dashboard';
                                 }
                             } else {
                                 alert(`Login Failed: ${result.message}`);
@@ -1249,7 +1249,7 @@ const renderCourseDetailsCurriculum = (episodes) => {
                     });
                 }
             }
-            if (path.includes('instructor-dashboard.html')) {
+            if (path.includes('instructor-dashboard')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1290,12 +1290,12 @@ const renderCourseDetailsCurriculum = (episodes) => {
                             }
                         } else {
                             alert(result.message);
-                            window.location.href = '/student-dashboard.html';
+                            window.location.href = '/student-dashboard';
                         }
                     })
                     .catch(error => console.error('Error fetching instructor dashboard data:', error));
             }
-            if (path.includes('instructor-profile.html')) {
+            if (path.includes('instructor-profile')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1327,7 +1327,7 @@ const renderCourseDetailsCurriculum = (episodes) => {
                     })
                     .catch(error => console.error('Error fetching profile data:', error));
             }
-            if (path.includes('instructor-course.html')) {
+            if (path.includes('instructor-course')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1343,7 +1343,7 @@ const renderCourseDetailsCurriculum = (episodes) => {
                                 const publishedCourses = courses.filter(c => c.status === 'Published');
                                 const pendingCourses = courses.filter(c => c.status === 'Pending');
                                 const draftCourses = courses.filter(c => c.status === 'Draft');
-// In main.js, inside the logic for instructor-course.html
+// In main.js, inside the logic for instructor-course
 
 const renderCourses = (containerSelector, courseList) => {
     const container = document.querySelector(containerSelector);
@@ -1370,7 +1370,7 @@ const renderCourses = (containerSelector, courseList) => {
             <div class="col-lg-4 col-md-6 col-12">
                 <div class="rbt-card variation-01 rbt-hover">
                     <div class="rbt-card-img">
-                        <a href="course-details.html?courseId=${course._id}">
+                        <a href="course-details?courseId=${course._id}">
                             <img src="/${course.thumbnail}" alt="Course thumbnail">
                         </a>
                     </div>
@@ -1384,14 +1384,14 @@ const renderCourses = (containerSelector, courseList) => {
                                 <a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
                             </div>
                         </div>
-                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <h4 class="rbt-card-title"><a href="course-details?courseId=${course._id}">${course.title}</a></h4>
                         <ul class="rbt-meta">
                             <li><i class="feather-book"></i>${course.episodes ? course.episodes.length : 0} Lessons</li>
                             <li><i class="feather-users"></i>0 Students</li>
                         </ul>
                         <div class="rbt-card-bottom">
                             <div class="rbt-price">${priceHtml}</div>
-                            <a class="rbt-btn-link left-icon" href="edit-course.html?courseId=${course._id}"><i class="feather-edit"></i> Edit</a>
+                            <a class="rbt-btn-link left-icon" href="edit-course?courseId=${course._id}"><i class="feather-edit"></i> Edit</a>
                         </div>
                     </div>
                 </div>
@@ -1412,7 +1412,7 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchAndDisplayCoursesByStatus();
             }
-            if (path.includes('instructor-quiz-attempts.html')) {
+            if (path.includes('instructor-quiz-attempts')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1454,7 +1454,7 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchQuizAttempts();
             }
-            if (path.includes('instructor-assignments.html')) {
+            if (path.includes('instructor-assignments')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1518,7 +1518,7 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchAssignments();
             }
-            if (path.includes('instructor-settings.html')) {
+            if (path.includes('instructor-settings')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
                     window.location.href = '/login';
@@ -1662,11 +1662,11 @@ const renderCourses = (containerSelector, courseList) => {
                 }
                 populateSettingsForms();
             }
-if (path.includes('create-course.html')) {
+if (path.includes('create-course')) {
     // --- This is the final, working code for this page ---
     if (!token || (user && user.role !== 'instructor')) {
         alert("Access Denied. You are not an instructor.");
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return;
     }
     updateUserDataOnPage();
@@ -1680,7 +1680,7 @@ if (path.includes('create-course.html')) {
         console.error('One or more essential form elements are missing. Aborting.');
         return;
     }
-// In main.js, inside the edit-course.html and create-course.html blocks
+// In main.js, inside the edit-course and create-course blocks
 
 // --- START: COURSE BUILDER LOGIC ---
 
@@ -1825,7 +1825,7 @@ saveTopicBtn.addEventListener('click', async () => {
         }
     });
 
-// In main.js, inside the if (path.includes('create-course.html')) block
+// In main.js, inside the if (path.includes('create-course')) block
 
 async function handleFormSubmit() {
     // --- 1. VALIDATION ---
@@ -1884,7 +1884,7 @@ formData.append('isQAEnabled', document.getElementById('flexSwitchCheckDefault2'
         const result = await response.json();
         if (result.success) {
             alert('Course created successfully!');
-            window.location.href = '/instructor-course.html';
+            window.location.href = '/instructor-course';
         } else {
             alert(`Failed to create course: ${result.message}`);
         }
@@ -1902,7 +1902,7 @@ formData.append('isQAEnabled', document.getElementById('flexSwitchCheckDefault2'
 
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-if (window.location.pathname.includes('edit-course.html')) {
+if (window.location.pathname.endsWith('edit-course')) {
 $(document).ready(function () {
     $('#language').selectpicker();
 });
@@ -2014,14 +2014,14 @@ const lessonsHtml = episode.lessons.map(lesson => `
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
             alert("Access Denied.");
-            window.location.href = '/login.html';
+            window.location.href = '/login';
             return;
         }
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('courseId');
         if (!courseId) {
             alert('No course ID found.');
-            window.location.href = 'instructor-course.html';
+            window.location.href = 'instructor-course';
             return;
         }
 
@@ -2174,7 +2174,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
     .catch(error => {
         console.error('Error loading course:', error);
         alert(`Error loading course data.`);
-        window.location.href = 'instructor-course.html';
+        window.location.href = 'instructor-course';
     });
 
         // --- EVENT LISTENERS ---
@@ -2183,7 +2183,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
         if (previewButton) {
             previewButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.open(`course-details.html?courseId=${courseId}`, '_blank');
+                window.open(`course-details?courseId=${courseId}`, '_blank');
             });
         }
 
@@ -2325,7 +2325,7 @@ document.addEventListener('click', function(e) {
         const lessonSummary = lessonLink.dataset.summary;
         const vimeoUrl = lessonLink.dataset.vimeoUrl;
         
-        // Store lesson data for lesson.html
+        // Store lesson data for lesson
         localStorage.setItem('currentLesson', JSON.stringify({
             courseId,
             episodeId,
@@ -2336,7 +2336,7 @@ document.addEventListener('click', function(e) {
         }));
         
         // Navigate to lesson page
-        window.location.href = `lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
+        window.location.href = `lesson?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
     }
 });
         // "Add Topic" Modal Save Button
@@ -2489,7 +2489,7 @@ if (editCourseForm) {
             
             if (result.success) {
                 alert('Course updated successfully!');
-                window.location.href = '/instructor-course.html';
+                window.location.href = '/instructor-course';
             } else {
                 alert(`Error: ${result.message}`);
             }
@@ -2502,7 +2502,7 @@ if (editCourseForm) {
     }; // End of window.onload
 }
 
-if (window.location.pathname.includes('course-details.html')) {
+if (window.location.pathname.endsWith('course-details')) {
 
     // These functions are now defined outside for better structure.
     // They are no longer hidden inside another function.
@@ -2515,7 +2515,7 @@ function renderLessons(lessons, episodeId, courseId) {
         <ul class="rbt-course-main-content liststyle">
             ${lessons.map(lesson => `
                 <li>
-                    <a href="lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lesson._id}" class="lesson-link">
+                    <a href="lesson?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lesson._id}" class="lesson-link">
                         <div class="course-content-left">
                             <i class="feather-${lesson.vimeoUrl ? 'play-circle' : 'file-text'}"></i>
                             
@@ -2726,9 +2726,9 @@ if (instructor) {
     });
 }
 // =================================================================
-// REFACTORED lesson.html SCRIPT
+// REFACTORED lesson SCRIPT
 // =================================================================
-if (window.location.pathname.includes('lesson.html')) {
+if (window.location.pathname.endsWith('lesson')) {
     
     // Use a single global variable to hold the course data.
     // This prevents us from having to pass it between every function.
@@ -2893,7 +2893,7 @@ if (window.location.pathname.includes('lesson.html')) {
             prevButton.style.opacity = '1';
             prevButton.style.pointerEvents = 'auto';
             // We make it a link for context, but clicks are handled dynamically
-            prevButton.href = `lesson.html?courseId=${currentCourseData._id}&lessonId=${prevLesson._id}`;
+            prevButton.href = `lesson?courseId=${currentCourseData._id}&lessonId=${prevLesson._id}`;
             prevButton.dataset.lessonId = prevLesson._id; // Store ID for click handler
         } else {
             prevButton.style.opacity = '0.5';
@@ -2905,7 +2905,7 @@ if (window.location.pathname.includes('lesson.html')) {
             const nextLesson = allLessons[currentIndex + 1];
             nextButton.style.opacity = '1';
             nextButton.style.pointerEvents = 'auto';
-            nextButton.href = `lesson.html?courseId=${currentCourseData._id}&lessonId=${nextLesson._id}`;
+            nextButton.href = `lesson?courseId=${currentCourseData._id}&lessonId=${nextLesson._id}`;
             nextButton.dataset.lessonId = nextLesson._id; // Store ID for click handler
         } else {
             nextButton.style.opacity = '0.5';
@@ -2930,7 +2930,7 @@ if (window.location.pathname.includes('lesson.html')) {
 }
         };
 
-if (window.location.pathname.includes('explore-courses.html')) {
+if (window.location.pathname.endsWith('explore-courses')) {
 
     document.addEventListener('DOMContentLoaded', () => {
         // --- Get DOM Elements ---
@@ -2940,7 +2940,7 @@ if (window.location.pathname.includes('explore-courses.html')) {
         const searchForm = document.getElementById('course-search-form'); // Assumes your form has this ID
         const searchInput = document.getElementById('course-search-input'); // Assumes your input has this ID
         const sortBySelect = document.getElementById('sort-by-select'); // Assumes your select has this ID
-// In main.js, inside the 'explore-courses.html' block and 'DOMContentLoaded'
+// In main.js, inside the 'explore-courses' block and 'DOMContentLoaded'
 
 // --- Initialize Price Range Slider ---
 if (typeof $ !== 'undefined' && $.ui) {
@@ -3002,7 +3002,7 @@ if (typeof $ !== 'undefined' && $.ui) {
             const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
             const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
             const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-            return `<div class="course-grid-3"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
+            return `<div class="course-grid-3"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
         };
 
         // --- Main Function to Fetch and Display Courses ---
@@ -3039,7 +3039,7 @@ if (typeof $ !== 'undefined' && $.ui) {
         };
 
         // --- Function to Handle Filter Changes ---
-// In main.js, inside the 'explore-courses.html' block
+// In main.js, inside the 'explore-courses' block
 
 // --- Function to Handle Filter Changes ---
 const handleFilterChange = () => {

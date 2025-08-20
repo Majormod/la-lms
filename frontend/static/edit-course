@@ -151,13 +151,13 @@
                     <div class="header-left rbt-header-content">
                         <div class="header-info">
                             <div class="logo logo-dark">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/logo/logo.png" alt="Education Logo Images">
                                 </a>
                             </div>
 
                             <div class="logo d-none logo-light">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/dark/logo/logo-light.png" alt="Education Logo Images">
                                 </a>
                             </div>
@@ -314,7 +314,7 @@
                             <ul class="mainmenu">
                                 <!--
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="index.html">Home</a>
+                                    <a href="index">Home</a>
                                 </li>
                                 -->
                                 <li class="with-megamenu has-menu-child-item">
@@ -338,23 +338,23 @@
                                                 <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                                     <h5 class="title">Leadership Assessments</h5>
 <p class="b4">
-<a href="assessment-the-leadership-quotient-test.html">The Leadership Quotient Test™</a><br><br>
-<a href="assessment-the-management-mastery-index.html">The Management Mastery Index™</a><br><br>
-<a href="assessment-the-marketing-influence-quotient.html">The Marketing Influence Quotient™</a><br><br>
-<a href="assessment-the-sales-performance-index.html">The Sales Performance Index™</a><br><br>
+<a href="assessment-the-leadership-quotient-test">The Leadership Quotient Test™</a><br><br>
+<a href="assessment-the-management-mastery-index">The Management Mastery Index™</a><br><br>
+<a href="assessment-the-marketing-influence-quotient">The Marketing Influence Quotient™</a><br><br>
+<a href="assessment-the-sales-performance-index">The Sales Performance Index™</a><br><br>
 </p>
- <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="assessment.html">
+ <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="assessment">
                                 <span data-text="Enroll Now">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Take Assessments Now</span>
                             </a>
                                                 </div>
                                                                                                 <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                                     <h5 class="title">&nbsp;</h5>
 <p class="b4">
-<a href="assessment-the-communication-impact-quotient.html">The Communication Impact Quotient™</a><br><br>
-<a href="assessment-the-human-capital-impact-quotient.html">The Human Capital Impact Quotient™</a><br><br>
-<a href="assessment-the-mindset-mastery-index.html">The Mindset Mastery Index™<br></a><br>
-<a href="assessment-the-strategy-execution-quotient.html">The Strategy Execution Quotient™</a><br><br>
-<a href="assessment-the-gravitas-and-presence-assessment.html">The Gravitas & Presence Assessment™</a>
+<a href="assessment-the-communication-impact-quotient">The Communication Impact Quotient™</a><br><br>
+<a href="assessment-the-human-capital-impact-quotient">The Human Capital Impact Quotient™</a><br><br>
+<a href="assessment-the-mindset-mastery-index">The Mindset Mastery Index™<br></a><br>
+<a href="assessment-the-strategy-execution-quotient">The Strategy Execution Quotient™</a><br><br>
+<a href="assessment-the-gravitas-and-presence-assessment">The Gravitas & Presence Assessment™</a>
 
 </p>
                                                 </div>
@@ -384,10 +384,10 @@
                                                 <div class="col-lg-12 col-xl-12 col-xxl-12 single-mega-item">
                                                     <h5 class="title">Leadership Courses</h5>
 <p class="description">Learn from the best. Master leadership. Accelerate growth.</p>
- <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="schools.html">
+ <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="schools">
                                 <span data-text="Enroll Now">Explore Schools</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="explore-courses.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="explore-courses">
                                 <span data-text="Enroll Now">Explore Courses</span>
                             </a>
                                                 </div>
@@ -450,7 +450,7 @@
 
                             <p class="rbt-card-text">Master strategic leadership, influence, and decision-making.</p>
                             <div class="rbt-card-bottom">
-                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-individuals.html">
+                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-individuals">
                                 <span data-text="Enroll Now">Know More</span>
                             </a>
                             </div>
@@ -525,13 +525,13 @@
                 </div>
                 <!-- End Single Card  -->
                             <div class="rbt-card-bottom">
-                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-programs.html">
+                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-programs">
                                 <span data-text="Enroll Now">Programs</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-leadership-consulting.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-leadership-consulting">
                                 <span data-text="Enroll Now">Leadership Consulting</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-speaking.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-speaking">
                                 <span data-text="Enroll Now">Speaking</span>
                             </a>
                  </div>
@@ -542,11 +542,11 @@
                                     <!-- End Mega Menu  -->
                                 </li>
                                 <li class="has-dropdown has-menu-child-item">
-                                    <a href="the-masterclass.html">The MasterClass&trade;
+                                    <a href="the-masterclass">The MasterClass&trade;
                                     </a>
                                 </li>
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="books.html">Books</a>
+                                    <a href="books">Books</a>
                                 </li>
                             </ul>
                         </nav>
@@ -571,7 +571,7 @@
 
 <li class="account-access rbt-user-wrapper d-none d-xl-block">
     
-    <a id="nav-login-link" class="d-none" href="login.html"><i class="feather-user"></i> Login</a>
+    <a id="nav-login-link" class="d-none" href="login"><i class="feather-user"></i> Login</a>
 
     <a id="nav-user-link" class="d-none" href="#"><i class="feather-user"></i> <span id="nav-user-name">User</span></a>
 
@@ -583,18 +583,18 @@
                 </div>
                 <div class="admin-info">
                     <span id="nav-user-name-dropdown" class="name">User Name</span>
-                    <a class="rbt-btn-link color-primary" href="profile.html">View Profile</a>
+                    <a class="rbt-btn-link color-primary" href="profile">View Profile</a>
                 </div>
             </div>
             <ul class="user-list-wrapper">
                 <li id="nav-bookmark-link"><a href="#"><i class="feather-bookmark"></i><span>Bookmark</span></a></li>
 <li id="nav-reviews-link"><a href="#"><i class="feather-star"></i><span>Reviews</span></a></li>
-                <li><a href="instructor-settings.html"><i class="feather-settings"></i><span>Settings</span></a></li>
+                <li><a href="instructor-settings"><i class="feather-settings"></i><span>Settings</span></a></li>
                 
-                <li class="instructor-only-link"><a href="instructor-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
+                <li class="instructor-only-link"><a href="instructor-dashboard"><i class="feather-home"></i><span>My Dashboard</span></a></li>
                 
-                <li class="student-only-link"><a href="student-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
-                <li class="student-only-link"><a href="student-enrolled-courses.html"><i class="feather-shopping-bag"></i><span>Enrolled Courses</span></a></li>
+                <li class="student-only-link"><a href="student-dashboard"><i class="feather-home"></i><span>My Dashboard</span></a></li>
+                <li class="student-only-link"><a href="student-enrolled-courses"><i class="feather-shopping-bag"></i><span>Enrolled Courses</span></a></li>
             </ul>
             <hr class="mt--10 mb--10">
             <ul class="user-list-wrapper">
@@ -614,12 +614,12 @@
                                             </div>
                                             <div class="admin-info">
                                                 <span class="name">RainbowIT</span>
-                                                <a class="rbt-btn-link color-primary" href="profile.html">View Profile</a>
+                                                <a class="rbt-btn-link color-primary" href="profile">View Profile</a>
                                             </div>
                                         </div>
                                         <ul class="user-list-wrapper">
                                             <li>
-                                                <a href="instructor-dashboard.html">
+                                                <a href="instructor-dashboard">
                                                     <i class="feather-home"></i>
                                                     <span>My Dashboard</span>
                                                 </a>
@@ -631,37 +631,37 @@
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-enrolled-courses.html">
+                                                <a href="instructor-enrolled-courses">
                                                     <i class="feather-shopping-bag"></i>
                                                     <span>Enrolled Courses</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-wishlist.html">
+                                                <a href="instructor-wishlist">
                                                     <i class="feather-heart"></i>
                                                     <span>Wishlist</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-reviews.html">
+                                                <a href="instructor-reviews">
                                                     <i class="feather-star"></i>
                                                     <span>Reviews</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-my-quiz-attempts.html">
+                                                <a href="instructor-my-quiz-attempts">
                                                     <i class="feather-list"></i>
                                                     <span>My Quiz Attempts</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-order-history.html">
+                                                <a href="instructor-order-history">
                                                     <i class="feather-clock"></i>
                                                     <span>Order History</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-quiz-attempts.html">
+                                                <a href="instructor-quiz-attempts">
                                                     <i class="feather-message-square"></i>
                                                     <span>Question & Answer</span>
                                                 </a>
@@ -679,13 +679,13 @@
                                         <hr class="mt--10 mb--10">
                                         <ul class="user-list-wrapper">
                                             <li>
-                                                <a href="instructor-settings.html">
+                                                <a href="instructor-settings">
                                                     <i class="feather-settings"></i>
                                                     <span>Settings</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="index.html">
+                                                <a href="index">
                                                     <i class="feather-log-out"></i>
                                                     <span>Logout</span>
                                                 </a>
@@ -745,12 +745,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-01.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">React Js</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">React Js</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -777,12 +777,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-02.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Java Program</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Java Program</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -809,12 +809,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-03.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Web Design</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Web Design</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -841,12 +841,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-04.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Web Design</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Web Design</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -987,13 +987,13 @@
                 <div class="content">
                     <div class="logo">
                         <div class="logo logo-dark">
-                            <a href="index.html">
+                            <a href="index">
                                 <img src="assets/images/logo/logo.png" alt="Education Logo Images">
                             </a>
                         </div>
 
                         <div class="logo d-none logo-light">
-                            <a href="index.html">
+                            <a href="index">
                                 <img src="assets/images/dark/logo/logo-light.png" alt="Education Logo Images">
                             </a>
                         </div>
@@ -1016,7 +1016,7 @@
             <nav class="mainmenu-nav">
                 <ul class="mainmenu">
                     <li class="with-megamenu has-menu-child-item position-static">
-                        <a href="index.html">Home</a>
+                        <a href="index">Home</a>
                     </li>
 
                     <li class="with-megamenu has-menu-child-item">
@@ -1039,31 +1039,31 @@
                                     <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                         <h3 class="rbt-short-title">Course Layout</h3>
                                         <ul class="mega-menu-item">
-                                            <li><a href="course-filter-one-toggle.html">Filter One Toggle</a></li>
-                                            <li><a href="explore-courses.html">Filter One Open</a></li>
-                                            <li><a href="course-filter-two-toggle.html">Filter Two Toggle</a></li>
-                                            <li><a href="course-filter-two-open.html">Filter Two Open</a></li>
-                                            <li><a href="course-with-tab.html">Course With Tab</a></li>
-                                            <li><a href="course-with-tab-two.html">Course With Tab Two</a></li>
-                                            <li><a href="course-card-2.html">Course Card Two</a></li>
-                                            <li><a href="course-card-3.html">Course Card Three</a></li>
-                                            <li><a href="course-masonry.html">Course Masonry</a></li>
-                                            <li><a href="course-with-sidebar.html">Course With Sidebar</a></li>
+                                            <li><a href="course-filter-one-toggle">Filter One Toggle</a></li>
+                                            <li><a href="explore-courses">Filter One Open</a></li>
+                                            <li><a href="course-filter-two-toggle">Filter Two Toggle</a></li>
+                                            <li><a href="course-filter-two-open">Filter Two Open</a></li>
+                                            <li><a href="course-with-tab">Course With Tab</a></li>
+                                            <li><a href="course-with-tab-two">Course With Tab Two</a></li>
+                                            <li><a href="course-card-2">Course Card Two</a></li>
+                                            <li><a href="course-card-3">Course Card Three</a></li>
+                                            <li><a href="course-masonry">Course Masonry</a></li>
+                                            <li><a href="course-with-sidebar">Course With Sidebar</a></li>
                                         </ul>
                                     </div>
                                     <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                         <h3 class="rbt-short-title">Course Layout</h3>
                                         <ul class="mega-menu-item">
-                                            <li><a href="course-details.html">Course Details</a></li>
-                                            <li><a href="course-details-2.html">Course Details Two</a></li>
-                                            <li><a href="course-details-3.html">Course Details Three</a></li>
-                                            <li><a href="course-details-4.html">Course Details Four</a></li>
-                                            <li><a href="course-details-5.html">Course Details Five</a></li>
-                                            <li><a href="course-details-6.html">Course Details Six</a></li>
-                                            <li><a href="course-details-7.html">Course Details Seven</a></li>
-                                            <li><a href="course-details-8.html">Course Details Eight</a></li>
-                                            <li><a href="lesson.html">Course Lesson <span class="rbt-badge-card">New</span></a></li>
-                                            <li><a href="create-course.html">Create Course <span class="rbt-badge-card">New</span></a></li>
+                                            <li><a href="course-details">Course Details</a></li>
+                                            <li><a href="course-details-2">Course Details Two</a></li>
+                                            <li><a href="course-details-3">Course Details Three</a></li>
+                                            <li><a href="course-details-4">Course Details Four</a></li>
+                                            <li><a href="course-details-5">Course Details Five</a></li>
+                                            <li><a href="course-details-6">Course Details Six</a></li>
+                                            <li><a href="course-details-7">Course Details Seven</a></li>
+                                            <li><a href="course-details-8">Course Details Eight</a></li>
+                                            <li><a href="lesson">Course Lesson <span class="rbt-badge-card">New</span></a></li>
+                                            <li><a href="create-course">Create Course <span class="rbt-badge-card">New</span></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1083,11 +1083,11 @@
                     </li>
 
                                                                 <li class="has-dropdown has-menu-child-item">
-                                    <a href="the-masterclass.html">The MasterClass&trade;
+                                    <a href="the-masterclass">The MasterClass&trade;
                                     </a>
                                 </li>
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="books.html">Books</a>
+                                    <a href="books">Books</a>
                                 </li>
                 </ul>
             </nav>
@@ -1146,7 +1146,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Miracle Morning</a></h6>
+                            <h6 class="title"><a href="single-product">Miracle Morning</a></h6>
 
                             <span class="quantity">1 * <span class="price">₹22</span></span>
                         </div>
@@ -1162,7 +1162,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Happy Strong</a></h6>
+                            <h6 class="title"><a href="single-product">Happy Strong</a></h6>
 
                             <span class="quantity">1 * <span class="price">₹30</span></span>
                         </div>
@@ -1178,7 +1178,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Rich Dad Poor Dad</a></h6>
+                            <h6 class="title"><a href="single-product">Rich Dad Poor Dad</a></h6>
 
                             <span class="quantity">1 * <span class="price">₹50</span></span>
                         </div>
@@ -1194,7 +1194,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Momentum Theorem</a></h6>
+                            <h6 class="title"><a href="single-product">Momentum Theorem</a></h6>
 
                             <span class="quantity">1 * <span class="price">₹50</span></span>
                         </div>
@@ -1835,7 +1835,7 @@
 
                         <div class="mt--10 row g-5">
                             <div class="col-lg-4">
-<button id="preview-course-btn" class="rbt-btn hover-icon-reverse bg-primary-opacity w-100 text-center" href="course-details.html">
+<button id="preview-course-btn" class="rbt-btn hover-icon-reverse bg-primary-opacity w-100 text-center" href="course-details">
                                     <span class="icon-reverse-wrapper">
                                         <span class="btn-text">Preview</span>
                                     <span class="btn-icon"><i class="feather-eye"></i></span>
@@ -2515,13 +2515,13 @@
                         <div class="inner text-center">
 
                             <div class="logo logo-dark">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/logo/logo.png" alt="Education Logo Images">
                                 </a>
                             </div>
 
                             <div class="logo d-none logo-light">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/dark/logo/logo-light.png" alt="Education Logo Images">
                                 </a>
                             </div>

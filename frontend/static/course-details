@@ -152,13 +152,13 @@
                     <div class="header-left rbt-header-content">
                         <div class="header-info">
                             <div class="logo logo-dark">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/logo/logo.png" alt="Education Logo Images">
                                 </a>
                             </div>
 
                             <div class="logo d-none logo-light">
-                                <a href="index.html">
+                                <a href="index">
                                     <img src="assets/images/dark/logo/logo-light.png" alt="Education Logo Images">
                                 </a>
                             </div>
@@ -315,7 +315,7 @@
                             <ul class="mainmenu">
                                 <!--
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="index.html">Home</a>
+                                    <a href="index">Home</a>
                                 </li>
                                 -->
                                 <li class="with-megamenu has-menu-child-item">
@@ -339,23 +339,23 @@
                                                 <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                                     <h5 class="title">Leadership Assessments</h5>
 <p class="b4">
-<a href="assessment-the-leadership-quotient-test.html">The Leadership Quotient Test™</a><br><br>
-<a href="assessment-the-management-mastery-index.html">The Management Mastery Index™</a><br><br>
-<a href="assessment-the-marketing-influence-quotient.html">The Marketing Influence Quotient™</a><br><br>
-<a href="assessment-the-sales-performance-index.html">The Sales Performance Index™</a><br><br>
+<a href="assessment-the-leadership-quotient-test">The Leadership Quotient Test™</a><br><br>
+<a href="assessment-the-management-mastery-index">The Management Mastery Index™</a><br><br>
+<a href="assessment-the-marketing-influence-quotient">The Marketing Influence Quotient™</a><br><br>
+<a href="assessment-the-sales-performance-index">The Sales Performance Index™</a><br><br>
 </p>
- <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="assessment.html">
+ <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="assessment">
                                 <span data-text="Enroll Now">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Take Assessments Now</span>
                             </a>
                                                 </div>
                                                                                                 <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                                     <h5 class="title">&nbsp;</h5>
 <p class="b4">
-<a href="assessment-the-communication-impact-quotient.html">The Communication Impact Quotient™</a><br><br>
-<a href="assessment-the-human-capital-impact-quotient.html">The Human Capital Impact Quotient™</a><br><br>
-<a href="assessment-the-mindset-mastery-index.html">The Mindset Mastery Index™<br></a><br>
-<a href="assessment-the-strategy-execution-quotient.html">The Strategy Execution Quotient™</a><br><br>
-<a href="assessment-the-gravitas-and-presence-assessment.html">The Gravitas & Presence Assessment™</a>
+<a href="assessment-the-communication-impact-quotient">The Communication Impact Quotient™</a><br><br>
+<a href="assessment-the-human-capital-impact-quotient">The Human Capital Impact Quotient™</a><br><br>
+<a href="assessment-the-mindset-mastery-index">The Mindset Mastery Index™<br></a><br>
+<a href="assessment-the-strategy-execution-quotient">The Strategy Execution Quotient™</a><br><br>
+<a href="assessment-the-gravitas-and-presence-assessment">The Gravitas & Presence Assessment™</a>
 
 </p>
                                                 </div>
@@ -385,10 +385,10 @@
                                                 <div class="col-lg-12 col-xl-12 col-xxl-12 single-mega-item">
                                                     <h5 class="title">Leadership Courses</h5>
 <p class="description">Learn from the best. Master leadership. Accelerate growth.</p>
- <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="schools.html">
+ <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="schools">
                                 <span data-text="Enroll Now">Explore Schools</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="explore-courses.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="explore-courses">
                                 <span data-text="Enroll Now">Explore Courses</span>
                             </a>
                                                 </div>
@@ -451,7 +451,7 @@
 
                             <p class="rbt-card-text">Master strategic leadership, influence, and decision-making.</p>
                             <div class="rbt-card-bottom">
-                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-individuals.html">
+                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-individuals">
                                 <span data-text="Enroll Now">Know More</span>
                             </a>
                             </div>
@@ -526,13 +526,13 @@
                 </div>
                 <!-- End Single Card  -->
                             <div class="rbt-card-bottom">
-                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-programs.html">
+                                <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-programs">
                                 <span data-text="Enroll Now">Programs</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-leadership-consulting.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-leadership-consulting">
                                 <span data-text="Enroll Now">Leadership Consulting</span>
                             </a>
-                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-speaking.html">
+                            <a class="rbt-btn btn-border-gradient radius-round btn-sm hover-transform-none" href="for-organizations-speaking">
                                 <span data-text="Enroll Now">Speaking</span>
                             </a>
                  </div>
@@ -543,11 +543,11 @@
                                     <!-- End Mega Menu  -->
                                 </li>
                                 <li class="has-dropdown has-menu-child-item">
-                                    <a href="the-masterclass.html">The MasterClass&trade;
+                                    <a href="the-masterclass">The MasterClass&trade;
                                     </a>
                                 </li>
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="books.html">Books</a>
+                                    <a href="books">Books</a>
                                 </li>
                             </ul>
                         </nav>
@@ -572,7 +572,7 @@
 
 <li class="account-access rbt-user-wrapper d-none d-xl-block">
     
-    <a id="nav-login-link" class="d-none" href="login.html"><i class="feather-user"></i> Login</a>
+    <a id="nav-login-link" class="d-none" href="login"><i class="feather-user"></i> Login</a>
 
     <a id="nav-user-link" class="d-none" href="#"><i class="feather-user"></i> <span id="nav-user-name">User</span></a>
 
@@ -584,18 +584,18 @@
                 </div>
                 <div class="admin-info">
                     <span id="nav-user-name-dropdown" class="name">User Name</span>
-                    <a class="rbt-btn-link color-primary" href="profile.html">View Profile</a>
+                    <a class="rbt-btn-link color-primary" href="profile">View Profile</a>
                 </div>
             </div>
             <ul class="user-list-wrapper">
                 <li id="nav-bookmark-link"><a href="#"><i class="feather-bookmark"></i><span>Bookmark</span></a></li>
 <li id="nav-reviews-link"><a href="#"><i class="feather-star"></i><span>Reviews</span></a></li>
-                <li><a href="instructor-settings.html"><i class="feather-settings"></i><span>Settings</span></a></li>
+                <li><a href="instructor-settings"><i class="feather-settings"></i><span>Settings</span></a></li>
                 
-                <li class="instructor-only-link"><a href="instructor-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
+                <li class="instructor-only-link"><a href="instructor-dashboard"><i class="feather-home"></i><span>My Dashboard</span></a></li>
                 
-                <li class="student-only-link"><a href="student-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
-                <li class="student-only-link"><a href="student-enrolled-courses.html"><i class="feather-shopping-bag"></i><span>Enrolled Courses</span></a></li>
+                <li class="student-only-link"><a href="student-dashboard"><i class="feather-home"></i><span>My Dashboard</span></a></li>
+                <li class="student-only-link"><a href="student-enrolled-courses"><i class="feather-shopping-bag"></i><span>Enrolled Courses</span></a></li>
             </ul>
             <hr class="mt--10 mb--10">
             <ul class="user-list-wrapper">
@@ -615,12 +615,12 @@
                                             </div>
                                             <div class="admin-info">
                                                 <span class="name">RainbowIT</span>
-                                                <a class="rbt-btn-link color-primary" href="profile.html">View Profile</a>
+                                                <a class="rbt-btn-link color-primary" href="profile">View Profile</a>
                                             </div>
                                         </div>
                                         <ul class="user-list-wrapper">
                                             <li>
-                                                <a href="instructor-dashboard.html">
+                                                <a href="instructor-dashboard">
                                                     <i class="feather-home"></i>
                                                     <span>My Dashboard</span>
                                                 </a>
@@ -632,37 +632,37 @@
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-enrolled-courses.html">
+                                                <a href="instructor-enrolled-courses">
                                                     <i class="feather-shopping-bag"></i>
                                                     <span>Enrolled Courses</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-wishlist.html">
+                                                <a href="instructor-wishlist">
                                                     <i class="feather-heart"></i>
                                                     <span>Wishlist</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-reviews.html">
+                                                <a href="instructor-reviews">
                                                     <i class="feather-star"></i>
                                                     <span>Reviews</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-my-quiz-attempts.html">
+                                                <a href="instructor-my-quiz-attempts">
                                                     <i class="feather-list"></i>
                                                     <span>My Quiz Attempts</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-order-history.html">
+                                                <a href="instructor-order-history">
                                                     <i class="feather-clock"></i>
                                                     <span>Order History</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="instructor-quiz-attempts.html">
+                                                <a href="instructor-quiz-attempts">
                                                     <i class="feather-message-square"></i>
                                                     <span>Question & Answer</span>
                                                 </a>
@@ -680,13 +680,13 @@
                                         <hr class="mt--10 mb--10">
                                         <ul class="user-list-wrapper">
                                             <li>
-                                                <a href="instructor-settings.html">
+                                                <a href="instructor-settings">
                                                     <i class="feather-settings"></i>
                                                     <span>Settings</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="index.html">
+                                                <a href="index">
                                                     <i class="feather-log-out"></i>
                                                     <span>Logout</span>
                                                 </a>
@@ -746,12 +746,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-01.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">React Js</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">React Js</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -778,12 +778,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-02.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Java Program</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Java Program</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -810,12 +810,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-03.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Web Design</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Web Design</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -842,12 +842,12 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
                             <div class="rbt-card variation-01 rbt-hover">
                                 <div class="rbt-card-img">
-                                    <a href="course-details.html">
+                                    <a href="course-details">
                                         <img src="assets/images/course/course-online-04.jpg" alt="Card image">
                                     </a>
                                 </div>
                                 <div class="rbt-card-body">
-                                    <h5 class="rbt-card-title"><a href="course-details.html">Web Design</a>
+                                    <h5 class="rbt-card-title"><a href="course-details">Web Design</a>
                                     </h5>
                                     <div class="rbt-review">
                                         <div class="rating">
@@ -988,13 +988,13 @@
                 <div class="content">
                     <div class="logo">
                         <div class="logo logo-dark">
-                            <a href="index.html">
+                            <a href="index">
                                 <img src="assets/images/logo/logo.png" alt="Education Logo Images">
                             </a>
                         </div>
 
                         <div class="logo d-none logo-light">
-                            <a href="index.html">
+                            <a href="index">
                                 <img src="assets/images/dark/logo/logo-light.png" alt="Education Logo Images">
                             </a>
                         </div>
@@ -1017,7 +1017,7 @@
             <nav class="mainmenu-nav">
                 <ul class="mainmenu">
                     <li class="with-megamenu has-menu-child-item position-static">
-                        <a href="index.html">Home</a>
+                        <a href="index">Home</a>
                     </li>
 
                     <li class="with-megamenu has-menu-child-item">
@@ -1040,31 +1040,31 @@
                                     <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                         <h3 class="rbt-short-title">Course Layout</h3>
                                         <ul class="mega-menu-item">
-                                            <li><a href="course-filter-one-toggle.html">Filter One Toggle</a></li>
-                                            <li><a href="explore-courses.html">Filter One Open</a></li>
-                                            <li><a href="course-filter-two-toggle.html">Filter Two Toggle</a></li>
-                                            <li><a href="course-filter-two-open.html">Filter Two Open</a></li>
-                                            <li><a href="course-with-tab.html">Course With Tab</a></li>
-                                            <li><a href="course-with-tab-two.html">Course With Tab Two</a></li>
-                                            <li><a href="course-card-2.html">Course Card Two</a></li>
-                                            <li><a href="course-card-3.html">Course Card Three</a></li>
-                                            <li><a href="course-masonry.html">Course Masonry</a></li>
-                                            <li><a href="course-with-sidebar.html">Course With Sidebar</a></li>
+                                            <li><a href="course-filter-one-toggle">Filter One Toggle</a></li>
+                                            <li><a href="explore-courses">Filter One Open</a></li>
+                                            <li><a href="course-filter-two-toggle">Filter Two Toggle</a></li>
+                                            <li><a href="course-filter-two-open">Filter Two Open</a></li>
+                                            <li><a href="course-with-tab">Course With Tab</a></li>
+                                            <li><a href="course-with-tab-two">Course With Tab Two</a></li>
+                                            <li><a href="course-card-2">Course Card Two</a></li>
+                                            <li><a href="course-card-3">Course Card Three</a></li>
+                                            <li><a href="course-masonry">Course Masonry</a></li>
+                                            <li><a href="course-with-sidebar">Course With Sidebar</a></li>
                                         </ul>
                                     </div>
                                     <div class="col-lg-12 col-xl-6 col-xxl-6 single-mega-item">
                                         <h3 class="rbt-short-title">Course Layout</h3>
                                         <ul class="mega-menu-item">
-                                            <li><a href="course-details.html">Course Details</a></li>
-                                            <li><a href="course-details-2.html">Course Details Two</a></li>
-                                            <li><a href="course-details-3.html">Course Details Three</a></li>
-                                            <li><a href="course-details-4.html">Course Details Four</a></li>
-                                            <li><a href="course-details-5.html">Course Details Five</a></li>
-                                            <li><a href="course-details-6.html">Course Details Six</a></li>
-                                            <li><a href="course-details-7.html">Course Details Seven</a></li>
-                                            <li><a href="course-details-8.html">Course Details Eight</a></li>
-                                            <li><a href="lesson.html">Course Lesson <span class="rbt-badge-card">New</span></a></li>
-                                            <li><a href="create-course.html">Create Course <span class="rbt-badge-card">New</span></a></li>
+                                            <li><a href="course-details">Course Details</a></li>
+                                            <li><a href="course-details-2">Course Details Two</a></li>
+                                            <li><a href="course-details-3">Course Details Three</a></li>
+                                            <li><a href="course-details-4">Course Details Four</a></li>
+                                            <li><a href="course-details-5">Course Details Five</a></li>
+                                            <li><a href="course-details-6">Course Details Six</a></li>
+                                            <li><a href="course-details-7">Course Details Seven</a></li>
+                                            <li><a href="course-details-8">Course Details Eight</a></li>
+                                            <li><a href="lesson">Course Lesson <span class="rbt-badge-card">New</span></a></li>
+                                            <li><a href="create-course">Create Course <span class="rbt-badge-card">New</span></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1084,11 +1084,11 @@
                     </li>
 
                                                                 <li class="has-dropdown has-menu-child-item">
-                                    <a href="the-masterclass.html">The MasterClass&trade;
+                                    <a href="the-masterclass">The MasterClass&trade;
                                     </a>
                                 </li>
                                 <li class="with-megamenu has-menu-child-item position-static">
-                                    <a href="books.html">Books</a>
+                                    <a href="books">Books</a>
                                 </li>
                 </ul>
             </nav>
@@ -1147,7 +1147,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Miracle Morning</a></h6>
+                            <h6 class="title"><a href="single-product">Miracle Morning</a></h6>
 
                             <span class="quantity">1 * <span class="price">$22</span></span>
                         </div>
@@ -1163,7 +1163,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Happy Strong</a></h6>
+                            <h6 class="title"><a href="single-product">Happy Strong</a></h6>
 
                             <span class="quantity">1 * <span class="price">$30</span></span>
                         </div>
@@ -1179,7 +1179,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Rich Dad Poor Dad</a></h6>
+                            <h6 class="title"><a href="single-product">Rich Dad Poor Dad</a></h6>
 
                             <span class="quantity">1 * <span class="price">$50</span></span>
                         </div>
@@ -1195,7 +1195,7 @@
                             </a>
                         </div>
                         <div class="product-content">
-                            <h6 class="title"><a href="single-product.html">Momentum Theorem</a></h6>
+                            <h6 class="title"><a href="single-product">Momentum Theorem</a></h6>
 
                             <span class="quantity">1 * <span class="price">$50</span></span>
                         </div>
@@ -1244,7 +1244,7 @@
                 <div class="col-lg-8">
                     <div class="content text-start">
                         <ul class="page-list">
-                            <li class="rbt-breadcrumb-item"><a href="index.html">Home</a></li>
+                            <li class="rbt-breadcrumb-item"><a href="index">Home</a></li>
                             <li>
                                 <div class="icon-right"><i class="feather-chevron-right"></i></div>
                             </li>
@@ -1288,7 +1288,7 @@
                                 </a>
                             </div>
                             <div id="instructor-info" class="rbt-author-info">
-                                By <a href="profile.html">Dr. Nanda</a> In <a href="#">Leadership</a>
+                                By <a href="profile">Dr. Nanda</a> In <a href="#">Leadership</a>
                             </div>
                         </div>
 
@@ -1397,7 +1397,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“You’re Not
                                                 Competing on Product, You’re Competing on Perception”</span>
@@ -1410,7 +1410,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Why positioning is
                                                 more critical today than ever</span>
@@ -1421,7 +1421,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Difference between
                                                 branding, messaging, and positioning</span>
@@ -1432,7 +1432,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Examples: Amul vs.
                                                 Nestlé, Volvo vs. BMW</span>
@@ -1443,7 +1443,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">The cost of a vague
                                                 position</span>
@@ -1454,7 +1454,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Introduce the
                                                 “Positioning Prism™” framework</span>
@@ -1465,7 +1465,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Exercise: Position
                                                 Audit</span>
@@ -1493,7 +1493,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Getting on the
                                                 Mental Shelf”</span>
@@ -1504,7 +1504,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How customers
                                                 actually make choices (System 1 vs System 2)</span>
@@ -1515,7 +1515,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">The power of memory
                                                 structures and recall cues</span>
@@ -1526,7 +1526,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How Maggi owns
                                                 “2-minute” and Nike owns “Just Do It”</span>
@@ -1537,7 +1537,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Introduction to
                                                 Mindspace Laddering™</span>
@@ -1548,7 +1548,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Assignment: Identify
                                                 your market’s mental ladder</span>
@@ -1575,7 +1575,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Pick Your People
                                                 Before You Pick Your Position”</span>
@@ -1586,7 +1586,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">You can't be for
                                                 everyone – the myth of mass appeal</span>
@@ -1597,7 +1597,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Customer
                                                 archetyping and targeting</span>
@@ -1608,7 +1608,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How Paperboat built
                                                 nostalgia as a niche</span>
@@ -1619,7 +1619,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Clarify Positioning
                                                 vs Segmentation</span>
@@ -1630,7 +1630,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Tool: Customer
                                                 Archetype Mapping Canvas</span>
@@ -1657,7 +1657,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Position Between
                                                 the Familiar and the Future”</span>
@@ -1668,7 +1668,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Positioning
                                                 requires emotional intelligence, not just strategy</span>
@@ -1679,7 +1679,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How to strike the
                                                 right balance between Anchor and Aspire</span>
@@ -1690,7 +1690,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Airtel’s transition
                                                 to digital lifestyle</span>
@@ -1701,7 +1701,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Tata Tea’s “Jaago
                                                 Re” campaign</span>
@@ -1712,7 +1712,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Exercise: Map your
                                                 current anchor and your customer’s aspiration</span>
@@ -1740,7 +1740,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Stand Where No One
                                                 Else Can”</span>
@@ -1751,7 +1751,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Avoiding the
                                                 “Obvious Trap” of category clichés</span>
@@ -1762,7 +1762,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Creating a
                                                 defendable "Only Path"</span>
@@ -1773,7 +1773,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Examples: Zoho,
                                                 Lijjat Papad, Nirma vs Surf</span>
@@ -1784,7 +1784,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Framework: The
                                                 strategic positioning quadrant</span>
@@ -1795,7 +1795,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Exercise: What is
                                                 your “Only Path”?</span>
@@ -1822,7 +1822,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“If You Can’t Win
                                                 the Game, Redesign the Board”</span>
@@ -1833,7 +1833,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Why leaders invent
                                                 categories</span>
@@ -1844,7 +1844,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How Byju’s
                                                 repositioned learning as entertainment</span>
@@ -1855,7 +1855,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Canva –
                                                 democratizing design for non-designers</span>
@@ -1866,7 +1866,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Category creation
                                                 vs category hijacking</span>
@@ -1877,7 +1877,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Practical: Reframe
                                                 your current category in a sentence</span>
@@ -1905,7 +1905,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Defend the Mind.
                                                 Attack the Myth.”</span>
@@ -1916,7 +1916,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Understanding
                                                 category kings and how they defend</span>
@@ -1927,7 +1927,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">The psychology of
                                                 first-mover advantage</span>
@@ -1938,7 +1938,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Case: Patanjali’s
                                                 attack on FMCG giants</span>
@@ -1949,7 +1949,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Framework: Attack,
                                                 Counter, Shield Model</span>
@@ -1977,7 +1977,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Your Words Are Your
                                                 Position”</span>
@@ -1988,7 +1988,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Why positioning must
                                                 bleed into every message</span>
@@ -1999,7 +1999,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Key message house vs
                                                 fragmented communication</span>
@@ -2010,7 +2010,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How to signal
                                                 position through tagline, tone, and story</span>
@@ -2021,7 +2021,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Case Studies: Dove &
                                                 Fevicol</span>
@@ -2032,7 +2032,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Exercise: Build a
                                                 Position-Driven Message Matrix</span>
@@ -2059,7 +2059,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“In the Age of
                                                 Algorithms, Be Instantly Memorable”</span>
@@ -2070,7 +2070,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How digital clutter
                                                 demands sharper positioning</span>
@@ -2081,7 +2081,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Positioning across
                                                 channels: website, ads, social media, UX</span>
@@ -2092,7 +2092,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Case: CRED, Zomato,
                                                 Dunzo’s distinct voices</span>
@@ -2103,7 +2103,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">The role of
                                                 influencers and social proof in positioning</span>
@@ -2114,7 +2114,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Activity: Audit your
                                                 top 3 digital assets</span>
@@ -2141,7 +2141,7 @@
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">“Your Brand, Your
                                                 Mindshare, Your Move”</span>
@@ -2152,7 +2152,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">Recap of all 4
                                                 frameworks and their application</span>
@@ -2163,7 +2163,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">How to evolve your
                                                 position over time</span>
@@ -2174,7 +2174,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-play-circle"></i> <span class="text">The 5 enemies of
                                                 positioning success</span>
@@ -2185,7 +2185,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Final tool: The
                                                 Positioning Prism™ Playbook</span>
@@ -2196,7 +2196,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="lesson.html">
+                                    <a href="lesson">
                                         <div class="course-content-left">
                                             <i class="feather-file-text"></i> <span class="text">Capstone: Create your
                                                 Positioning Manifesto</span>
@@ -2283,7 +2283,7 @@
                                     <div class="media-body">
                                         <div class="author-info">
                                             <h5 class="title">
-                                                <a id="instructor-name" class="hover-flip-item-wrapper" href="author.html">Dr. Nanda</a>
+                                                <a id="instructor-name" class="hover-flip-item-wrapper" href="author">Dr. Nanda</a>
                                             </h5>
                                             <span id="instructor-occupation" class="b3 subtitle">Leadership Strategist & Author</span>
                                             <ul class="rbt-meta mb--20 mt--10">
@@ -2704,7 +2704,7 @@
                             <div class="col-lg-6 col-md-6 col-sm-6 col-12" data-sal-delay="150" data-sal="slide-up" data-sal-duration="800">
                                 <div class="rbt-card variation-01 rbt-hover">
                                     <div class="rbt-card-img">
-                                        <a href="course-details.html">
+                                        <a href="course-details">
                                             <img src="assets/images/course/course-online-01.jpg" alt="Card image">
                                             <div class="rbt-badge-3 bg-white">
                                                 <span>-40%</span>
@@ -2730,7 +2730,7 @@
                                             </div>
                                         </div>
 
-                                        <h4 class="rbt-card-title"><a href="course-details.html">React Front To Back</a>
+                                        <h4 class="rbt-card-title"><a href="course-details">React Front To Back</a>
                                         </h4>
 
                                         <ul class="rbt-meta">
@@ -2747,7 +2747,7 @@
                                                 </a>
                                             </div>
                                             <div class="rbt-author-info">
-                                                By <a href="profile.html">Angela</a> In <a href="#">Development</a>
+                                                By <a href="profile">Angela</a> In <a href="#">Development</a>
                                             </div>
                                         </div>
                                         <div class="rbt-card-bottom">
@@ -2755,7 +2755,7 @@
                                                 <span id="course-price" class="current-price">₹2000</span>
                                                 <span id="course-off-price" class="off-price">₹2500</span>
                                             </div>
-                                            <a class="rbt-btn-link" href="course-details.html">Learn
+                                            <a class="rbt-btn-link" href="course-details">Learn
                                                 More<i class="feather-arrow-right"></i></a>
                                         </div>
                                     </div>
@@ -2767,7 +2767,7 @@
                             <div class="col-lg-6 col-md-6 col-sm-6 col-12" data-sal-delay="150" data-sal="slide-up" data-sal-duration="800">
                                 <div class="rbt-card variation-01 rbt-hover">
                                     <div class="rbt-card-img">
-                                        <a href="course-details.html">
+                                        <a href="course-details">
                                             <img src="assets/images/course/course-online-02.jpg" alt="Card image">
                                         </a>
                                     </div>
@@ -2788,7 +2788,7 @@
                                                         class="feather-bookmark"></i></a>
                                             </div>
                                         </div>
-                                        <h4 class="rbt-card-title"><a href="course-details.html">PHP Beginner
+                                        <h4 class="rbt-card-title"><a href="course-details">PHP Beginner
                                                 Advanced</a>
                                         </h4>
                                         <ul class="rbt-meta">
@@ -2805,7 +2805,7 @@
                                                 </a>
                                             </div>
                                             <div class="rbt-author-info">
-                                                By <a href="profile.html">Angela</a> In <a href="#">Development</a>
+                                                By <a href="profile">Angela</a> In <a href="#">Development</a>
                                             </div>
                                         </div>
                                         <div class="rbt-card-bottom">
@@ -2813,7 +2813,7 @@
                                                 <span class="current-price">$60</span>
                                                 <span class="off-price">$120</span>
                                             </div>
-                                            <a class="rbt-btn-link" href="course-details.html">Learn
+                                            <a class="rbt-btn-link" href="course-details">Learn
                                                 More<i class="feather-arrow-right"></i></a>
                                         </div>
                                     </div>
@@ -2957,7 +2957,7 @@
                 <div class="col-lg-4 col-md-6 col-sm-6 col-12">
                     <div class="rbt-card variation-01 rbt-hover">
                         <div class="rbt-card-img">
-                            <a href="course-details.html">
+                            <a href="course-details">
                                 <img src="assets/images/course/course-online-03.jpg" alt="Card image">
                                 <div class="rbt-badge-3 bg-white">
                                     <span>-10%</span>
@@ -2982,7 +2982,7 @@
                                             class="feather-bookmark"></i></a>
                                 </div>
                             </div>
-                            <h4 class="rbt-card-title"><a href="course-details.html">Angular Zero to Mastery</a>
+                            <h4 class="rbt-card-title"><a href="course-details">Angular Zero to Mastery</a>
                             </h4>
                             <ul class="rbt-meta">
                                 <li><i class="feather-book"></i>8 Lessons</li>
@@ -2998,7 +2998,7 @@
                                     </a>
                                 </div>
                                 <div class="rbt-author-info">
-                                    By <a href="profile.html">Slaughter</a> In <a href="#">Languages</a>
+                                    By <a href="profile">Slaughter</a> In <a href="#">Languages</a>
                                 </div>
                             </div>
                             <div class="rbt-card-bottom">
@@ -3006,7 +3006,7 @@
                                     <span class="current-price">$80</span>
                                     <span class="off-price">$100</span>
                                 </div>
-                                <a class="rbt-btn-link" href="course-details.html">Learn
+                                <a class="rbt-btn-link" href="course-details">Learn
                                     More<i class="feather-arrow-right"></i></a>
                             </div>
                         </div>
@@ -3018,7 +3018,7 @@
                 <div class="col-lg-4 col-md-6 col-sm-6 col-12">
                     <div class="rbt-card variation-01 rbt-hover">
                         <div class="rbt-card-img">
-                            <a href="course-details.html">
+                            <a href="course-details">
                                 <img src="assets/images/course/course-online-04.jpg" alt="Card image">
                                 <div class="rbt-badge-3 bg-white">
                                     <span>-40%</span>
@@ -3044,7 +3044,7 @@
                                 </div>
                             </div>
 
-                            <h4 class="rbt-card-title"><a href="course-details.html">Web Front To Back</a>
+                            <h4 class="rbt-card-title"><a href="course-details">Web Front To Back</a>
                             </h4>
                             <ul class="rbt-meta">
                                 <li><i class="feather-book"></i>20 Lessons</li>
@@ -3059,7 +3059,7 @@
                                     </a>
                                 </div>
                                 <div class="rbt-author-info">
-                                    By <a href="profile.html">Patrick</a> In <a href="#">Languages</a>
+                                    By <a href="profile">Patrick</a> In <a href="#">Languages</a>
                                 </div>
                             </div>
 
@@ -3068,7 +3068,7 @@
                                     <span class="current-price">$60</span>
                                     <span class="off-price">$120</span>
                                 </div>
-                                <a class="rbt-btn-link" href="course-details.html">Learn
+                                <a class="rbt-btn-link" href="course-details">Learn
                                     More<i class="feather-arrow-right"></i></a>
                             </div>
                         </div>
@@ -3080,7 +3080,7 @@
                 <div class="col-lg-4 col-md-6 col-sm-6 col-12">
                     <div class="rbt-card variation-01 rbt-hover">
                         <div class="rbt-card-img">
-                            <a href="course-details.html">
+                            <a href="course-details">
                                 <img src="assets/images/course/course-online-05.jpg" alt="Card image">
                                 <div class="rbt-badge-3 bg-white">
                                     <span>-20%</span>
@@ -3105,7 +3105,7 @@
                                             class="feather-bookmark"></i></a>
                                 </div>
                             </div>
-                            <h4 class="rbt-card-title"><a href="course-details.html">SQL Beginner Advanced</a>
+                            <h4 class="rbt-card-title"><a href="course-details">SQL Beginner Advanced</a>
                             </h4>
                             <ul class="rbt-meta">
                                 <li><i class="feather-book"></i>12 Lessons</li>
@@ -3121,7 +3121,7 @@
                                     </a>
                                 </div>
                                 <div class="rbt-author-info">
-                                    By <a href="profile.html">Angela</a> In <a href="#">Development</a>
+                                    By <a href="profile">Angela</a> In <a href="#">Development</a>
                                 </div>
                             </div>
                             <div class="rbt-card-bottom">
@@ -3129,7 +3129,7 @@
                                     <span class="current-price">$60</span>
                                     <span class="off-price">$120</span>
                                 </div>
-                                <a class="rbt-btn-link left-icon" href="course-details.html"><i
+                                <a class="rbt-btn-link left-icon" href="course-details"><i
                                         class="feather-shopping-cart"></i> Add To Cart</a>
                             </div>
                         </div>
@@ -3184,12 +3184,12 @@
                         <div class="col-lg-4 col-md-6 col-sm-6 col-12 mt--30">
                             <div class="footer-widget">
                                 <div class="logo logo-dark logo-footer">
-                                    <a href="index.html">
+                                    <a href="index">
                                         <img src="assets/images/logo/logo.png" alt="Edu-cause">
                                     </a>
                                 </div>
                                 <div class="logo d-none logo-light logo-footer">
-                                    <a href="index.html">
+                                    <a href="index">
                                         <img src="assets/images/dark/logo/logo-light.png" alt="Edu-cause">
                                     </a>
                                 </div>
@@ -3226,7 +3226,7 @@
                                         <a href="#">Contact Us</a>
                                     </li>
                                     <li>
-                                        <a href="faqs.html">FAQs</a>
+                                        <a href="faqs">FAQs</a>
                                     </li>
                                 </ul>
                             </div>
@@ -3237,16 +3237,16 @@
                                 <h5 class="ft-title">Our Company</h5>
                                 <ul class="ft-link">
                                     <li>
-                                        <a href="contact.html">Contact Us</a>
+                                        <a href="contact">Contact Us</a>
                                     </li>
                                     <li>
-                                        <a href="join-our-global-faculty.html">Join Our Global Faculty</a>
+                                        <a href="join-our-global-faculty">Join Our Global Faculty</a>
                                     </li>
                                     <li>
-                                        <a href="instructor.html">Instructor</a>
+                                        <a href="instructor">Instructor</a>
                                     </li>
                                     <li>
-                                        <a href="customer-love.html">Customer Love</a>
+                                        <a href="customer-love">Customer Love</a>
                                     </li>
                                 </ul>
                             </div>
