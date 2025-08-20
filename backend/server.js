@@ -748,7 +748,7 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     }
 });
 
-app.use(express.static(staticPath));
+app.use(express.static(staticPath, { extensions: ['html'] }));
 
 
 // --- CATCH-ALL ROUTE for Clean URLs (This must come AFTER all API routes) ---
