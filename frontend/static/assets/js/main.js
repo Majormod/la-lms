@@ -1885,7 +1885,8 @@ if (saveLessonBtn) {
         if (featureImageInput.files[0]) {
             formData.append('featureImage', featureImageInput.files[0]);
         }
-        
+        // ADD THIS LINE
+formData.append('removeExerciseFile', document.getElementById('remove-exercise-file-flag').value);
         const exerciseFileInput = document.getElementById('lesson-exercise-file');
         if (exerciseFileInput.files[0]) {
             formData.append('exerciseFile', exerciseFileInput.files[0]);
@@ -2080,6 +2081,27 @@ $(document).ready(function () {
     window.openUpdateLessonModal = function(episodeId, lessonId) {
         currentEditingEpisodeId = episodeId;
         currentEditingLessonId = lessonId;
+        // --- Find all the new elements for the file display ---
+    const currentFileContainer = document.getElementById('current-exercise-file-container');
+    const currentFileLink = document.getElementById('current-exercise-file-link');
+    const removeFileFlag = document.getElementById('remove-exercise-file-flag');
+
+    if (courseData) {
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode) {
+            const lesson = episode.lessons.find(les => les._id == lessonId);
+            if (lesson) {
+                // --- This is the new logic ---
+                if (lesson.exerciseFile) {
+                    currentFileLink.href = `/${lesson.exerciseFile}`;
+                    // Display just the filename, not the full path
+                    currentFileLink.textContent = lesson.exerciseFile.split('/').pop();
+                    currentFileContainer.style.display = 'block';
+                    removeFileFlag.value = 'false'; // Reset the flag
+                } else {
+                    currentFileContainer.style.display = 'none'; // Hide if no file
+                }
+                // --- End of new logic ---
         if (courseData) {
             const episode = courseData.episodes.find(ep => ep._id == episodeId);
             if (episode) {
@@ -2498,6 +2520,21 @@ document.addEventListener('click', function(e) {
         
         // Navigate to lesson page
         window.location.href = `lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
+    }
+});
+// --- Event listener for the "Remove Exercise File" button ---
+document.addEventListener('DOMContentLoaded', () => {
+    const removeBtn = document.getElementById('remove-exercise-file-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            // Hide the file display
+            document.getElementById('current-exercise-file-container').style.display = 'none';
+            // Set the hidden input flag to 'true' so the server knows to delete the file
+            document.getElementById('remove-exercise-file-flag').value = 'true';
+            // Clear the actual file input in case a new file was selected
+            document.getElementById('lesson-exercise-file').value = '';
+            document.getElementById('exercise-file-name').textContent = '';
+        });
     }
 });
         // "Add Topic" Modal Save Button
