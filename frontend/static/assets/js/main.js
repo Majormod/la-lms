@@ -2152,11 +2152,7 @@ const lessonsHtml = episode.lessons.map(lesson => `
         }).join('');
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-    const params = new URLSearchParams(window.location.search);
-    const courseId = params.get('courseId');
+    window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
             alert("Access Denied.");
