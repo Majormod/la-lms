@@ -782,30 +782,36 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
 app.use(express.static(staticPath));
 
 
-// --- CATCH-ALL ROUTE for Clean URLs (This must come AFTER all API routes) ---
+// in server.js
+
+// ... your existing API routes like app.use('/api/courses', ...) go here ...
+
+
+// =================================================================
+// --- CATCH-ALL ROUTE FOR SERVING HTML FILES ---
+// This must be after all API routes and before app.listen()
+// =================================================================
 app.get('*', (req, res) => {
-    // Exclude API calls from this catch-all
-    if (req.path.startsWith('/api')) {
-        return res.status(404).sendFile(path.join(staticPath, '404.html'));
+    // First, make sure it's not an API call that slipped through
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
     }
 
-    const requestedPath = req.path === '/' ? '/index' : req.path;
-    const filePath = path.join(staticPath, requestedPath);
+    // Construct the path to the potential HTML file in your static folder
+    // This handles the root path ('/') by serving 'index.html'
+    // and other paths (e.g., '/about') by appending '.html'
+    const filePath = path.join(__dirname, '../frontend/static', req.path === '/' ? 'index.html' : `${req.path}.html`);
 
+    // Try to send the file
     res.sendFile(filePath, (err) => {
         if (err) {
-            // If the requested .html file is not found, send the 404 page
-            res.status(404).sendFile(path.join(staticPath, '404.html'));
+            // If the file doesn't exist (e.g., /non-existent-page), send your 404 page
+            res.status(404).sendFile(path.join(__dirname, '../frontend/static', '404.html'));
         }
     });
 });
-// In server.js
 
 
-
-
-// Your other existing routes like app.post('/api/register', ...) etc. can remain as they are.
-// ...
 // --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`✅ Backend server is running on http://localhost:${PORT}`);
