@@ -1074,7 +1074,21 @@
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
         // In main.js, add this to the top (global scope)
+// --- Helper function to trigger the hidden file input ---
+function triggerExerciseFileUpload() {
+    // Find the hidden file input and click it
+    document.getElementById('lesson-exercise-file').click();
+}
 
+// --- Helper function to display the chosen file's name ---
+function displayExerciseFileName(fileInput) {
+    const fileNameDisplay = document.getElementById('exercise-file-name');
+    if (fileInput.files.length > 0) {
+        fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+    } else {
+        fileNameDisplay.textContent = '';
+    }
+}
 const renderCourseDetailsCurriculum = (episodes) => {
     const courseContentWrapper = document.getElementById('coursecontent')?.querySelector('.accordion');
     if (!courseContentWrapper) return;

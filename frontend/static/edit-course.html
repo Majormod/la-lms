@@ -2033,13 +2033,13 @@
                                                     Second.</small></div>
                                         </div>
                                     </div>
-                                    
-<button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient">
+
+<button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
     <span class="btn-text">Upload Exercise</span>
     <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
 </button>
 
-<input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;">
+<input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;" onchange="displayExerciseFileName(this)">
 
 <span id="exercise-file-name" class="d-block mt--10"></span>
 
