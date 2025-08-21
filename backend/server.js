@@ -640,7 +640,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // In server.js
 const lessonUploads = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, 'public/assets/images/uploads/'),
+        destination: (req, file, cb) => cb(null, '../frontend/static/assets/images/uploads/'),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
     fileFilter: (req, file, cb) => {
