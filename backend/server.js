@@ -637,14 +637,17 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // In server.js
 
 // Using multer's .fields() method to accept up to two different files
+// In server.js
 const lessonUploads = multer({
     storage: multer.diskStorage({
-        // Use the SAME path as your other uploads
-        destination: (req, file, cb) => cb(null, path.join(__dirname, '../frontend/static/assets/images/uploads/')), // <-- Correct path
+        destination: (req, file, cb) => cb(null, '../frontend/static/assets/images/uploads/'),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
-    // ...
-}).single('exerciseFile');
+    fileFilter: (req, file, cb) => {
+        // Validate file types if needed (e.g., PDF, images)
+        cb(null, true);
+    }
+}).single('exerciseFile'); // Only handle exerciseFile
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
 app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
