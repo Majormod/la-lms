@@ -1074,21 +1074,7 @@
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
         // In main.js, add this to the top (global scope)
-// --- Helper function to trigger the hidden file input ---
-window.triggerExerciseFileUpload = function() {
-    // Find the hidden file input and click it
-    document.getElementById('lesson-exercise-file').click();
-}
 
-// --- Helper function to display the chosen file's name ---
-window.displayExerciseFileName = function(fileInput) {
-    const fileNameDisplay = document.getElementById('exercise-file-name');
-    if (fileInput.files.length > 0) {
-        fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
-    } else {
-        fileNameDisplay.textContent = '';
-    }
-}
 const renderCourseDetailsCurriculum = (episodes) => {
     const courseContentWrapper = document.getElementById('coursecontent')?.querySelector('.accordion');
     if (!courseContentWrapper) return;
@@ -2166,7 +2152,11 @@ const lessonsHtml = episode.lessons.map(lesson => `
         }).join('');
     };
 
-    window.onload = function() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId');
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
             alert("Access Denied.");
