@@ -234,6 +234,37 @@ app.get('/api/instructor/my-courses-status', auth, async (req, res) => {
     }
 });
 
+// In server.js
+
+app.get('/api/instructor/announcements', auth, async (req, res) => {
+    try {
+        // For now, we'll return mock data. Later, you can fetch this from your database.
+        const announcements = [
+            {
+                date: new Date('2025-08-16T10:00:00Z'),
+                title: 'New Content Added to Module 3!',
+                course: 'Full-Stack Web Development'
+            },
+            {
+                date: new Date('2025-08-12T15:30:00Z'),
+                title: 'Live Q&A Session This Friday',
+                course: 'Advanced React and Redux'
+            },
+            {
+                date: new Date('2025-08-10T09:00:00Z'),
+                title: 'Welcome to the Course!',
+                course: 'Data Science with Python'
+            }
+        ];
+
+        res.status(200).json({ success: true, announcements: announcements });
+
+    } catch (error) {
+        console.error('Error fetching instructor announcements:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
         if (req.user.role !== 'instructor') {
@@ -609,7 +640,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // In server.js
 const lessonUploads = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, 'public/assets/images/uploads/'),
+        destination: (req, file, cb) => cb(null, '../frontend/static/assets/images/uploads/'),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
     fileFilter: (req, file, cb) => {
@@ -748,36 +779,42 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     }
 });
 
-app.use(express.static(staticPath, { extensions: ['html'] }));
+app.use(express.static(staticPath));
 
 
-// --- CATCH-ALL ROUTE for Clean URLs (This must come AFTER all API routes) ---
-// --- CATCH-ALL ROUTE for Clean URLs ---
-// --- CATCH-ALL ROUTE for Clean URLs ---
+// in server.js
+
+// ... your existing API routes like app.use('/api/courses', ...) go here ...
+
+
+// =================================================================
+// --- CATCH-ALL ROUTE FOR SERVING HTML FILES ---
+// This must be after all API routes and before app.listen()
+// =================================================================
 app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) {
-        return res.status(404).json({ success: false, message: 'API route not found' });
+    // First, make sure it's not an API call that slipped through
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
     }
 
-    const requestedPath = req.path === '/' ? '/index' : req.path;
-    const filePath = path.join(staticPath, requestedPath);
+    // Construct the path to the potential HTML file in your static folder
+    // This handles the root path ('/') by serving 'index.html'
+    // and other paths (e.g., '/about') by appending '.html'
+    const filePath = path.join(__dirname, '../frontend/static', req.path === '/' ? 'index.html' : `${req.path}.html`);
 
-    // Add the options object to set the Content-Type header
-    res.sendFile(filePath, { headers: { 'Content-Type': 'text/html' } }, (err) => {
+    // Try to send the file
+    res.sendFile(filePath, (err) => {
         if (err) {
-            // Also set the header for the 404 page
-            res.status(404).sendFile(path.join(staticPath, '404'), { headers: { 'Content-Type': 'text/html' } });
+            // If the file doesn't exist (e.g., /non-existent-page), send your 404 page
+            res.status(404).sendFile(path.join(__dirname, '../frontend/static', '404.html'));
         }
     });
 });
-// In server.js
 
 
-
-
-// Your other existing routes like app.post('/api/register', ...) etc. can remain as they are.
-// ...
 // --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`✅ Backend server is running on http://localhost:${PORT}`);
 });
+
+// Current version
