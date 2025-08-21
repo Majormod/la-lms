@@ -2329,25 +2329,30 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
             });
         }
 
-        // Lesson Modal Setup
-        if (lessonModal) {
-            lessonModal.addEventListener('show.bs.modal', (e) => {
-                const button = e.relatedTarget;
-                if (button.classList.contains('add-lesson-btn')) {
-                    currentEditingEpisodeId = button.dataset.episodeId;
-                    currentEditingLessonId = null;
-                    document.getElementById('lesson-form').reset();
-                    lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                    lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Add Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-                }
-            });
+// Lesson Modal Setup
+if (lessonModal) {
+    lessonModal.addEventListener('show.bs.modal', (e) => {
+        const button = e.relatedTarget;
+
+        // The 'if (button)' check goes on the OUTSIDE
+        if (button) {
+            // All the logic that uses the 'button' variable goes INSIDE this check
+            if (button.classList.contains('add-lesson-btn')) {
+                currentEditingEpisodeId = button.dataset.episodeId;
+                currentEditingLessonId = null;
+                document.getElementById('lesson-form').reset();
+                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
+                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Add Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
+            }
         }
+    });
+}
 
         // Save Lesson Button
         if (saveLessonBtn) {
