@@ -1424,7 +1424,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         }
 // ADD THIS LINE TO FIX THE HEADER
         updateUserDataOnPage(); 
-        
+
         const user = JSON.parse(userString);
 
         // This authorization check will now work correctly
@@ -1855,7 +1855,30 @@ if (saveLessonBtn) {
         if (exerciseFileInput.files[0]) {
             formData.append('exerciseFile', exerciseFileInput.files[0]);
         }
+// --- Logic for "Add Lesson" Modal File Upload Button ---
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadExerciseBtn = document.getElementById('upload-exercise-btn');
+    const lessonExerciseFileInput = document.getElementById('lesson-exercise-file');
+    const exerciseFileNameDisplay = document.getElementById('exercise-file-name');
 
+    if (uploadExerciseBtn && lessonExerciseFileInput) {
+        // When the custom button is clicked...
+        uploadExerciseBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Stop any potential form submission
+            lessonExerciseFileInput.click(); // ...programmatically click the hidden file input.
+        });
+
+        // When a file is chosen in the hidden input...
+        lessonExerciseFileInput.addEventListener('change', () => {
+            if (lessonExerciseFileInput.files.length > 0) {
+                // ...display its name.
+                exerciseFileNameDisplay.textContent = `Selected file: ${lessonExerciseFileInput.files[0].name}`;
+            } else {
+                exerciseFileNameDisplay.textContent = '';
+            }
+        });
+    }
+});
         try {
             const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEpisodeId}/lessons`, {
                 method: 'POST',
