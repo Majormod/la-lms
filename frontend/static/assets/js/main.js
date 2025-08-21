@@ -1824,7 +1824,28 @@ document.addEventListener('click', (e) => {
         currentEpisodeId = addLessonBtn.dataset.episodeId;
     }
 });
+// --- Logic for "Add Lesson" Modal File Upload Button ---
+const uploadExerciseBtn = document.getElementById('upload-exercise-btn');
+const lessonExerciseFileInput = document.getElementById('lesson-exercise-file');
+const exerciseFileNameDisplay = document.getElementById('exercise-file-name');
 
+if (uploadExerciseBtn && lessonExerciseFileInput) {
+    // When the custom button is clicked...
+    uploadExerciseBtn.addEventListener('click', () => {
+        // ...programmatically click the hidden file input.
+        lessonExerciseFileInput.click(); 
+    });
+
+    // When a file is chosen in the hidden input...
+    lessonExerciseFileInput.addEventListener('change', () => {
+        if (lessonExerciseFileInput.files.length > 0) {
+            // ...display its name in the span.
+            exerciseFileNameDisplay.textContent = `Selected file: ${lessonExerciseFileInput.files[0].name}`;
+        } else {
+            exerciseFileNameDisplay.textContent = '';
+        }
+    });
+}
 if (saveLessonBtn) {
     saveLessonBtn.addEventListener('click', async () => {
         if (!currentEpisodeId) {
@@ -1855,30 +1876,6 @@ if (saveLessonBtn) {
         if (exerciseFileInput.files[0]) {
             formData.append('exerciseFile', exerciseFileInput.files[0]);
         }
-// --- Logic for "Add Lesson" Modal File Upload Button ---
-document.addEventListener('DOMContentLoaded', () => {
-    const uploadExerciseBtn = document.getElementById('upload-exercise-btn');
-    const lessonExerciseFileInput = document.getElementById('lesson-exercise-file');
-    const exerciseFileNameDisplay = document.getElementById('exercise-file-name');
-
-    if (uploadExerciseBtn && lessonExerciseFileInput) {
-        // When the custom button is clicked...
-        uploadExerciseBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Stop any potential form submission
-            lessonExerciseFileInput.click(); // ...programmatically click the hidden file input.
-        });
-
-        // When a file is chosen in the hidden input...
-        lessonExerciseFileInput.addEventListener('change', () => {
-            if (lessonExerciseFileInput.files.length > 0) {
-                // ...display its name.
-                exerciseFileNameDisplay.textContent = `Selected file: ${lessonExerciseFileInput.files[0].name}`;
-            } else {
-                exerciseFileNameDisplay.textContent = '';
-            }
-        });
-    }
-});
         try {
             const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEpisodeId}/lessons`, {
                 method: 'POST',
