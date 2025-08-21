@@ -2033,19 +2033,16 @@
                                                     Second.</small></div>
                                         </div>
                                     </div>
-<div class="course-field mb--20">
-    <h6>Upload exercise files to the Lesson</h6>
-    <div class="rbt-modern-select bg-transparent height-45 w-100 mb--10">
-        <button id="upload-exercise-btn" class="rbt-btn btn-md btn-border hover-icon-reverse">
-            <span class="icon-reverse-wrapper">
-                <span class="btn-text">Upload Exercise File</span>
-                <span class="btn-icon"><i class="feather-paperclip"></i></span>
-                <span class="btn-icon"><i class="feather-paperclip"></i></span>
-            </span>
-        </button>
-        <input id="lesson-exercise-file" type="file" name="exerciseFile" style="display: none;">
-    </div>
-</div>
+                                    
+<button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient">
+    <span class="btn-text">Upload Exercise</span>
+    <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
+</button>
+
+<input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;">
+
+<span id="exercise-file-name" class="d-block mt--10"></span>
+
                                     <div class="course-field mb--20">
                                         <p class="rbt-checkbox-wrapper mb--5 d-flex"><input id="lesson-is-preview" name="rbt-checkbox-11" type="checkbox" value="yes"><label for="rbt-checkbox-11">Enable Course Preview</label></p>
                                     </div>
