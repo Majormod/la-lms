@@ -730,6 +730,14 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
+        // --- ADD THIS BLOCK TO HANDLE FILE REMOVAL ---
+    if (req.body.removeExerciseFile === 'true') {
+        // Here you could also add code to delete the actual file from your server's disk
+        // For now, we'll just remove the reference from the database
+        lesson.exerciseFile = undefined; 
+    }
+    // --- END OF NEW BLOCK ---
+    
         if (req.file) {
             lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
