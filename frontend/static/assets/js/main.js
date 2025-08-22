@@ -2446,15 +2446,7 @@ if (lessonModal) {
                 }
             });
         }
-// Add this inside the edit-course.html logic block
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('remove-exercise-file-btn')?.addEventListener('click', () => {
-        document.getElementById('current-exercise-file-container').style.display = 'none';
-        document.getElementById('remove-exercise-file-flag').value = 'true';
-        document.getElementById('lesson-exercise-file').value = '';
-        document.getElementById('exercise-file-name').textContent = '';
-    });
-});
+
         // Delete Lesson Event Listener
         document.addEventListener('click', async (e) => {
             const deleteLessonBtn = e.target.closest('.delete-lesson');
