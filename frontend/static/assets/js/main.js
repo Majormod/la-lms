@@ -2086,6 +2086,8 @@ $(document).ready(function () {
             const episode = courseData.episodes.find(ep => ep._id == episodeId);
             if (episode) {
                 const lesson = episode.lessons.find(les => les._id == lessonId);
+                // ADD THIS LINE TO DEBUG
+            console.log('Editing Lesson - Found lesson data:', lesson);
                 if (lesson) {
                     document.getElementById('lesson-title').value = lesson.title || '';
                     document.getElementById('lesson-summary').value = lesson.summary || '';
