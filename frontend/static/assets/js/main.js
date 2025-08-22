@@ -2598,7 +2598,7 @@ const populateCourseDetails = async () => {
             // --- 1. Populate Header Section ---
             document.getElementById('course-title').textContent = course.title;
             document.getElementById('course-subtitle').textContent = course.description.substring(0, 100) + '...';
-
+            document.getElementById('course-status').value = course.status || 'Draft';
             // --- 2. Populate Instructor Info & Avatar ---
             if (course.instructor) {
                 const instructorName = `${course.instructor.firstName} ${course.instructor.lastName}`;
