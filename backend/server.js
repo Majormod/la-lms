@@ -650,10 +650,11 @@ const lessonUploads = multer({
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
 // --- REPLACE ALL OF YOUR PUT ROUTES FOR LESSONS WITH THIS SINGLE ONE ---
+// In server.js, replace your PUT route with this one
+
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles', 5), async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        // 'filesToRemove' comes from the frontend
         const { title, summary, vimeoUrl, duration, isPreview, filesToRemove } = req.body;
 
         const course = await Course.findById(courseId);
@@ -667,6 +668,13 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         const lesson = episode.lessons.id(lessonId);
         if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
 
+        // --- THIS IS THE FIX ---
+        // Ensure lesson.exerciseFiles is an array before we operate on it.
+        if (!Array.isArray(lesson.exerciseFiles)) {
+            lesson.exerciseFiles = [];
+        }
+        // --- END OF FIX ---
+
         // Update text fields
         lesson.title = title || lesson.title;
         lesson.summary = summary || lesson.summary;
@@ -674,10 +682,11 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
-        // 1. Handle file removal using the 'key'
+        // 1. Handle file removal
         if (filesToRemove) {
             const parsedFilesToRemove = JSON.parse(filesToRemove);
             if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
+                // Filter out files whose 'key' is in the removal list
                 lesson.exerciseFiles = lesson.exerciseFiles.filter(
                     file => !parsedFilesToRemove.includes(file.key)
                 );
@@ -688,7 +697,8 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         if (req.files && req.files.length > 0) {
             const newFileObjects = req.files.map(file => ({
                 name: file.originalname,
-                path: file.path,
+                // Save a clean, relative path for the frontend to use
+                path: `assets/images/uploads/${file.filename}`,
                 key: file.filename
             }));
             lesson.exerciseFiles.push(...newFileObjects);
@@ -701,7 +711,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
-}); // Only handle exerciseFile
+});
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
 // --- REPLACE YOUR EXISTING POST ROUTE WITH THIS ---
