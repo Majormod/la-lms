@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
@@ -640,52 +639,18 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
 
-// 1. Replace your 'lessonUploads' multer instance with this
+// 1. Replace your existing 'lessonUploads' multer instance with this one
 const lessonUploads = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => cb(null, path.join(__dirname, '../frontend/static/assets/images/uploads/')),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
-}).array('exerciseFiles', 5); // Accept up to 5 files with the name 'exerciseFiles'
-
-// 2. Replace your 'POST .../lessons' route with this
-app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
-    try {
-        // ... (find course and episode) ...
-        const newLesson = { /* ... (title, summary, etc.) ... */ };
-        
-        if (req.files && req.files.length > 0) {
-            newLesson.exerciseFiles = req.files.map(file => `assets/images/uploads/${file.filename}`);
-        }
-
-        episode.lessons.push(newLesson);
-        await course.save();
-        res.status(201).json({ success: true, message: 'Lesson added!', course });
-    } catch (error) { /* ... */ }
-});
-
-// 3. Replace your 'PUT .../lessons/:lessonId' route with this
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
-    try {
-        // ... (find course, episode, lesson) ...
-        // ... (update title, summary, etc.) ...
-
-        // Add new files to the existing array
-        if (req.files && req.files.length > 0) {
-            const newFilePaths = req.files.map(file => `assets/images/uploads/${file.filename}`);
-            lesson.exerciseFiles.push(...newFilePaths);
-        }
-
-        await course.save();
-        res.json({ success: true, message: 'Lesson updated!', course });
-    } catch (error) { /* ... */ }
-});
+}).single('exerciseFile');
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
     try {
-        console.log('--- UPDATE LESSON: Route started ---');
         const { courseId, episodeId, lessonId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
 
@@ -699,7 +664,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         
         const lesson = episode.lessons.id(lessonId);
         if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
-console.log('--- UPDATE LESSON: Found lesson, preparing to save... ---');
+
         // Update text fields
         lesson.title = title || lesson.title;
         lesson.summary = summary || lesson.summary;
@@ -719,10 +684,9 @@ console.log('--- UPDATE LESSON: Found lesson, preparing to save... ---');
         }
 
         await course.save();
-        console.log('--- UPDATE LESSON: Save operation completed! ---');
         res.json({ success: true, message: 'Lesson updated successfully!', course });
     } catch (error) {
-        console.error('--- UPDATE LESSON: CRITICAL ERROR ---', error);
+        console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 }); // Only handle exerciseFile
@@ -762,7 +726,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         if (req.file) {
             newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
-
+        
 // --- ADD THESE LOGS TO DEBUG ---
         console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
         console.log(newLesson);
@@ -859,39 +823,6 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     } catch (error) {
         console.error('Error deleting lesson:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
-    }
-});
-
-// In server.js
- // Make sure you require the 'fs' module at the top of your file
-
-app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files', auth, async (req, res) => {
-    try {
-        const { courseId, episodeId, lessonId } = req.params;
-        const { filePathToDelete } = req.body; // We'll send the file path in the body
-
-        const course = await Course.findById(courseId);
-        if (!course || course.instructor.toString() !== req.user.id) {
-            return res.status(404).json({ success: false, message: 'Not authorized' });
-        }
-        
-        const episode = course.episodes.id(episodeId);
-        const lesson = episode.lessons.id(lessonId);
-
-        // Remove the file path from the array in the database
-        lesson.exerciseFiles.pull(filePathToDelete);
-        await course.save();
-
-        // Optional but recommended: Delete the physical file from the server
-        const physicalPath = path.join(__dirname, '../frontend/static', filePathToDelete);
-        fs.unlink(physicalPath, (err) => {
-            if (err) console.error("Error deleting physical file:", err);
-        });
-
-        res.json({ success: true, message: 'File deleted successfully!', course });
-    } catch (error) {
-        console.error('Error deleting file:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
