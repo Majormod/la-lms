@@ -2107,63 +2107,80 @@ $(document).ready(function () {
         }
     }
 
-    const renderCourseBuilder = (episodes) => {
-        const container = document.getElementById('course-builder-topics-container');
-        if (!container) return;
-        if (!episodes || episodes.length === 0) {
-            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
-            return;
-        }
-        container.innerHTML = episodes.map((episode) => {
-const lessonsHtml = episode.lessons.map(lesson => `
-    <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-        <div class="col-10 inner d-flex align-items-center gap-2">
-            <i class="feather-play-circle"></i>
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-        </div>
-        <div class="col-2 inner">
-            <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                <li>
-                    <i class="feather-trash delete-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-                <li>
-                    <i class="feather-edit edit-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-            </ul>
-        </div>
-    </div>
-`).join('');
+const renderCourseBuilder = (episodes) => {
+    const container = document.getElementById('course-builder-topics-container');
+    if (!container) return;
+    if (!episodes || episodes.length === 0) {
+        container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
+        return;
+    }
+
+    container.innerHTML = episodes.map((episode) => {
+        const lessonsHtml = episode.lessons.map(lesson => {
+            // This block checks for an exercise file
+            let exerciseFileHtml = '';
+            if (lesson.exerciseFile) {
+                // If a file exists, it creates a link with a paperclip icon
+                exerciseFileHtml = `
+                    <a href="/${lesson.exerciseFile}" target="_blank" title="View Exercise File" class="ms-2">
+                        <i class="feather-paperclip"></i>
+                    </a>
+                `;
+            }
+
             return `
-                <div class="accordion-item card mb--20">
-                    <h2 class="accordion-header card-header rbt-course">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
-                            ${episode.title}
-                        </button>
-                        <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
-                        <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
-                    </h2>
-                    <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
-                        <div class="accordion-body card-body">
-                            ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
-                            <div class="d-flex">
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper">
-                                        <span class="btn-text">Add Lesson</span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
+                <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+                    <div class="col-10 inner d-flex align-items-center gap-2">
+                        <i class="feather-play-circle"></i>
+                        <h6 class="rbt-title mb-0">${lesson.title}</h6>
+                        ${exerciseFileHtml} </div>
+                    <div class="col-2 inner">
+                        <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2 justify-content-end">
+                            <li>
+                                <i class="feather-trash delete-lesson" 
+                                   data-episode-id="${episode._id}" 
+                                   data-lesson-id="${lesson._id}"
+                                   style="cursor: pointer;"></i>
+                            </li>
+                            <li>
+                                <i class="feather-edit edit-lesson" 
+                                   data-episode-id="${episode._id}" 
+                                   data-lesson-id="${lesson._id}"
+                                   style="cursor: pointer;"></i>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             `;
         }).join('');
-    };
+
+        return `
+            <div class="accordion-item card mb--20">
+                <h2 class="accordion-header card-header rbt-course">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
+                        ${episode.title}
+                    </button>
+                    <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
+                    <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
+                </h2>
+                <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
+                    <div class="accordion-body card-body">
+                        ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
+                        <div class="d-flex">
+                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
+                                <span class="icon-reverse-wrapper">
+                                    <span class="btn-text">Add Lesson</span>
+                                    <span class="btn-icon"><i class="feather-plus-square"></i></span>
+                                    <span class="btn-icon"><i class="feather-plus-square"></i></span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
 
     window.onload = function() {
         // --- AUTH & URL CHECK ---
