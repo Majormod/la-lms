@@ -649,12 +649,10 @@ const lessonUploads = multer({
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
-// --- REPLACE ALL OF YOUR PUT ROUTES FOR LESSONS WITH THIS SINGLE ONE ---
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles', 5), async (req, res) => {
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        // 'filesToRemove' comes from the frontend
-        const { title, summary, vimeoUrl, duration, isPreview, filesToRemove } = req.body;
+        const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -670,33 +668,23 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         // Update text fields
         lesson.title = title || lesson.title;
         lesson.summary = summary || lesson.summary;
-        lesson.vimeoUrl = vimeoUrl;
+        lesson.vimeoUrl = vimeoUrl; // Allow clearing the URL
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
-        // 1. Handle file removal using the 'key'
-        if (filesToRemove) {
-            const parsedFilesToRemove = JSON.parse(filesToRemove);
-            if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
-                lesson.exerciseFiles = lesson.exerciseFiles.filter(
-                    file => !parsedFilesToRemove.includes(file.key)
-                );
-            }
+        // Handle file removal
+        if (removeExerciseFile === 'true') {
+            // Optional: Add code here to delete the actual file from the server's disk
+            lesson.exerciseFile = undefined; 
         }
 
-        // 2. Handle new file uploads
-        if (req.files && req.files.length > 0) {
-            const newFileObjects = req.files.map(file => ({
-                name: file.originalname,
-                path: file.path,
-                key: file.filename
-            }));
-            lesson.exerciseFiles.push(...newFileObjects);
+        // Handle new file upload
+        if (req.file) {
+            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
 
         await course.save();
         res.json({ success: true, message: 'Lesson updated successfully!', course });
-
     } catch (error) {
         console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -733,13 +721,9 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.arra
             exerciseFiles: [] // Initialize as an empty array
         };
 
+        // If new files are uploaded, map them to an array of paths
         if (req.files && req.files.length > 0) {
-            // Create an array of file objects, not just strings
-            newLessonData.exerciseFiles = req.files.map(file => ({
-                name: file.originalname,
-                path: file.path,
-                key: file.filename 
-            }));
+            newLesson.exerciseFiles = req.files.map(file => file.path); // Use file.path from Multer
         }
 
         episode.lessons.push(newLesson);
