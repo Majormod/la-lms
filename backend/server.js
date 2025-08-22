@@ -466,77 +466,56 @@ app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, 
             return res.status(403).json({ success: false, message: 'User not authorized' });
         }
 
-        // Update basic fields
+        // --- Update All Fields from Form Data ---
+
+        // Basic fields
         course.title = req.body.title || course.title;
         course.slug = req.body.slug || course.slug;
         course.description = req.body.description || course.description;
-        course.originalPrice = parseFloat(req.body.originalPrice) || course.originalPrice;
-        course.price = parseFloat(req.body.price) || course.price;
-        course.previewVideoUrl = req.body.previewVideoUrl || course.previewVideoUrl;
+        course.originalPrice = parseFloat(req.body.originalPrice);
+        course.price = parseFloat(req.body.price);
+        course.previewVideoUrl = req.body.previewVideoUrl;
         course.status = req.body.status || course.status;
 
-        // Update Additional Information fields - CORRECTED TO MATCH YOUR MODEL
-        course.startDate = req.body.startDate || course.startDate;
+        // Additional Information fields
+        course.startDate = req.body.startDate;
         
-        // Language - handle array
         if (req.body.language) {
-            try {
-                course.language = JSON.parse(req.body.language);
-            } catch (e) {
-                course.language = Array.isArray(req.body.language) ? req.body.language : [req.body.language];
-            }
+            try { course.language = JSON.parse(req.body.language); } 
+            catch (e) { course.language = []; }
         }
         
-        // Requirements - your model expects array, frontend sends newline-separated
         if (req.body.requirements) {
-            course.requirements = req.body.requirements.split('\n')
-                .map(req => req.trim())
-                .filter(req => req.length > 0);
+            course.requirements = req.body.requirements.split('\n').map(item => item.trim()).filter(Boolean);
         }
-        
-        // What You'll Learn - your model has this field, not detailedDescription
         if (req.body.whatYoullLearn) {
-            course.whatYoullLearn = req.body.whatYoullLearn.split('\n')
-                .map(item => item.trim())
-                .filter(item => item.length > 0);
+            course.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
         }
-        
-        // Duration - your model has nested duration object, not separate fields
-        course.duration = course.duration || {};
-        course.duration.hours = parseInt(req.body.durationHours) || course.duration.hours || 0;
-        course.duration.minutes = parseInt(req.body.durationMinutes) || course.duration.minutes || 0;
-        
-        // Tags - your model has 'tags' field, not 'courseTags'
-        if (req.body.tags) {
-            course.tags = req.body.tags.split(',')
-                .map(tag => tag.trim())
-                .filter(tag => tag.length > 0);
-        }
-        
-        // Targeted Audience - your model has this field
         if (req.body.targetedAudience) {
-            course.targetedAudience = req.body.targetedAudience.split('\n')
-                .map(audience => audience.trim())
-                .filter(audience => audience.length > 0);
+            course.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
+        }
+        if (req.body.tags) {
+            course.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean);
         }
 
-        // Update certificate fields
+        // Handle nested duration object
+        course.duration = course.duration || {};
+        course.duration.hours = parseInt(req.body.durationHours, 10) || 0;
+        course.duration.minutes = parseInt(req.body.durationMinutes, 10) || 0;
+
+        // Certificate fields
         course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
         course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
         course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
 
+        // Handle new thumbnail upload
         if (req.file) {
             course.thumbnail = `assets/images/uploads/${req.file.filename}`;
         }
 
         const updatedCourse = await course.save();
-        // DEBUG: Check what was actually saved
-console.log('=== SERVER: After saving ===');
-console.log('whatYoullLearn:', updatedCourse.whatYoullLearn);
-console.log('tags:', updatedCourse.tags);
-console.log('duration:', updatedCourse.duration);
-console.log('requirements:', updatedCourse.requirements);
         res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
+
     } catch (error) {
         console.error('Error updating course:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
