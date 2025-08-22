@@ -2232,6 +2232,40 @@ const renderCourseBuilder = (episodes) => {
         document.getElementById('lesson-exercise-file').value = '';
         document.getElementById('exercise-file-name').textContent = '';
     });
+    // In main.js, inside the edit-course.html logic
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('remove-file-btn')) {
+        e.preventDefault();
+        
+        const listItem = e.target.closest('.list-group-item');
+        const filePathToDelete = e.target.dataset.filename;
+        
+        if (!currentEditingLessonId || !confirm(`Are you sure you want to delete ${filePathToDelete.split('/').pop()}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}/files`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                },
+                body: JSON.stringify({ filePathToDelete })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                listItem.remove(); // Remove the item from the list instantly
+                courseData = result.course; // Update the global course data
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error deleting file:', error);
+        }
+    }
+});
         // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
 fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
     .then(res => res.ok ? res.json() : Promise.reject('Course not found'))
