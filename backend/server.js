@@ -652,63 +652,46 @@ const lessonUploads = multer({
 // --- REPLACE ALL OF YOUR PUT ROUTES FOR LESSONS WITH THIS SINGLE ONE ---
 // In server.js, replace your PUT route with this one
 
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles', 5), async (req, res) => {
-    try {
-        const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview, filesToRemove } = req.body;
+// In server.js, find your MAIN course update route
+// It will probably have 'upload.single('thumbnail')' as middleware
 
+app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
+    try {
+        const { courseId } = req.params;
         const course = await Course.findById(courseId);
+
         if (!course || course.instructor.toString() !== req.user.id) {
             return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
         }
 
-        const episode = course.episodes.id(episodeId);
-        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
-        
-        const lesson = episode.lessons.id(lessonId);
-        if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+        // Create an object with only the fields from the main form
+        const updateData = {
+            title: req.body.title,
+            slug: req.body.slug,
+            description: req.body.description,
+            price: req.body.price,
+            originalPrice: req.body.originalPrice,
+            status: req.body.status,
+            // Add any other TOP-LEVEL course fields from your form here...
+            // e.g., requirements, whatYoullLearn, tags, etc.
+        };
 
-        // --- THIS IS THE FIX ---
-        // Ensure lesson.exerciseFiles is an array before we operate on it.
-        if (!Array.isArray(lesson.exerciseFiles)) {
-            lesson.exerciseFiles = [];
-        }
-        // --- END OF FIX ---
-
-        // Update text fields
-        lesson.title = title || lesson.title;
-        lesson.summary = summary || lesson.summary;
-        lesson.vimeoUrl = vimeoUrl;
-        lesson.duration = duration || lesson.duration;
-        lesson.isPreview = isPreview === 'true';
-
-        // 1. Handle file removal
-        if (filesToRemove) {
-            const parsedFilesToRemove = JSON.parse(filesToRemove);
-            if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
-                // Filter out files whose 'key' is in the removal list
-                lesson.exerciseFiles = lesson.exerciseFiles.filter(
-                    file => !parsedFilesToRemove.includes(file.key)
-                );
-            }
+        // If a new thumbnail was uploaded, add it to the update object
+        if (req.file) {
+            updateData.thumbnail = req.file.path;
         }
 
-        // 2. Handle new file uploads
-        if (req.files && req.files.length > 0) {
-            const newFileObjects = req.files.map(file => ({
-                name: file.originalname,
-                // Save a clean, relative path for the frontend to use
-                path: `assets/images/uploads/${file.filename}`,
-                key: file.filename
-            }));
-            lesson.exerciseFiles.push(...newFileObjects);
-        }
+        // Use findByIdAndUpdate to only touch the specified fields
+        const updatedCourse = await Course.findByIdAndUpdate(
+            courseId,
+            { $set: updateData },
+            { new: true } // This option returns the updated document
+        );
 
-        await course.save();
-        res.json({ success: true, message: 'Lesson updated successfully!', course });
+        res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
 
     } catch (error) {
-        console.error('Error updating lesson:', error);
+        console.error('Error updating course:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
