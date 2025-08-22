@@ -2201,44 +2201,27 @@ let existingFilesToRemove = [];
  * Updates the UI to display the list of current and newly added files.
  * @param {Array} existingFiles - An array of file objects from the lesson data.
  */
-// In main.js, replace the old function with this one
-
 function updateExerciseFileListUI(existingFiles = []) {
     const container = document.getElementById('exerciseFileListContainer');
     if (!container) return;
 
     container.innerHTML = ''; // Clear the current list
 
-    // 1. Render existing files
-    existingFiles.forEach(fileData => {
-        let name, key;
+    // 1. Render existing files (that haven't been marked for removal)
+    const validExistingFiles = existingFiles.filter(file => file && file.name && file.key);
 
-        // Check if the fileData is an object (the ideal format) or a string (the current format)
-        if (typeof fileData === 'object' && fileData !== null && fileData.name) {
-            // This handles the correct data structure
-            name = fileData.name;
-            key = fileData.key;
-        } else if (typeof fileData === 'string') {
-            // This handles the current data structure (an array of paths)
-            // It extracts the filename from the full path
-            name = fileData.split('/').pop().split('-').slice(1).join('-'); // Removes the timestamp for a cleaner name
-            key = fileData; // Use the full path as the unique key for now
-        } else {
-            return; // Skip if data is not in a recognized format
-        }
-        
-        // Don't render if it's marked for removal
-        if (!existingFilesToRemove.includes(key)) {
+    validExistingFiles.forEach(file => {
+        if (!existingFilesToRemove.includes(file.key)) {
             container.innerHTML += `
                 <div class="file-item-existing d-flex justify-content-between align-items-center mb-2 p-2" style="background-color: #f8f9fa; border-radius: 5px;">
-                    <span><i class="fas fa-file-alt me-2"></i> ${name} (Saved)</span>
-                    <button type="button" class="btn-close" aria-label="Remove" data-file-key="${key}"></button>
+                    <span><i class="fas fa-file-alt me-2"></i> ${file.name} (Saved)</span>
+                    <button type="button" class="btn-close" aria-label="Remove" data-file-key="${file.key}"></button>
                 </div>
             `;
         }
     });
 
-    // 2. Render newly added files (this part remains the same)
+    // 2. Render newly added files from our DataTransfer object
     for (const file of newFilesDataTransfer.files) {
         container.innerHTML += `
             <div class="file-item-new d-flex justify-content-between align-items-center mb-2 p-2" style="background-color: #e9f7ef; border-radius: 5px;">
