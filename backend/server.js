@@ -668,7 +668,6 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
     try {
         // ... (find course, episode, lesson) ...
-        
         // ... (update title, summary, etc.) ...
 
         // Add new files to the existing array
@@ -686,6 +685,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
     try {
+        console.log('--- UPDATE LESSON: Route started ---');
         const { courseId, episodeId, lessonId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
 
@@ -699,7 +699,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         
         const lesson = episode.lessons.id(lessonId);
         if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
-
+console.log('--- UPDATE LESSON: Found lesson, preparing to save... ---');
         // Update text fields
         lesson.title = title || lesson.title;
         lesson.summary = summary || lesson.summary;
@@ -719,9 +719,10 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         }
 
         await course.save();
+        console.log('--- UPDATE LESSON: Save operation completed! ---');
         res.json({ success: true, message: 'Lesson updated successfully!', course });
     } catch (error) {
-        console.error('Error updating lesson:', error);
+        console.error('--- UPDATE LESSON: CRITICAL ERROR ---', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 }); // Only handle exerciseFile
