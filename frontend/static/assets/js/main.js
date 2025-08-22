@@ -2076,36 +2076,80 @@ $(document).ready(function () {
         }
     }
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    // Set global IDs for the lesson being edited
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    
+    // Find the necessary HTML elements from the modal
+    const currentFileContainer = document.getElementById('current-exercise-file-container');
+    const currentFilesList = document.getElementById('current-files-list');
+    const removeFileFlag = document.getElementById('remove-exercise-file-flag');
+
+    // Make sure the course data and the list container element are available
+    if (courseData && currentFilesList) {
+        currentFilesList.innerHTML = ''; // Clear any previous file list
+
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode) {
+            const lesson = episode.lessons.find(les => les._id == lessonId);
+            if (lesson) {
+
+                // --- NEW LOGIC TO DISPLAY CURRENT EXERCISE FILES ---
+                let filesToDisplay = [];
+                // Check for the new 'exerciseFiles' array first (for multi-file support)
+                if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                    filesToDisplay = lesson.exerciseFiles;
                 }
+                // Fallback to check for the old 'exerciseFile' string for backward compatibility
+                else if (lesson.exerciseFile) {
+                    filesToDisplay.push(lesson.exerciseFile);
+                }
+
+                if (filesToDisplay.length > 0) {
+                    currentFileContainer.style.display = 'block'; // Show the section
+                    filesToDisplay.forEach(filePath => {
+                        const fileName = typeof filePath === 'string' ? filePath.split('/').pop() : filePath.name;
+                        const fileUrl = typeof filePath === 'string' ? filePath : filePath.path;
+                        const listItem = `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="/${fileUrl}" target="_blank" class="rbt-btn-link">${fileName}</a>
+                                <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filename="${fileUrl}">Remove</button>
+                            </li>
+                        `;
+                        currentFilesList.innerHTML += listItem;
+                    });
+                } else {
+                    currentFileContainer.style.display = 'none'; // Hide the section if no files
+                }
+                if (removeFileFlag) removeFileFlag.value = 'false'; // Always reset the remove flag
+                // --- END OF NEW LOGIC ---
+
+
+                // --- YOUR EXISTING LOGIC TO POPULATE THE REST OF THE FORM ---
+                document.getElementById('lesson-title').value = lesson.title || '';
+                document.getElementById('lesson-summary').value = lesson.summary || '';
+                document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                
+                const modal = document.getElementById('Lesson');
+                modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                modal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Update Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
             }
         }
     }
+}
 
     const renderCourseBuilder = (episodes) => {
         const container = document.getElementById('course-builder-topics-container');
