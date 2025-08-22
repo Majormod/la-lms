@@ -1080,10 +1080,11 @@ window.triggerExerciseFileUpload = function() {
 }
 
 // Helper function to display the chosen file's name
+// 1. Replace your existing 'displayExerciseFileName' function
 window.displayExerciseFileName = function(fileInput) {
     const fileNameDisplay = document.getElementById('exercise-file-name');
     if (fileInput.files.length > 0) {
-        fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+        fileNameDisplay.textContent = `${fileInput.files.length} file(s) selected.`;
     } else {
         fileNameDisplay.textContent = '';
     }
@@ -2079,6 +2080,8 @@ $(document).ready(function () {
     window.openUpdateLessonModal = function(episodeId, lessonId) {
         currentEditingEpisodeId = episodeId;
         currentEditingLessonId = lessonId;
+        const currentFilesList = document.getElementById('current-files-list');
+    currentFilesList.innerHTML = ''; // Clear the list
         if (courseData) {
             const episode = courseData.episodes.find(ep => ep._id == episodeId);
             if (episode) {

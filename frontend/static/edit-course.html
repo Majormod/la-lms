@@ -2036,26 +2036,21 @@
 
 <div class="col-12">
     <div class="form-group">
-        <label>Exercise File (Optional)</label>
+        <label>Exercise Files (Optional)</label>
         
-        <button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
-            <span class="btn-text">Upload Exercise</span>
+        <button type="button" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
+            <span class="btn-text">Add Files</span>
             <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
         </button>
 
-        <input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;" onchange="displayExerciseFileName(this)">
+        <input type="file" id="lesson-exercise-file" name="exerciseFiles" style="display: none;" onchange="displayExerciseFileName(this)" multiple>
 
         <span id="exercise-file-name" class="d-block mt--10"></span>
 
-        <div id="current-exercise-file-container" class="mt-2" style="display: none;">
-            <p class="b3 mb-1">Current File:</p>
-            <div class="d-flex align-items-center">
-                <a href="#" id="current-exercise-file-link" target="_blank" class="rbt-btn-link"></a>
-                <button type="button" id="remove-exercise-file-btn" class="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger ms-3" title="Remove File">
-                    <i class="feather-x"></i>
-                </button>
-            </div>
-            <input type="hidden" id="remove-exercise-file-flag" value="false">
+        <div id="current-exercise-file-container" class="mt-3">
+            <p class="b3 mb-2">Current Files:</p>
+            <ul id="current-files-list" class="list-group">
+                </ul>
         </div>
     </div>
 </div>

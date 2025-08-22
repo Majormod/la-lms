@@ -639,13 +639,47 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
 
-// 1. Replace your existing 'lessonUploads' multer instance with this one
+// 1. Replace your 'lessonUploads' multer instance with this
 const lessonUploads = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => cb(null, path.join(__dirname, '../frontend/static/assets/images/uploads/')),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
-}).single('exerciseFile');
+}).array('exerciseFiles', 5); // Accept up to 5 files with the name 'exerciseFiles'
+
+// 2. Replace your 'POST .../lessons' route with this
+app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
+    try {
+        // ... (find course and episode) ...
+        const newLesson = { /* ... (title, summary, etc.) ... */ };
+        
+        if (req.files && req.files.length > 0) {
+            newLesson.exerciseFiles = req.files.map(file => `assets/images/uploads/${file.filename}`);
+        }
+
+        episode.lessons.push(newLesson);
+        await course.save();
+        res.status(201).json({ success: true, message: 'Lesson added!', course });
+    } catch (error) { /* ... */ }
+});
+
+// 3. Replace your 'PUT .../lessons/:lessonId' route with this
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
+    try {
+        // ... (find course, episode, lesson) ...
+        
+        // ... (update title, summary, etc.) ...
+
+        // Add new files to the existing array
+        if (req.files && req.files.length > 0) {
+            const newFilePaths = req.files.map(file => `assets/images/uploads/${file.filename}`);
+            lesson.exerciseFiles.push(...newFilePaths);
+        }
+
+        await course.save();
+        res.json({ success: true, message: 'Lesson updated!', course });
+    } catch (error) { /* ... */ }
+});
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
@@ -726,7 +760,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         if (req.file) {
             newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
-        
+
 // --- ADD THESE LOGS TO DEBUG ---
         console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
         console.log(newLesson);
