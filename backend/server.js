@@ -726,6 +726,11 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         if (req.file) {
             newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
+        
+// --- ADD THESE LOGS TO DEBUG ---
+        console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
+        console.log(newLesson);
+        // --- END OF LOGS ---
 
         episode.lessons.push(newLesson);
         await course.save();
