@@ -2076,36 +2076,46 @@ $(document).ready(function () {
         }
     }
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-                }
+
+    
+
+// --- REPLACE your old openUpdateLessonModal function with this one ---
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    if (courseData) {
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode) {
+            const lesson = episode.lessons.find(les => les._id == lessonId);
+            if (lesson) {
+                document.getElementById('lesson-title').value = lesson.title || '';
+                document.getElementById('lesson-summary').value = lesson.summary || '';
+                document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                
+                // ===> THIS IS THE NEW PART <===
+                populateLessonFilesForEdit(lesson); // Populate the exercise files UI
+                
+                const modal = document.getElementById('Lesson');
+                modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                modal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Update Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
             }
         }
     }
+}
+
+
 
     const renderCourseBuilder = (episodes) => {
         const container = document.getElementById('course-builder-topics-container');
@@ -2165,6 +2175,142 @@ const lessonsHtml = episode.lessons.map(lesson => `
         }).join('');
     };
 
+
+
+
+// --- PASTE THIS ENTIRE BLOCK AFTER YOUR renderCourseBuilder FUNCTION ---
+
+/**
+ * =================================================================
+ * == EXERCISE FILE UPLOAD FEATURE FOR LESSON MODAL
+ * =================================================================
+ */
+
+// State management variables for the file uploader
+let newFilesDataTransfer = new DataTransfer();
+let existingFilesToRemove = [];
+
+/**
+ * Updates the UI to display the list of current and newly added files.
+ * @param {Array} existingFiles - An array of file objects from the lesson data.
+ */
+function updateExerciseFileListUI(existingFiles = []) {
+    const container = document.getElementById('exerciseFileListContainer');
+    if (!container) return;
+
+    container.innerHTML = ''; // Clear the current list
+
+    // 1. Render existing files (that haven't been marked for removal)
+    const validExistingFiles = existingFiles.filter(file => file && file.name && file.key);
+
+    validExistingFiles.forEach(file => {
+        if (!existingFilesToRemove.includes(file.key)) {
+            container.innerHTML += `
+                <div class="file-item-existing d-flex justify-content-between align-items-center mb-2 p-2" style="background-color: #f8f9fa; border-radius: 5px;">
+                    <span><i class="fas fa-file-alt me-2"></i> ${file.name} (Saved)</span>
+                    <button type="button" class="btn-close" aria-label="Remove" data-file-key="${file.key}"></button>
+                </div>
+            `;
+        }
+    });
+
+    // 2. Render newly added files from our DataTransfer object
+    for (const file of newFilesDataTransfer.files) {
+        container.innerHTML += `
+            <div class="file-item-new d-flex justify-content-between align-items-center mb-2 p-2" style="background-color: #e9f7ef; border-radius: 5px;">
+                <span><i class="fas fa-paperclip me-2"></i> ${file.name} (New)</span>
+                <button type="button" class="btn-close" aria-label="Remove" data-file-name="${file.name}"></button>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Prepares the modal for editing, populating it with existing files from a lesson.
+ * @param {Object} lesson - The lesson object which may contain an array of exerciseFiles.
+ */
+function populateLessonFilesForEdit(lesson) {
+    // Reset state for the new modal instance
+    newFilesDataTransfer = new DataTransfer();
+    existingFilesToRemove = [];
+    
+    // Pass the existing files to the UI renderer
+    updateExerciseFileListUI(lesson.exerciseFiles || []);
+}
+
+
+/**
+ * Sets up all event listeners for the file upload feature.
+ */
+function initializeExerciseUploadFeature() {
+    const fileInput = document.getElementById('lessonExerciseInput');
+    const triggerBtn = document.getElementById('triggerFileUploadBtn');
+    const fileListContainer = document.getElementById('exerciseFileListContainer');
+
+    if (!fileInput || !triggerBtn || !fileListContainer) return;
+
+    // 1. Trigger the hidden file input when the custom button is clicked
+    triggerBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // 2. Handle the file selection event
+    fileInput.addEventListener('change', (event) => {
+        for (const file of event.target.files) {
+            newFilesDataTransfer.items.add(file);
+        }
+        // Re-render the UI with the newly added files
+        const lesson = findCurrentLesson(); // Helper to get lesson data
+        updateExerciseFileListUI(lesson ? lesson.exerciseFiles : []);
+        fileInput.value = ''; // Allow re-selecting the same file
+    });
+
+    // 3. Use EVENT DELEGATION to handle remove clicks
+    fileListContainer.addEventListener('click', (event) => {
+        if (event.target.tagName !== 'BUTTON') return; // Only listen for clicks on buttons
+
+        const lesson = findCurrentLesson();
+        const existingFiles = lesson ? lesson.exerciseFiles : [];
+
+        // Handle removing a NEWLY added file
+        const fileNameToRemove = event.target.getAttribute('data-file-name');
+        if (fileNameToRemove) {
+            const newDt = new DataTransfer();
+            for (const file of newFilesDataTransfer.files) {
+                if (file.name !== fileNameToRemove) {
+                    newDt.items.add(file);
+                }
+            }
+            newFilesDataTransfer = newDt; // Replace with the updated list
+            updateExerciseFileListUI(existingFiles);
+        }
+
+        // Handle removing an EXISTING file
+        const fileKeyToRemove = event.target.getAttribute('data-file-key');
+        if (fileKeyToRemove) {
+            if (!existingFilesToRemove.includes(fileKeyToRemove)) {
+                existingFilesToRemove.push(fileKeyToRemove);
+            }
+            updateExerciseFileListUI(existingFiles); // Re-render to hide the removed file
+        }
+    });
+}
+
+/**
+ * Helper function to find the currently editing lesson data from courseData.
+ */
+function findCurrentLesson() {
+    if (!courseData || !currentEditingEpisodeId || !currentEditingLessonId) return null;
+    const episode = courseData.episodes.find(ep => ep._id === currentEditingEpisodeId);
+    if (!episode) return null;
+    return episode.lessons.find(les => les._id === currentEditingLessonId);
+}
+
+// --- END OF THE BLOCK TO PASTE ---
+
+
+
+
     window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
@@ -2211,6 +2357,9 @@ const lessonsHtml = episode.lessons.map(lesson => `
         document.getElementById('remove-exercise-file-flag').value = 'true';
         document.getElementById('lesson-exercise-file').value = '';
         document.getElementById('exercise-file-name').textContent = '';
+
+            initializeExerciseUploadFeature(); // <-- ADD THIS LINE
+
     });
         // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
 fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
@@ -2373,71 +2522,75 @@ if (lessonModal) {
     });
 }
 
-        // Save Lesson Button
-        if (saveLessonBtn) {
-            saveLessonBtn.addEventListener('click', async () => {
-                const title = document.getElementById('lesson-title').value;
-                const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
-                const hr = document.getElementById('lesson-duration-hr').value || '0';
-                const min = document.getElementById('lesson-duration-min').value || '0';
-                const sec = document.getElementById('lesson-duration-sec').value || '0';
-                const duration = `${hr} hr ${min} min ${sec} sec`;
-                const isPreview = document.getElementById('lesson-is-preview').checked;
-                const exerciseFileInput = lessonModal.querySelector('input[type="file"][name="exerciseFile"]');
-                const episodeId = currentEditingEpisodeId;
+// --- REPLACE your old 'saveLessonBtn' event listener with this one ---
+if (saveLessonBtn) {
+    saveLessonBtn.addEventListener('click', async () => {
+        const title = document.getElementById('lesson-title').value;
+        const summary = document.getElementById('lesson-summary').value;
+        const videoSource = document.getElementById('lesson-video-source').value;
+        const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
+        const hr = document.getElementById('lesson-duration-hr').value || '0';
+        const min = document.getElementById('lesson-duration-min').value || '0';
+        const sec = document.getElementById('lesson-duration-sec').value || '0';
+        const duration = `${hr} hr ${min} min ${sec} sec`;
+        const isPreview = document.getElementById('lesson-is-preview').checked;
+        const episodeId = currentEditingEpisodeId;
 
-                if (!title) return alert('Please enter a lesson title.');
-                if (!episodeId) return alert('No episode selected. Please try again.');
+        if (!title) return alert('Please enter a lesson title.');
+        if (!episodeId) return alert('No episode selected. Please try again.');
 
-                try {
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
-                    formData.append('duration', duration);
-                    formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files[0]) {
-                        formData.append('exerciseFile', exerciseFileInput.files[0]);
-                    }
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('summary', summary);
+            formData.append('vimeoUrl', vimeoUrl);
+            formData.append('duration', duration);
+            formData.append('isPreview', isPreview);
 
-                    const url = currentEditingLessonId 
-                        ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
-                        : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
-                    const method = currentEditingLessonId ? 'PUT' : 'POST';
+            // ===> THIS IS THE NEW PART <===
+            // 1. Append all NEW files
+            for (const file of newFilesDataTransfer.files) {
+                formData.append('exerciseFiles', file); // Use 'exerciseFiles' to support multiple files
+            }
+            // 2. Append the list of EXISTING files to remove
+            formData.append('filesToRemove', JSON.stringify(existingFilesToRemove));
+            // ===> END OF NEW PART <===
 
-                    const response = await fetch(url, {
-                        method,
-                        headers: { 'x-auth-token': token },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(lessonModal).hide();
-                        lessonModal.querySelector('form')?.reset();
-                        if (exerciseFileInput) exerciseFileInput.value = '';
-                        lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                        lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                            <span class="icon-reverse-wrapper">
-                                <span class="btn-text">Add Lesson</span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            </span>
-                        `;
-                        currentEditingLessonId = null;
-                        currentEditingEpisodeId = null;
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error saving lesson:', error);
-                    alert('An error occurred while saving the lesson.');
-                }
+            const url = currentEditingLessonId
+                ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
+                : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
+            const method = currentEditingLessonId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'x-auth-token': token },
+                body: formData
             });
+            const result = await response.json();
+            
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(lessonModal).hide();
+                lessonModal.querySelector('form')?.reset();
+
+                // Reset file uploader state
+                newFilesDataTransfer = new DataTransfer();
+                existingFilesToRemove = [];
+                updateExerciseFileListUI(); // Clear the UI
+                
+                // Reset other state variables
+                currentEditingLessonId = null;
+                currentEditingEpisodeId = null;
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving lesson:', error);
+            alert('An error occurred while saving the lesson.');
         }
+    });
+}
 
         // Delete Lesson Event Listener
         document.addEventListener('click', async (e) => {
