@@ -454,7 +454,7 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
+app.put('/api/courses/:courseId', auth, async (req, res) => {
     try {
         const { courseId } = req.params;
         const course = await Course.findById(courseId);
