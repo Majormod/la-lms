@@ -2088,6 +2088,10 @@ window.openUpdateLessonModal = function(episodeId, lessonId) {
         if (episode) {
             const lesson = episode.lessons.find(les => les._id == lessonId);
             if (lesson) {
+                // --- ADD THESE TWO LINES TO DEBUG ---
+                console.log("Opening modal for lesson:", lesson);
+                console.log("Exercise files found:", lesson.exerciseFiles);
+                // ------------------------------------
                 document.getElementById('lesson-title').value = lesson.title || '';
                 document.getElementById('lesson-summary').value = lesson.summary || '';
                 document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
