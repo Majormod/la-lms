@@ -454,80 +454,92 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-// In server.js, replace your main course PUT route with this final version
 app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
     try {
         const { courseId } = req.params;
+        const course = await Course.findById(courseId);
+        
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+        if (course.instructor.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized' });
+        }
 
-        // 1. Create an empty object to build our update query
-        const updateData = {};
+        // Update basic fields
+        course.title = req.body.title || course.title;
+        course.slug = req.body.slug || course.slug;
+        course.description = req.body.description || course.description;
+        course.originalPrice = parseFloat(req.body.originalPrice) || course.originalPrice;
+        course.price = parseFloat(req.body.price) || course.price;
+        course.previewVideoUrl = req.body.previewVideoUrl || course.previewVideoUrl;
+        course.status = req.body.status || course.status;
 
-        // 2. Populate the update object with data from the form, transforming it as we go
-        if (req.body.title) updateData.title = req.body.title;
-        if (req.body.slug) updateData.slug = req.body.slug;
-        if (req.body.description) updateData.description = req.body.description;
-        if (req.body.originalPrice) updateData.originalPrice = parseFloat(req.body.originalPrice);
-        if (req.body.price) updateData.price = parseFloat(req.body.price);
-        if (req.body.previewVideoUrl) updateData.previewVideoUrl = req.body.previewVideoUrl;
-        if (req.body.status) updateData.status = req.body.status;
-        if (req.body.startDate) updateData.startDate = req.body.startDate;
-
-        // Convert string inputs into arrays where needed by the schema
-        if (req.body.tags) {
-            updateData.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean);
-        }
-        if (req.body.requirements) {
-            updateData.requirements = req.body.requirements.split('\n').map(req => req.trim()).filter(Boolean);
-        }
-        if (req.body.whatYoullLearn) {
-            updateData.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        if (req.body.targetedAudience) {
-            updateData.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
-        }
+        // Update Additional Information fields - CORRECTED TO MATCH YOUR MODEL
+        course.startDate = req.body.startDate || course.startDate;
+        
+        // Language - handle array
         if (req.body.language) {
             try {
-                updateData.language = JSON.parse(req.body.language);
+                course.language = JSON.parse(req.body.language);
             } catch (e) {
-                updateData.language = [req.body.language];
+                course.language = Array.isArray(req.body.language) ? req.body.language : [req.body.language];
             }
         }
         
-        // Handle nested duration object using dot notation
-        if (req.body.durationHours) updateData['duration.hours'] = parseInt(req.body.durationHours);
-        if (req.body.durationMinutes) updateData['duration.minutes'] = parseInt(req.body.durationMinutes);
+        // Requirements - your model expects array, frontend sends newline-separated
+        if (req.body.requirements) {
+            course.requirements = req.body.requirements.split('\n')
+                .map(req => req.trim())
+                .filter(req => req.length > 0);
+        }
         
-        // Handle certificate fields
-        if (req.body.certificateTemplate) {
-            updateData.certificateTemplate = req.body.certificateTemplate;
-            updateData.includesCertificate = req.body.certificateTemplate !== 'none';
+        // What You'll Learn - your model has this field, not detailedDescription
+        if (req.body.whatYoullLearn) {
+            course.whatYoullLearn = req.body.whatYoullLearn.split('\n')
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
         }
-        if (req.body.certificateOrientation) updateData.certificateOrientation = req.body.certificateOrientation;
+        
+        // Duration - your model has nested duration object, not separate fields
+        course.duration = course.duration || {};
+        course.duration.hours = parseInt(req.body.durationHours) || course.duration.hours || 0;
+        course.duration.minutes = parseInt(req.body.durationMinutes) || course.duration.minutes || 0;
+        
+        // Tags - your model has 'tags' field, not 'courseTags'
+        if (req.body.tags) {
+            course.tags = req.body.tags.split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0);
+        }
+        
+        // Targeted Audience - your model has this field
+        if (req.body.targetedAudience) {
+            course.targetedAudience = req.body.targetedAudience.split('\n')
+                .map(audience => audience.trim())
+                .filter(audience => audience.length > 0);
+        }
 
-        // Handle new thumbnail upload
+        // Update certificate fields
+        course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
+        course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
+        course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
+
         if (req.file) {
-            updateData.thumbnail = `assets/images/uploads/${req.file.filename}`;
+            course.thumbnail = `assets/images/uploads/${req.file.filename}`;
         }
 
-        // 3. Update the database using findByIdAndUpdate
-        const updatedCourse = await Course.findByIdAndUpdate(
-            courseId,
-            { $set: updateData },
-            { new: true, runValidators: true } // Options to return the new doc and run schema validation
-        );
-
-        if (!updatedCourse) {
-             return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-
+        const updatedCourse = await course.save();
+        // DEBUG: Check what was actually saved
+console.log('=== SERVER: After saving ===');
+console.log('whatYoullLearn:', updatedCourse.whatYoullLearn);
+console.log('tags:', updatedCourse.tags);
+console.log('duration:', updatedCourse.duration);
+console.log('requirements:', updatedCourse.requirements);
         res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
-
     } catch (error) {
         console.error('Error updating course:', error);
-        if (error.name === 'ValidationError' || error.name === 'CastError') {
-            return res.status(400).json({ success: false, message: 'Validation Error', details: error.message });
-        }
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 });
 
@@ -640,71 +652,63 @@ const lessonUploads = multer({
 // --- REPLACE ALL OF YOUR PUT ROUTES FOR LESSONS WITH THIS SINGLE ONE ---
 // In server.js, replace your PUT route with this one
 
-// In server.js, find your MAIN course update route
-// It will probably have 'upload.single('thumbnail')' as middleware
-
-// In server.js, replace your main course PUT route with this final version
-
-app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles', 5), async (req, res) => {
     try {
-        const { courseId } = req.params;
+        const { courseId, episodeId, lessonId } = req.params;
+        const { title, summary, vimeoUrl, duration, isPreview, filesToRemove } = req.body;
 
-        // 1. Prepare the update data object
-        const updateData = { ...req.body }; // Copy all text fields from the request
-
-        // 2. Handle file upload
-        if (req.file) {
-            // Your Multer config saves the full path, but let's store a relative URL
-            updateData.thumbnail = `assets/images/uploads/${req.file.filename}`;
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
         }
 
-        // 3. --- THIS IS THE CRITICAL FIX ---
-        // Convert string inputs into arrays where needed by the schema.
-        if (updateData.tags && typeof updateData.tags === 'string') {
-            updateData.tags = updateData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
-        }
-        if (updateData.requirements && typeof updateData.requirements === 'string') {
-            updateData.requirements = updateData.requirements.split('\n').map(req => req.trim()).filter(Boolean);
-        }
-        if (updateData.whatYoullLearn && typeof updateData.whatYoullLearn === 'string') {
-            updateData.whatYoullLearn = updateData.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        if (updateData.targetedAudience && typeof updateData.targetedAudience === 'string') {
-            updateData.targetedAudience = updateData.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        // Also handle language if it's sent as a string
-        if (updateData.language && typeof updateData.language === 'string') {
-             try {
-                // The frontend sends a JSON string for multi-select, so we parse it
-                updateData.language = JSON.parse(updateData.language);
-             } catch (e) {
-                console.error("Could not parse language field:", e);
-                // Fallback for single language or error
-                updateData.language = [updateData.language];
-             }
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+        
+        const lesson = episode.lessons.id(lessonId);
+        if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+
+        // --- THIS IS THE FIX ---
+        // Ensure lesson.exerciseFiles is an array before we operate on it.
+        if (!Array.isArray(lesson.exerciseFiles)) {
+            lesson.exerciseFiles = [];
         }
         // --- END OF FIX ---
 
+        // Update text fields
+        lesson.title = title || lesson.title;
+        lesson.summary = summary || lesson.summary;
+        lesson.vimeoUrl = vimeoUrl;
+        lesson.duration = duration || lesson.duration;
+        lesson.isPreview = isPreview === 'true';
 
-        // 4. Update the database using findByIdAndUpdate
-        const updatedCourse = await Course.findByIdAndUpdate(
-            courseId,
-            { $set: updateData },
-            { new: true, runValidators: true } // Options to return the new doc and run schema validation
-        );
-
-        if (!updatedCourse) {
-             return res.status(404).json({ success: false, message: 'Course not found' });
+        // 1. Handle file removal
+        if (filesToRemove) {
+            const parsedFilesToRemove = JSON.parse(filesToRemove);
+            if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
+                // Filter out files whose 'key' is in the removal list
+                lesson.exerciseFiles = lesson.exerciseFiles.filter(
+                    file => !parsedFilesToRemove.includes(file.key)
+                );
+            }
         }
 
-        res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
+        // 2. Handle new file uploads
+        if (req.files && req.files.length > 0) {
+            const newFileObjects = req.files.map(file => ({
+                name: file.originalname,
+                // Save a clean, relative path for the frontend to use
+                path: `assets/images/uploads/${file.filename}`,
+                key: file.filename
+            }));
+            lesson.exerciseFiles.push(...newFileObjects);
+        }
+
+        await course.save();
+        res.json({ success: true, message: 'Lesson updated successfully!', course });
 
     } catch (error) {
-        console.error('Error updating course:', error);
-        // Provide a more specific error message if it's a validation error
-        if (error.name === 'ValidationError' || error.name === 'CastError') {
-            return res.status(400).json({ success: false, message: 'Validation Error', details: error.message });
-        }
+        console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
