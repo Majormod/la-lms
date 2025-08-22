@@ -2179,7 +2179,32 @@ const lessonsHtml = episode.lessons.map(lesson => `
             window.location.href = 'instructor-course.html';
             return;
         }
+// --- Logic for custom file upload button ---
+const triggerBtn = document.getElementById('triggerFileUploadBtn');
+const fileInput = document.getElementById('lessonExerciseInput');
+const fileListContainer = document.getElementById('exerciseFileListContainer');
 
+if (triggerBtn && fileInput) {
+    // When the visible button is clicked, trigger the hidden file input
+    triggerBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // When files are selected, display their names
+    fileInput.addEventListener('change', () => {
+        if (fileListContainer) {
+            fileListContainer.innerHTML = ''; // Clear previous list
+            if (fileInput.files.length > 0) {
+                let fileListHtml = '<p class="b3 mb-2">Selected Files:</p><ul class="list-group">';
+                Array.from(fileInput.files).forEach(file => {
+                    fileListHtml += `<li class="list-group-item list-group-item-sm">${file.name}</li>`;
+                });
+                fileListHtml += '</ul>';
+                fileListContainer.innerHTML = fileListHtml;
+            }
+        }
+    });
+}
         // --- DEFINE ALL PAGE ELEMENTS ---
         const editCourseForm = document.getElementById('create-course-form');
         const courseTitleInput = document.getElementById('field-1');
