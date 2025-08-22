@@ -19,7 +19,7 @@ const LessonSchema = new Schema({
     isPreview: {
         type: Boolean, // Can non-enrolled students watch this lesson?
         default: false
-    }
+    },
     exerciseFile: { type: String } // <-- ADD THIS LINE
 });
 
