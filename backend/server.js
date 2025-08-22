@@ -655,43 +655,68 @@ const lessonUploads = multer({
 // In server.js, find your MAIN course update route
 // It will probably have 'upload.single('thumbnail')' as middleware
 
+// In server.js, replace your main course PUT route with this final version
+
 app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
     try {
         const { courseId } = req.params;
-        const course = await Course.findById(courseId);
 
-        if (!course || course.instructor.toString() !== req.user.id) {
-            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
-        }
+        // 1. Prepare the update data object
+        const updateData = { ...req.body }; // Copy all text fields from the request
 
-        // Create an object with only the fields from the main form
-        const updateData = {
-            title: req.body.title,
-            slug: req.body.slug,
-            description: req.body.description,
-            price: req.body.price,
-            originalPrice: req.body.originalPrice,
-            status: req.body.status,
-            // Add any other TOP-LEVEL course fields from your form here...
-            // e.g., requirements, whatYoullLearn, tags, etc.
-        };
-
-        // If a new thumbnail was uploaded, add it to the update object
+        // 2. Handle file upload
         if (req.file) {
-            updateData.thumbnail = req.file.path;
+            // Your Multer config saves the full path, but let's store a relative URL
+            updateData.thumbnail = `assets/images/uploads/${req.file.filename}`;
         }
 
-        // Use findByIdAndUpdate to only touch the specified fields
+        // 3. --- THIS IS THE CRITICAL FIX ---
+        // Convert string inputs into arrays where needed by the schema.
+        if (updateData.tags && typeof updateData.tags === 'string') {
+            updateData.tags = updateData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+        }
+        if (updateData.requirements && typeof updateData.requirements === 'string') {
+            updateData.requirements = updateData.requirements.split('\n').map(req => req.trim()).filter(Boolean);
+        }
+        if (updateData.whatYoullLearn && typeof updateData.whatYoullLearn === 'string') {
+            updateData.whatYoullLearn = updateData.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
+        }
+        if (updateData.targetedAudience && typeof updateData.targetedAudience === 'string') {
+            updateData.targetedAudience = updateData.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
+        }
+        // Also handle language if it's sent as a string
+        if (updateData.language && typeof updateData.language === 'string') {
+             try {
+                // The frontend sends a JSON string for multi-select, so we parse it
+                updateData.language = JSON.parse(updateData.language);
+             } catch (e) {
+                console.error("Could not parse language field:", e);
+                // Fallback for single language or error
+                updateData.language = [updateData.language];
+             }
+        }
+        // --- END OF FIX ---
+
+
+        // 4. Update the database using findByIdAndUpdate
         const updatedCourse = await Course.findByIdAndUpdate(
             courseId,
             { $set: updateData },
-            { new: true } // This option returns the updated document
+            { new: true, runValidators: true } // Options to return the new doc and run schema validation
         );
+
+        if (!updatedCourse) {
+             return res.status(404).json({ success: false, message: 'Course not found' });
+        }
 
         res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
 
     } catch (error) {
         console.error('Error updating course:', error);
+        // Provide a more specific error message if it's a validation error
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Validation Error', details: error.message });
+        }
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
