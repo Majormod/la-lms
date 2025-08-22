@@ -2205,7 +2205,13 @@ const lessonsHtml = episode.lessons.map(lesson => `
             const buttonText = submitButton.querySelector('.btn-text');
             if (buttonText) buttonText.textContent = 'Update Course';
         }
-
+    // ADD THIS EVENT LISTENER FOR THE REMOVE BUTTON
+    document.getElementById('remove-exercise-file-btn')?.addEventListener('click', () => {
+        document.getElementById('current-exercise-file-container').style.display = 'none';
+        document.getElementById('remove-exercise-file-flag').value = 'true';
+        document.getElementById('lesson-exercise-file').value = '';
+        document.getElementById('exercise-file-name').textContent = '';
+    });
         // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
 fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
     .then(res => res.ok ? res.json() : Promise.reject('Course not found'))
