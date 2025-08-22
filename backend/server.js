@@ -692,8 +692,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
 }); // Only handle exerciseFile
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
-// --- REPLACE YOUR EXISTING POST ROUTE WITH THIS ---
-app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.array('exerciseFiles', 5), async (req, res) => {
+app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview } = req.body;
@@ -703,8 +702,12 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.arra
         }
 
         const course = await Course.findById(courseId);
-        if (!course || course.instructor.toString() !== req.user.id) {
-            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
+        if (course.instructor.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized' });
         }
 
         const episode = course.episodes.id(episodeId);
@@ -717,23 +720,77 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.arra
             summary,
             vimeoUrl,
             duration,
-            isPreview: isPreview === 'true',
-            exerciseFiles: [] // Initialize as an empty array
+            isPreview: isPreview === 'true'
         };
 
-        // If new files are uploaded, map them to an array of paths
-        if (req.files && req.files.length > 0) {
-            newLesson.exerciseFiles = req.files.map(file => file.path); // Use file.path from Multer
+        if (req.file) {
+            newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
         }
+        
+// --- ADD THESE LOGS TO DEBUG ---
+        console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
+        console.log(newLesson);
+        // --- END OF LOGS ---
 
         episode.lessons.push(newLesson);
         await course.save();
 
-        res.status(201).json({ success: true, message: 'Lesson added successfully!', course });
-
+        res.status(201).json({ 
+            success: true, 
+            message: 'Lesson added successfully!',
+            course: course 
+        });
     } catch (error) {
         console.error('Error adding lesson:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
+// PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
+    try {
+        const { courseId, episodeId, lessonId } = req.params;
+        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
+        if (course.instructor.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) {
+            return res.status(404).json({ success: false, message: 'Topic not found' });
+        }
+
+        const lesson = episode.lessons.id(lessonId);
+        if (!lesson) {
+            return res.status(404).json({ success: false, message: 'Lesson not found' });
+        }
+
+        lesson.title = title || lesson.title;
+        lesson.summary = summary || lesson.summary;
+        lesson.vimeoUrl = vimeoUrl || lesson.vimeoUrl;
+        lesson.duration = duration || lesson.duration;
+        lesson.isPreview = isPreview === 'true';
+
+        if (req.file) {
+            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        }
+
+        await course.save();
+
+        res.json({
+            success: true,
+            message: 'Lesson updated successfully!',
+            course: course
+        });
+    } catch (error) {
+        console.error('Error updating lesson:', error);
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 });
 
