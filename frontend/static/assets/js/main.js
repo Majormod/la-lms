@@ -2082,32 +2082,6 @@ $(document).ready(function () {
         currentEditingLessonId = lessonId;
         const currentFilesList = document.getElementById('current-files-list');
     currentFilesList.innerHTML = ''; // Clear the list
-    // --- NEW ROBUST LOGIC ---
-                let filesToDisplay = [];
-                // First, check if the new 'exerciseFiles' array exists and has files
-                if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
-                    filesToDisplay = lesson.exerciseFiles;
-                } 
-                // If not, check for the old 'exerciseFile' string (for backward compatibility)
-                else if (lesson.exerciseFile) {
-                    filesToDisplay.push(lesson.exerciseFile); // Put the single file into an array
-                }
-                // --- END OF NEW LOGIC ---
-
-                if (filesToDisplay.length > 0) {
-                    filesToDisplay.forEach(filePath => {
-                        const fileName = filePath.split('/').pop();
-                        const listItem = `
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="/${filePath}" target="_blank" class="rbt-btn-link">${fileName}</a>
-                                <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filename="${filePath}">Remove</button>
-                            </li>
-                        `;
-                        currentFilesList.innerHTML += listItem;
-                    });
-                } else {
-                     currentFilesList.innerHTML = '<li class="list-group-item">No files attached.</li>';
-                }
         if (courseData) {
             const episode = courseData.episodes.find(ep => ep._id == episodeId);
             if (episode) {
