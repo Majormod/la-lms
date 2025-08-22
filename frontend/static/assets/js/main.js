@@ -1830,12 +1830,16 @@ if (window.location.pathname.includes('create-course.html')) {
                 
                 // This automatically gathers all fields from your form
                 const formData = new FormData(courseForm);
-                
-                // Basic validation
-                if (!formData.get('title') || !formData.get('thumbnail')) {
-                     alert('Please provide at least a Course Title and a Thumbnail.');
-                     return;
-                }
+                // --- ADD THESE TWO LINES TO DEBUG ---
+        console.log('Title from form:', formData.get('title'));
+        console.log('Thumbnail file from form:', formData.get('thumbnail'));
+
+        // This is a more reliable check
+        const thumbnailFile = formData.get('thumbnail');
+        if (!formData.get('title') || !thumbnailFile || !thumbnailFile.name) {
+             alert('Please provide at least a Course Title and a Thumbnail.');
+             return;
+        }
 
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/instructor/courses`, {
