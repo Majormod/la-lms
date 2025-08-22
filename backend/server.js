@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
+const fs = require('fs');
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
@@ -857,6 +858,39 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     } catch (error) {
         console.error('Error deleting lesson:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
+// In server.js
+ // Make sure you require the 'fs' module at the top of your file
+
+app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, lessonId } = req.params;
+        const { filePathToDelete } = req.body; // We'll send the file path in the body
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+        
+        const episode = course.episodes.id(episodeId);
+        const lesson = episode.lessons.id(lessonId);
+
+        // Remove the file path from the array in the database
+        lesson.exerciseFiles.pull(filePathToDelete);
+        await course.save();
+
+        // Optional but recommended: Delete the physical file from the server
+        const physicalPath = path.join(__dirname, '../frontend/static', filePathToDelete);
+        fs.unlink(physicalPath, (err) => {
+            if (err) console.error("Error deleting physical file:", err);
+        });
+
+        res.json({ success: true, message: 'File deleted successfully!', course });
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
