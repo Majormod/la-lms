@@ -2079,20 +2079,6 @@ $(document).ready(function () {
     window.openUpdateLessonModal = function(episodeId, lessonId) {
         currentEditingEpisodeId = episodeId;
         currentEditingLessonId = lessonId;
-        // --- ADD THIS BLOCK to handle showing the current file ---
-        const currentFileContainer = document.getElementById('current-exercise-file-container');
-        const currentFileLink = document.getElementById('current-exercise-file-link');
-        const removeFileFlag = document.getElementById('remove-exercise-file-flag');
-
-        if (lesson.exerciseFile) {
-            currentFileLink.href = `/${lesson.exerciseFile}`;
-            currentFileLink.textContent = lesson.exerciseFile.split('/').pop();
-            currentFileContainer.style.display = 'block';
-            if(removeFileFlag) removeFileFlag.value = 'false';
-        } else {
-            currentFileContainer.style.display = 'none';
-        }
-        // --- END OF BLOCK TO ADD ---
         if (courseData) {
             const episode = courseData.episodes.find(ep => ep._id == episodeId);
             if (episode) {
