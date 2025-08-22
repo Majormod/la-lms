@@ -1797,261 +1797,67 @@ if (window.location.pathname.includes('/instructor-')) {
                 }
                 populateSettingsForms();
             }
-if (path.includes('create-course.html')) {
-    // --- This is the final, working code for this page ---
-    if (!token || (user && user.role !== 'instructor')) {
-        alert("Access Denied. You are not an instructor.");
-        window.location.href = '/login.html';
-        return;
-    }
-    updateUserDataOnPage();
+if (window.location.pathname.includes('create-course.html')) {
 
-    const courseForm = document.getElementById('create-course-form');
-    const submitButton = document.getElementById('create-course-btn');
-    const thumbnailInput = document.getElementById('createinputfile');
-    const thumbnailPreview = document.getElementById('createfileImage'); // Added for preview
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('lmsToken');
+        const userString = localStorage.getItem('lmsUser');
+        const user = JSON.parse(userString || '{}');
 
-    if (!courseForm || !submitButton || !thumbnailInput || !thumbnailPreview) {
-        console.error('One or more essential form elements are missing. Aborting.');
-        return;
-    }
-// In main.js, inside the edit-course.html and create-course.html blocks
-
-// --- START: COURSE BUILDER LOGIC ---
-
-// Helper function to re-draw the course builder accordion
-// In main.js, inside the edit/create course blocks
-
-// In main.js, replace the old "Add Lesson" logic with this
-
-// In main.js
-
-// --- START: ADD LESSON LOGIC ---
-const addLessonModal = document.getElementById('Lesson');
-const saveLessonBtn = document.getElementById('save-lesson-btn');
-let currentEpisodeId = null;
-
-document.addEventListener('click', (e) => {
-    const addLessonBtn = e.target.closest('.add-lesson-btn');
-    if (addLessonBtn) {
-        currentEpisodeId = addLessonBtn.dataset.episodeId;
-    }
-});
-// --- Logic for "Add Lesson" Modal File Upload Button ---
-const uploadExerciseBtn = document.getElementById('upload-exercise-btn');
-const lessonExerciseFileInput = document.getElementById('lesson-exercise-file');
-const exerciseFileNameDisplay = document.getElementById('exercise-file-name');
-
-if (uploadExerciseBtn && lessonExerciseFileInput) {
-    // When the custom button is clicked...
-    uploadExerciseBtn.addEventListener('click', () => {
-        // ...programmatically click the hidden file input.
-        lessonExerciseFileInput.click(); 
-    });
-
-    // When a file is chosen in the hidden input...
-    lessonExerciseFileInput.addEventListener('change', () => {
-        if (lessonExerciseFileInput.files.length > 0) {
-            // ...display its name in the span.
-            exerciseFileNameDisplay.textContent = `Selected file: ${lessonExerciseFileInput.files[0].name}`;
-        } else {
-            exerciseFileNameDisplay.textContent = '';
-        }
-    });
-}
-if (saveLessonBtn) {
-    saveLessonBtn.addEventListener('click', async () => {
-        if (!currentEpisodeId) {
-            alert('Could not determine which topic to add the lesson to. Please try again.');
+        // Security check
+        if (!token || user.role !== 'instructor') {
+            alert("Access Denied. You must be an instructor to create a course.");
+            window.location.href = 'login.html';
             return;
         }
 
-        // Use FormData to handle file uploads
-        const formData = new FormData();
-        
-        // Append all form fields. Use unique IDs for each field.
-        formData.append('title', document.getElementById('lesson-title').value);
-        formData.append('summary', document.getElementById('lesson-summary').value);
-        formData.append('vimeoUrl', document.getElementById('lesson-video-url').value);
-        formData.append('duration', document.getElementById('lesson-duration').value);
-        formData.append('isPreview', document.getElementById('lesson-is-preview').checked);
-        formData.append('sourceType', document.getElementById('lesson-video-source').value);
-        formData.append('vimeoUrl', document.getElementById('lesson-video-url').value); // <-- ADD THIS LINE
-        formData.append('duration', durationString);
-        
+        const courseForm = document.getElementById('create-course-form');
+        const thumbnailInput = document.getElementById('createinputfile');
+        const thumbnailPreview = document.getElementById('createfileImage');
 
-        const featureImageInput = document.getElementById('lesson-feature-image');
-        if (featureImageInput.files[0]) {
-            formData.append('featureImage', featureImageInput.files[0]);
-        }
-        
-        const exerciseFileInput = document.getElementById('lesson-exercise-file');
-        if (exerciseFileInput.files[0]) {
-            formData.append('exerciseFile', exerciseFileInput.files[0]);
-        }
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEpisodeId}/lessons`, {
-                method: 'POST',
-                headers: {
-                    // IMPORTANT: Do NOT set 'Content-Type'. The browser does it automatically for FormData.
-                    'x-auth-token': token,
-                },
-                body: formData,
+        // Logic to show the image preview on the page
+        if(thumbnailInput && thumbnailPreview) {
+            thumbnailInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    thumbnailPreview.src = URL.createObjectURL(this.files[0]);
+                }
             });
-
-            const result = await response.json();
-
-            if (result.success) {
-                renderCourseBuilder(result.course.episodes);
-                const modalInstance = bootstrap.Modal.getInstance(addLessonModal);
-                modalInstance.hide();
-                addLessonModal.querySelector('form')?.reset();
-            } else {
-                alert(`Error: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Failed to save lesson:', error);
-            alert('An error occurred while saving the lesson.');
         }
-    });
-}
-// --- END: ADD LESSON LOGIC ---
+        
+        if (courseForm) {
+            courseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-// Select elements from the "Add Topic" modal
-const addTopicModal = document.getElementById('exampleModal');
-const saveTopicBtn = document.getElementById('save-topic-btn');
-const topicNameInput = addTopicModal.querySelector('#modal-field-1');
-const topicSummaryInput = addTopicModal.querySelector('#modal-field-2');
+                // This automatically collects all fields from your form
+                const formData = new FormData(courseForm);
+                
+                // Basic validation
+                if (!formData.get('title') || !formData.get('thumbnail')) {
+                     alert('Please provide at least a Course Title and a Thumbnail.');
+                     return;
+                }
 
-// Handle the "Save Topic" button click
-saveTopicBtn.addEventListener('click', async () => {
-    const title = topicNameInput.value;
-    const summary = topicSummaryInput.value;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/instructor/courses`, {
+                        method: 'POST',
+                        headers: { 'x-auth-token': token },
+                        body: formData,
+                    });
 
-    if (!title) {
-        alert('Please enter a topic name.');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': token,
-            },
-            body: JSON.stringify({ title, summary }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Success! Re-render the course builder with the new data
-            renderCourseBuilder(result.course.episodes);
-            
-            // Hide the modal
-            const modalInstance = bootstrap.Modal.getInstance(addTopicModal);
-            modalInstance.hide();
-
-            // Clear the form for next time
-            topicNameInput.value = '';
-            topicSummaryInput.value = '';
-
-        } else {
-            alert(`Error: ${result.message}`);
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Course created successfully! You will now be taken to the edit page to add content.');
+                        // Redirect to the edit page for the newly created course
+                        window.location.href = `edit-course.html?courseId=${result.course._id}`;
+                    } else {
+                        alert(`Failed to create course: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error creating course:', error);
+                    alert('An error occurred. Please check the console for details.');
+                }
+            });
         }
-    } catch (error) {
-        console.error('Failed to save topic:', error);
-        alert('An error occurred while saving the topic.');
-    }
-});
-
-// Also, in your fetch-and-populate logic for the edit page,
-// call renderCourseBuilder to show existing topics on page load.
-// Find .then(result => { ... })
-// Inside if (result.success), add this line:
-// renderCourseBuilder(course.episodes);
-
-// --- END: COURSE BUILDER LOGIC ---
-    // --- Logic to show the image preview on the page ---
-    thumbnailInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            thumbnailPreview.src = URL.createObjectURL(this.files[0]);
-        }
-    });
-
-// In main.js, inside the if (path.includes('create-course.html')) block
-
-async function handleFormSubmit() {
-    // --- 1. VALIDATION ---
-    const title = document.getElementById('field-1').value;
-    const slug = document.getElementById('field-2').value;
-    const description = document.getElementById('aboutCourse').value;
-    const regularPrice = document.getElementById('regularPrice-1').value;
-
-    if (!title || !slug || !description || !regularPrice) {
-        alert('Please fill out all required fields: Title, Slug, Description, and Price.');
-        return;
-    }
-    
-    // --- 2. DATA COLLECTION ---
-    const formData = new FormData();
-    const discountedPriceInput = document.getElementById('discountedPrice-1');
-    const discountedPrice = discountedPriceInput.value ? discountedPriceInput.value : regularPrice;
-
-    // Append all data, including the new fields
-    formData.append('title', title);
-    formData.append('slug', slug);
-    formData.append('description', description);
-    formData.append('previewVideoUrl', document.getElementById('videoUrl').value); // <-- ADD THIS LINE
-
-    // --- ADD THESE FOUR LINES ---
-formData.append('maxStudents', document.getElementById('field-3').value);
-formData.append('difficultyLevel', document.getElementById('field-4').value);
-formData.append('isPublic', document.getElementById('flexSwitchCheckDefault').checked);
-formData.append('isQAEnabled', document.getElementById('flexSwitchCheckDefault2').checked);
-// ----------------------------
-    formData.append('originalPrice', regularPrice);
-    formData.append('price', discountedPrice);
-    formData.append('maxStudents', document.getElementById('field-3').value);
-    formData.append('difficultyLevel', document.getElementById('field-4').value);
-    formData.append('isPublic', document.getElementById('flexSwitchCheckDefault').checked); // Send true/false for checkboxes
-    formData.append('isQAEnabled', document.getElementById('flexSwitchCheckDefault2').checked); // Send true/false for checkboxes
-    
-    if (thumbnailInput.files.length > 0) {
-        formData.append('thumbnail', thumbnailInput.files[0]);
-    } else {
-        alert('Please select a course thumbnail image.');
-        return;
-    }
-
-    // --- 3. API CALL (This part remains the same) ---
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/instructor/courses`, {
-            method: 'POST',
-            headers: { 'x-auth-token': token },
-            body: formData,
-        });
-        if (!response.ok) {
-            const errorText = await response.text(); 
-            throw new Error(`Server responded with an error: ${errorText}`);
-        }
-        const result = await response.json();
-        if (result.success) {
-            alert('Course created successfully!');
-            window.location.href = '/instructor-course.html';
-        } else {
-            alert(`Failed to create course: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error creating course:', error);
-        alert('An error occurred. Please check the console for details.');
-    }
-}
-    submitButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        handleFormSubmit();
     });
 }
 
