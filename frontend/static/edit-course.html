@@ -2036,18 +2036,21 @@
 
 <div class="col-12">
     <div class="form-group d-flex flex-column">
-        <label class="d-block mb-3">Exercise Files (Optional)</label>
+        <label class="d-block mb-2">Exercise Files (Optional)</label>
 
-        <div>
-            <button type="button" class="rbt-btn btn-sm btn-border-gradient" id="triggerFileUploadBtn">
-    <span class="btn-text">Add Files</span>
-    <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
-</button>
+        <button type="button" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
+            <span class="btn-text">Add Files</span>
+            <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
+        </button>
 
-<input type="file" id="lessonExerciseInput" multiple hidden>
+        <input type="file" id="lesson-exercise-file" name="exerciseFiles" style="display: none;" onchange="displayExerciseFileName(this)" multiple>
 
-<div id="exerciseFileListContainer" class="mt-3">
-    </div>
+        <span id="exercise-file-name" class="d-block mt--10"></span>
+
+        <div id="current-exercise-file-container" class="mt-3">
+            <p class="b3 mb-2">Current Files:</p>
+            <ul id="current-files-list" class="list-group">
+                </ul>
         </div>
     </div>
 </div>
