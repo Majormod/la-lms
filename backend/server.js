@@ -674,22 +674,24 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, up
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
-        // 1. Handle file removal
+        // 1. Handle file removal using the 'key'
         if (filesToRemove) {
             const parsedFilesToRemove = JSON.parse(filesToRemove);
             if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
-                // Filter the lesson's files, keeping only those NOT in the removal list
                 lesson.exerciseFiles = lesson.exerciseFiles.filter(
-                    fileKey => !parsedFilesToRemove.includes(fileKey)
+                    file => !parsedFilesToRemove.includes(file.key)
                 );
-                // Optional: You could add code here to delete the actual files from your 'uploads' folder
             }
         }
 
         // 2. Handle new file uploads
         if (req.files && req.files.length > 0) {
-            const newFilePaths = req.files.map(file => file.path);
-            lesson.exerciseFiles.push(...newFilePaths); // Add new file paths to the array
+            const newFileObjects = req.files.map(file => ({
+                name: file.originalname,
+                path: file.path,
+                key: file.filename
+            }));
+            lesson.exerciseFiles.push(...newFileObjects);
         }
 
         await course.save();
@@ -731,9 +733,13 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.arra
             exerciseFiles: [] // Initialize as an empty array
         };
 
-        // If new files are uploaded, map them to an array of paths
         if (req.files && req.files.length > 0) {
-            newLesson.exerciseFiles = req.files.map(file => file.path); // Use file.path from Multer
+            // Create an array of file objects, not just strings
+            newLessonData.exerciseFiles = req.files.map(file => ({
+                name: file.originalname,
+                path: file.path,
+                key: file.filename 
+            }));
         }
 
         episode.lessons.push(newLesson);

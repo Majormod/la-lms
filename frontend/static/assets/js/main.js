@@ -2147,6 +2147,20 @@ const lessonsHtml = episode.lessons.map(lesson => `
         </div>
     </div>
 `).join('');
+const lessonsHtml = episode.lessons.map(lesson => `
+            <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+                <div class="col-10 inner d-flex align-items-center gap-2">
+                    <i class="feather-play-circle"></i>
+                    
+                    ${lesson.exerciseFiles && lesson.exerciseFiles.length > 0 ? 
+                        '<i class="feather-paperclip" title="Has attachments"></i>' : ''}
+                    
+                    <h6 class="rbt-title mb-0">${lesson.title}</h6>
+                </div>
+                <div class="col-2 inner">
+                    </div>
+            </div>
+        `).join('');
             return `
                 <div class="accordion-item card mb--20">
                     <h2 class="accordion-header card-header rbt-course">

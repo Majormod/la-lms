@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Defines the schema for a single Lesson
+// In your models/Course.js file
+
+const ExerciseFileSchema = new mongoose.Schema({
+  name: { type: String, required: true }, // e.g., 'Chapter 1 Worksheet.pdf'
+  path: { type: String, required: true }, // e.g., 'uploads/1662512345-worksheet.pdf'
+  key:  { type: String, required: true }  // The unique filename from Multer
+}, { _id: false });
+
 const LessonSchema = new Schema({
     title: { 
         type: String, 
@@ -20,7 +27,7 @@ const LessonSchema = new Schema({
         type: Boolean, // Can non-enrolled students watch this lesson?
         default: false
     },
-    exerciseFiles: [{ type: String }] // Changed to an array of strings
+    exerciseFiles: [ExerciseFileSchema] // Use the new, more detailed schema
 });
 
 // Defines the schema for an Episode (Topic), which contains an array of Lessons
