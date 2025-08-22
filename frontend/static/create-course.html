@@ -1254,7 +1254,7 @@
                                             <div class="rbt-course-field-wrapper rbt-default-form">
                                                 <div class="course-field mb--15">
                                                     <label for="field-1">Course Title</label>
-                                                    <input id="field-1" type="text" placeholder="New Course" name="title">
+                                                    <input id="field-1" type="text" placeholder="New Course">
                                                     <small class="d-block mt_dec--5"><i class="feather-info"></i> Title
                                                         should be 30 charecter.</small>
                                                 </div>
@@ -1267,7 +1267,7 @@
 
                                                 <div class="course-field mb--15">
                                                     <label for="aboutCourse">About Course</label>
-                                                    <textarea id="aboutCourse" name="description" rows="10"></textarea>
+                                                    <textarea id="aboutCourse" rows="10"></textarea>
                                                     <small class="d-block mt_dec--5"><i class="feather-info"></i> HTML
                                                         or plain text allowed, no emoji This field is used for search,
                                                         so please be descriptive!</small>
@@ -1316,6 +1316,18 @@
                                                                             </div>
                                                                             <small><i class="feather-info"></i> Course
                                                                                 difficulty level</small>
+                                                                        </div>
+                                                                                                                                                <div class="course-field mb--20">
+                                                                            <label for="field-4">Course Status</label>
+                                                                            <div class="rbt-modern-select bg-transparent height-45 mb--10">
+                                                                               <select class="w-100" id="course-status" class="form-control">
+            <option value="Draft">Draft</option>
+            <option value="Pending">Pending</option>
+            <option value="Published">Published</option>
+        </select>
+                                                                            </div>
+                                                                            <small><i class="feather-info"></i> Course
+                                                                                status</small>
                                                                         </div>
 
                                                                         <div class="course-field mb--20">
@@ -1481,7 +1493,7 @@
                                                             <div class="brows-file-wrapper" data-black-overlay="9">
                                                                 <!-- actual upload which is hidden -->
                                                                 <input name="createinputfile" id="createinputfile" type="file" class="inputfile" />
-                                                                <input id="createinputfile" type="file" src="assets/images/others/thumbnail-placeholder.svg" alt="file image" name="thumbnail">
+                                                                <img id="createfileImage" src="assets/images/others/thumbnail-placeholder.svg" alt="file image">
                                                                 <!-- our custom upload button -->
                                                                 <label class="d-flex" for="createinputfile" title="No File Choosen">
                                                                     <i class="feather-upload"></i>
@@ -1531,6 +1543,30 @@
 
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="accordion-item card">
+                                    <h2 class="accordion-header card-header" id="accThree">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accCollapseThree" aria-expanded="false" aria-controls="accCollapseThree">
+                                            Course Builder
+                                        </button>
+                                    </h2>
+<div id="accCollapseThree" class="accordion-collapse collapse show" aria-labelledby="accThree">
+    <div class="accordion-body card-body">
+
+        <div id="course-builder-topics-container">
+            </div>
+
+        <button class="rbt-btn btn-md btn-gradient hover-icon-reverse" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <span class="icon-reverse-wrapper">
+                <span class="btn-text">Add New Topic</span>
+                <span class="btn-icon"><i class="feather-plus-circle"></i></span>
+                <span class="btn-icon"><i class="feather-plus-circle"></i></span>
+            </span>
+        </button>
+
+    </div>
+</div>
                                 </div>
 
                                 <div class="accordion-item card rbt-course-field-wrapper">
@@ -1592,12 +1628,12 @@
                                                     <label>Total Course Duration</label>
                                                     <div class="row row--15">
                                                         <div class="col-lg-6">
-                                                            <input type="number" placeholder="00">
+                                                            <input id="totalDurationHours" type="number" placeholder="00">
                                                             <small class="d-block mt_dec--5"><i
                                                                     class="feather-info"></i> Hour.</small>
                                                         </div>
                                                         <div class="col-lg-6">
-                                                            <input type="number" placeholder="00">
+                                                            <input id="totalDurationMinutes" type="number" placeholder="00">
                                                             <small class="d-block mt_dec--5"><i
                                                                     class="feather-info"></i> Minute.</small>
                                                         </div>
@@ -1799,7 +1835,7 @@
 
                         <div class="mt--10 row g-5">
                             <div class="col-lg-4">
-<button id="preview-course-btn" class="rbt-btn hover-icon-reverse bg-primary-opacity w-100 text-center" href="course-details.html">
+<button id="preview-course-btn" class="rbt-btn hover-icon-reverse bg-primary-opacity w-100 text-center" href="course-details">
                                     <span class="icon-reverse-wrapper">
                                         <span class="btn-text">Preview</span>
                                     <span class="btn-icon"><i class="feather-eye"></i></span>
@@ -1810,7 +1846,7 @@
                             <div class="col-lg-8">
                                 <button id="create-course-btn" type="submit" class="rbt-btn btn-gradient hover-icon-reverse w-100">
   <span class="icon-reverse-wrapper">
-    <span class="btn-text">Create Course</span>
+    <span class="btn-text">Save Changes</span>
     <span class="btn-icon"><i class="feather-arrow-right"></i></span>
     <span class="btn-icon"><i class="feather-arrow-right"></i></span>
   </span>
