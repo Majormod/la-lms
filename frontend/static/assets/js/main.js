@@ -1798,7 +1798,6 @@ if (window.location.pathname.includes('/instructor-')) {
                 populateSettingsForms();
             }
 if (window.location.pathname.includes('create-course.html')) {
-
     document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('lmsToken');
         const userString = localStorage.getItem('lmsUser');
@@ -1806,7 +1805,7 @@ if (window.location.pathname.includes('create-course.html')) {
 
         // Security check
         if (!token || user.role !== 'instructor') {
-            alert("Access Denied. You must be an instructor to create a course.");
+            alert("Access Denied. You must be an instructor.");
             window.location.href = 'login.html';
             return;
         }
@@ -1815,20 +1814,21 @@ if (window.location.pathname.includes('create-course.html')) {
         const thumbnailInput = document.getElementById('createinputfile');
         const thumbnailPreview = document.getElementById('createfileImage');
 
-        // Logic to show the image preview on the page
-        if(thumbnailInput && thumbnailPreview) {
+        // Logic for thumbnail preview
+        if (thumbnailInput && thumbnailPreview) {
             thumbnailInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) {
                     thumbnailPreview.src = URL.createObjectURL(this.files[0]);
                 }
             });
         }
-        
+
+        // Form submission logic
         if (courseForm) {
             courseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-
-                // This automatically collects all fields from your form
+                
+                // This automatically gathers all fields from your form
                 const formData = new FormData(courseForm);
                 
                 // Basic validation
@@ -1846,7 +1846,7 @@ if (window.location.pathname.includes('create-course.html')) {
 
                     const result = await response.json();
                     if (result.success) {
-                        alert('Course created successfully! You will now be taken to the edit page to add content.');
+                        alert('Course created! You will now be taken to the edit page to add content.');
                         // Redirect to the edit page for the newly created course
                         window.location.href = `edit-course.html?courseId=${result.course._id}`;
                     } else {
@@ -1854,7 +1854,7 @@ if (window.location.pathname.includes('create-course.html')) {
                     }
                 } catch (error) {
                     console.error('Error creating course:', error);
-                    alert('An error occurred. Please check the console for details.');
+                    alert('An error occurred. Please check the console.');
                 }
             });
         }
