@@ -454,92 +454,80 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-app.put('/api/courses/:courseId', auth, async (req, res) => {
+// In server.js, replace your main course PUT route with this final version
+app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
     try {
         const { courseId } = req.params;
-        const course = await Course.findById(courseId);
-        
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-        if (course.instructor.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'User not authorized' });
-        }
 
-        // Update basic fields
-        course.title = req.body.title || course.title;
-        course.slug = req.body.slug || course.slug;
-        course.description = req.body.description || course.description;
-        course.originalPrice = parseFloat(req.body.originalPrice) || course.originalPrice;
-        course.price = parseFloat(req.body.price) || course.price;
-        course.previewVideoUrl = req.body.previewVideoUrl || course.previewVideoUrl;
-        course.status = req.body.status || course.status;
+        // 1. Create an empty object to build our update query
+        const updateData = {};
 
-        // Update Additional Information fields - CORRECTED TO MATCH YOUR MODEL
-        course.startDate = req.body.startDate || course.startDate;
-        
-        // Language - handle array
+        // 2. Populate the update object with data from the form, transforming it as we go
+        if (req.body.title) updateData.title = req.body.title;
+        if (req.body.slug) updateData.slug = req.body.slug;
+        if (req.body.description) updateData.description = req.body.description;
+        if (req.body.originalPrice) updateData.originalPrice = parseFloat(req.body.originalPrice);
+        if (req.body.price) updateData.price = parseFloat(req.body.price);
+        if (req.body.previewVideoUrl) updateData.previewVideoUrl = req.body.previewVideoUrl;
+        if (req.body.status) updateData.status = req.body.status;
+        if (req.body.startDate) updateData.startDate = req.body.startDate;
+
+        // Convert string inputs into arrays where needed by the schema
+        if (req.body.tags) {
+            updateData.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+        }
+        if (req.body.requirements) {
+            updateData.requirements = req.body.requirements.split('\n').map(req => req.trim()).filter(Boolean);
+        }
+        if (req.body.whatYoullLearn) {
+            updateData.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
+        }
+        if (req.body.targetedAudience) {
+            updateData.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
+        }
         if (req.body.language) {
             try {
-                course.language = JSON.parse(req.body.language);
+                updateData.language = JSON.parse(req.body.language);
             } catch (e) {
-                course.language = Array.isArray(req.body.language) ? req.body.language : [req.body.language];
+                updateData.language = [req.body.language];
             }
         }
         
-        // Requirements - your model expects array, frontend sends newline-separated
-        if (req.body.requirements) {
-            course.requirements = req.body.requirements.split('\n')
-                .map(req => req.trim())
-                .filter(req => req.length > 0);
-        }
+        // Handle nested duration object using dot notation
+        if (req.body.durationHours) updateData['duration.hours'] = parseInt(req.body.durationHours);
+        if (req.body.durationMinutes) updateData['duration.minutes'] = parseInt(req.body.durationMinutes);
         
-        // What You'll Learn - your model has this field, not detailedDescription
-        if (req.body.whatYoullLearn) {
-            course.whatYoullLearn = req.body.whatYoullLearn.split('\n')
-                .map(item => item.trim())
-                .filter(item => item.length > 0);
+        // Handle certificate fields
+        if (req.body.certificateTemplate) {
+            updateData.certificateTemplate = req.body.certificateTemplate;
+            updateData.includesCertificate = req.body.certificateTemplate !== 'none';
         }
-        
-        // Duration - your model has nested duration object, not separate fields
-        course.duration = course.duration || {};
-        course.duration.hours = parseInt(req.body.durationHours) || course.duration.hours || 0;
-        course.duration.minutes = parseInt(req.body.durationMinutes) || course.duration.minutes || 0;
-        
-        // Tags - your model has 'tags' field, not 'courseTags'
-        if (req.body.tags) {
-            course.tags = req.body.tags.split(',')
-                .map(tag => tag.trim())
-                .filter(tag => tag.length > 0);
-        }
-        
-        // Targeted Audience - your model has this field
-        if (req.body.targetedAudience) {
-            course.targetedAudience = req.body.targetedAudience.split('\n')
-                .map(audience => audience.trim())
-                .filter(audience => audience.length > 0);
-        }
+        if (req.body.certificateOrientation) updateData.certificateOrientation = req.body.certificateOrientation;
 
-        // Update certificate fields
-        course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
-        course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
-        course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
-
+        // Handle new thumbnail upload
         if (req.file) {
-            course.thumbnail = `assets/images/uploads/${req.file.filename}`;
+            updateData.thumbnail = `assets/images/uploads/${req.file.filename}`;
         }
 
-        const updatedCourse = await course.save();
-        // DEBUG: Check what was actually saved
-console.log('=== SERVER: After saving ===');
-console.log('whatYoullLearn:', updatedCourse.whatYoullLearn);
-console.log('tags:', updatedCourse.tags);
-console.log('duration:', updatedCourse.duration);
-console.log('requirements:', updatedCourse.requirements);
+        // 3. Update the database using findByIdAndUpdate
+        const updatedCourse = await Course.findByIdAndUpdate(
+            courseId,
+            { $set: updateData },
+            { new: true, runValidators: true } // Options to return the new doc and run schema validation
+        );
+
+        if (!updatedCourse) {
+             return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
         res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
+
     } catch (error) {
         console.error('Error updating course:', error);
-        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Validation Error', details: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
