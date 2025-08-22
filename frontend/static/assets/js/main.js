@@ -1074,17 +1074,6 @@
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
         // In main.js, add this to the top (global scope)
-function triggerExerciseFileUpload() {
-    document.getElementById('lesson-exercise-file').click();
-}
-function displayExerciseFileName(fileInput) {
-    const fileNameDisplay = document.getElementById('exercise-file-name');
-    if (fileInput.files.length > 0) {
-        fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
-    } else {
-        fileNameDisplay.textContent = '';
-    }
-}
 
 const renderCourseDetailsCurriculum = (episodes) => {
     const courseContentWrapper = document.getElementById('coursecontent')?.querySelector('.accordion');
@@ -2074,58 +2063,36 @@ $(document).ready(function () {
         }
     }
 
-window.openUpdateLessonModal = function(episodeId, lessonId) {
-    currentEditingEpisodeId = episodeId;
-    currentEditingLessonId = lessonId;
-
-    // Find the HTML elements for the file display section
-    const currentFileContainer = document.getElementById('current-exercise-file-container');
-    const currentFileLink = document.getElementById('current-exercise-file-link');
-    const removeFileFlag = document.getElementById('remove-exercise-file-flag');
-
-    if (courseData) {
-        const episode = courseData.episodes.find(ep => ep._id == episodeId);
-        if (episode) {
-            const lesson = episode.lessons.find(les => les._id == lessonId);
-            if (lesson) {
-                // --- NEW LOGIC to show/hide the current exercise file ---
-                if (lesson.exerciseFile) {
-                    // If a file exists, show the container and populate the link
-                    currentFileLink.href = `/${lesson.exerciseFile}`;
-                    currentFileLink.textContent = lesson.exerciseFile.split('/').pop(); // Show just the filename
-                    currentFileContainer.style.display = 'block';
-                    if (removeFileFlag) removeFileFlag.value = 'false'; // Reset the remove flag
-                } else {
-                    // If no file exists, hide the container
-                    currentFileContainer.style.display = 'none';
+    window.openUpdateLessonModal = function(episodeId, lessonId) {
+        currentEditingEpisodeId = episodeId;
+        currentEditingLessonId = lessonId;
+        if (courseData) {
+            const episode = courseData.episodes.find(ep => ep._id == episodeId);
+            if (episode) {
+                const lesson = episode.lessons.find(les => les._id == lessonId);
+                if (lesson) {
+                    document.getElementById('lesson-title').value = lesson.title || '';
+                    document.getElementById('lesson-summary').value = lesson.summary || '';
+                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                    const modal = document.getElementById('Lesson');
+                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                    modal.querySelector('#save-lesson-btn').innerHTML = `
+                        <span class="icon-reverse-wrapper">
+                            <span class="btn-text">Update Lesson</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </span>
+                    `;
                 }
-                // --- END OF NEW LOGIC ---
-
-
-                // --- Your existing logic to populate the rest of the form ---
-                document.getElementById('lesson-title').value = lesson.title || '';
-                document.getElementById('lesson-summary').value = lesson.summary || '';
-                document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-
-                const modal = document.getElementById('Lesson');
-                modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                modal.querySelector('#save-lesson-btn').innerHTML = `
-                    <span class="icon-reverse-wrapper">
-                        <span class="btn-text">Update Lesson</span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                    </span>
-                `;
             }
         }
     }
-}
 
     const renderCourseBuilder = (episodes) => {
         const container = document.getElementById('course-builder-topics-container');
@@ -2344,19 +2311,6 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
             }
             
             renderCourseBuilder(course.episodes);
-            // Example for renderCourseBuilder's lessonsHtml
-const lessonsHtml = episode.lessons.map(lesson => {
-    let exerciseFileHtml = '';
-    if (lesson.exerciseFile) {
-        exerciseFileHtml = `<a href="/${lesson.exerciseFile}" target="_blank" title="View Exercise File" class="ms-2"><i class="feather-paperclip"></i></a>`;
-    }
-    return `
-        <div class="d-flex ...">
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-            ${exerciseFileHtml} </div>
-        ...
-    `;
-}).join('');
         }
     })
     .catch(error => {
@@ -2703,19 +2657,7 @@ function renderLessons(lessons, episodeId, courseId) {
     if (!lessons || lessons.length === 0) {
         return '<p class="text-muted">No lessons in this topic yet.</p>';
     }
-// Example for renderCourseBuilder's lessonsHtml
-const lessonsHtml = episode.lessons.map(lesson => {
-    let exerciseFileHtml = '';
-    if (lesson.exerciseFile) {
-        exerciseFileHtml = `<a href="/${lesson.exerciseFile}" target="_blank" title="View Exercise File" class="ms-2"><i class="feather-paperclip"></i></a>`;
-    }
-    return `
-        <div class="d-flex ...">
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-            ${exerciseFileHtml} </div>
-        ...
-    `;
-}).join('');
+
     return `
         <ul class="rbt-course-main-content liststyle">
             ${lessons.map(lesson => `
@@ -2977,19 +2919,7 @@ if (window.location.pathname.includes('lesson.html')) {
     function renderSidebar(activeLessonId) {
         const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
-// Example for renderCourseBuilder's lessonsHtml
-const lessonsHtml = episode.lessons.map(lesson => {
-    let exerciseFileHtml = '';
-    if (lesson.exerciseFile) {
-        exerciseFileHtml = `<a href="/${lesson.exerciseFile}" target="_blank" title="View Exercise File" class="ms-2"><i class="feather-paperclip"></i></a>`;
-    }
-    return `
-        <div class="d-flex ...">
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-            ${exerciseFileHtml} </div>
-        ...
-    `;
-}).join('');
+
         // Find which episode contains the active lesson to ensure it's expanded.
         const activeEpisode = currentCourseData.episodes.find(ep => ep.lessons.some(l => l._id === activeLessonId));
 
