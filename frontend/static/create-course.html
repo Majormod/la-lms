@@ -1486,22 +1486,26 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="course-field mb--20">
-                                                    <h6>Course Thumbnail</h6>
-                                                    <div class="rbt-create-course-thumbnail upload-area">
-                                                        <div class="upload-area">
-                                                            <div class="brows-file-wrapper" data-black-overlay="9">
-                                                                <!-- actual upload which is hidden -->
-                                                                <input name="createinputfile" id="createinputfile" type="file" class="inputfile" />
-                                                                <img id="createinputfile" class="inputfile" src="assets/images/others/thumbnail-placeholder.svg" alt="file image" name="thumbnail">
-                                                                <!-- our custom upload button -->
-                                                                <label class="d-flex" for="createinputfile" title="No File Choosen">
-                                                                    <i class="feather-upload"></i>
-                                                                    <span class="text-center">Choose a File</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+<div class="course-field mb--20">
+    <h6>Course Thumbnail</h6>
+    <div class="rbt-create-course-thumbnail upload-area">
+        <div class="upload-area">
+            <div class="brows-file-wrapper" data-black-overlay="9">
+                
+                <input id="createinputfile" type="file" class="inputfile" name="thumbnail" />
+
+                <img id="createfileImage" src="assets/images/others/thumbnail-placeholder.svg" alt="file image">
+                
+                <label class="d-flex" for="createinputfile" title="No File Choosen">
+                    <i class="feather-upload"></i>
+                    <span class="text-center">Choose a File</span>
+                </label>
+
+            </div>
+        </div>
+    </div>
+    <small><i class="feather-info"></i> <b>Size:</b> 700x430 pixels...</small>
+</div>
 
                                                     <small><i class="feather-info"></i> <b>Size:</b> 700x430 pixels,
                                                         <b>File
