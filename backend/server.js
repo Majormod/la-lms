@@ -638,16 +638,58 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
+
+// 1. Replace your existing 'lessonUploads' multer instance with this one
 const lessonUploads = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, '../frontend/static/assets/images/uploads/'),
+        destination: (req, file, cb) => cb(null, path.join(__dirname, '../frontend/static/assets/images/uploads/')),
         filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
     }),
-    fileFilter: (req, file, cb) => {
-        // Validate file types if needed (e.g., PDF, images)
-        cb(null, true);
+}).single('exerciseFile');
+
+
+// 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
+    try {
+        const { courseId, episodeId, lessonId } = req.params;
+        const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+        
+        const lesson = episode.lessons.id(lessonId);
+        if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+
+        // Update text fields
+        lesson.title = title || lesson.title;
+        lesson.summary = summary || lesson.summary;
+        lesson.vimeoUrl = vimeoUrl; // Allow clearing the URL
+        lesson.duration = duration || lesson.duration;
+        lesson.isPreview = isPreview === 'true';
+
+        // Handle file removal
+        if (removeExerciseFile === 'true') {
+            // Optional: Add code here to delete the actual file from the server's disk
+            lesson.exerciseFile = undefined; 
+        }
+
+        // Handle new file upload
+        if (req.file) {
+            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        }
+
+        await course.save();
+        res.json({ success: true, message: 'Lesson updated successfully!', course });
+    } catch (error) {
+        console.error('Error updating lesson:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-}).single('exerciseFile'); // Only handle exerciseFile
+}); // Only handle exerciseFile
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
 app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {

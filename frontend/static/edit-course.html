@@ -2034,24 +2034,30 @@
                                         </div>
                                     </div>
 
-<button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
-    <span class="btn-text">Upload Exercise</span>
-    <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
-</button>
-
-<input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;" onchange="displayExerciseFileName(this)">
-
-<span id="exercise-file-name" class="d-block mt--10"></span>
-
-<div id="current-exercise-file-container" class="mt-2" style="display: none;">
-    <p class="b3 mb-1">Current File:</p>
-    <div class="d-flex align-items-center">
-        <a href="#" id="current-exercise-file-link" target="_blank" class="rbt-btn-link"></a>
-        <button type="button" id="remove-exercise-file-btn" class="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger ms-3" title="Remove File">
-            <i class="feather-x"></i>
+<div class="col-12">
+    <div class="form-group">
+        <label>Exercise File (Optional)</label>
+        
+        <button type="button" id="upload-exercise-btn" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
+            <span class="btn-text">Upload Exercise</span>
+            <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
         </button>
+
+        <input type="file" id="lesson-exercise-file" name="exerciseFile" style="display: none;" onchange="displayExerciseFileName(this)">
+
+        <span id="exercise-file-name" class="d-block mt--10"></span>
+
+        <div id="current-exercise-file-container" class="mt-2" style="display: none;">
+            <p class="b3 mb-1">Current File:</p>
+            <div class="d-flex align-items-center">
+                <a href="#" id="current-exercise-file-link" target="_blank" class="rbt-btn-link"></a>
+                <button type="button" id="remove-exercise-file-btn" class="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger ms-3" title="Remove File">
+                    <i class="feather-x"></i>
+                </button>
+            </div>
+            <input type="hidden" id="remove-exercise-file-flag" value="false">
+        </div>
     </div>
-    <input type="hidden" id="remove-exercise-file-flag" name="removeExerciseFile" value="false">
 </div>
 
                                     <div class="course-field mb--20">
