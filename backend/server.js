@@ -649,10 +649,13 @@ const lessonUploads = multer({
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
+// --- REPLACE ALL OF YOUR PUT ROUTES FOR LESSONS WITH THIS SINGLE ONE ---
+// In server.js, replace your PUT route with this one
+
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles', 5), async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
+        const { title, summary, vimeoUrl, duration, isPreview, filesToRemove } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -665,34 +668,54 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         const lesson = episode.lessons.id(lessonId);
         if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
 
+        // --- THIS IS THE FIX ---
+        // Ensure lesson.exerciseFiles is an array before we operate on it.
+        if (!Array.isArray(lesson.exerciseFiles)) {
+            lesson.exerciseFiles = [];
+        }
+        // --- END OF FIX ---
+
         // Update text fields
         lesson.title = title || lesson.title;
         lesson.summary = summary || lesson.summary;
-        lesson.vimeoUrl = vimeoUrl; // Allow clearing the URL
+        lesson.vimeoUrl = vimeoUrl;
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
-        // Handle file removal
-        if (removeExerciseFile === 'true') {
-            // Optional: Add code here to delete the actual file from the server's disk
-            lesson.exerciseFile = undefined; 
+        // 1. Handle file removal
+        if (filesToRemove) {
+            const parsedFilesToRemove = JSON.parse(filesToRemove);
+            if (Array.isArray(parsedFilesToRemove) && parsedFilesToRemove.length > 0) {
+                // Filter out files whose 'key' is in the removal list
+                lesson.exerciseFiles = lesson.exerciseFiles.filter(
+                    file => !parsedFilesToRemove.includes(file.key)
+                );
+            }
         }
 
-        // Handle new file upload
-        if (req.file) {
-            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        // 2. Handle new file uploads
+        if (req.files && req.files.length > 0) {
+            const newFileObjects = req.files.map(file => ({
+                name: file.originalname,
+                // Save a clean, relative path for the frontend to use
+                path: `assets/images/uploads/${file.filename}`,
+                key: file.filename
+            }));
+            lesson.exerciseFiles.push(...newFileObjects);
         }
 
         await course.save();
         res.json({ success: true, message: 'Lesson updated successfully!', course });
+
     } catch (error) {
         console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
-}); // Only handle exerciseFile
+});
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
-app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
+// --- REPLACE YOUR EXISTING POST ROUTE WITH THIS ---
+app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.array('exerciseFiles', 5), async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview } = req.body;
@@ -702,12 +725,8 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         }
 
         const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'User not authorized' });
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
         }
 
         const episode = course.episodes.id(episodeId);
@@ -720,77 +739,27 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
             summary,
             vimeoUrl,
             duration,
-            isPreview: isPreview === 'true'
+            isPreview: isPreview === 'true',
+            exerciseFiles: [] // Initialize as an empty array
         };
 
-        if (req.file) {
-            newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        if (req.files && req.files.length > 0) {
+            // Create an array of file objects, not just strings
+            newLessonData.exerciseFiles = req.files.map(file => ({
+                name: file.originalname,
+                path: file.path,
+                key: file.filename 
+            }));
         }
-        
-// --- ADD THESE LOGS TO DEBUG ---
-        console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
-        console.log(newLesson);
-        // --- END OF LOGS ---
 
         episode.lessons.push(newLesson);
         await course.save();
 
-        res.status(201).json({ 
-            success: true, 
-            message: 'Lesson added successfully!',
-            course: course 
-        });
+        res.status(201).json({ success: true, message: 'Lesson added successfully!', course });
+
     } catch (error) {
         console.error('Error adding lesson:', error);
-        res.status(500).json({ success: false, message: 'Server error', error: error.message });
-    }
-});
-
-// PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
-    try {
-        const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
-
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'User not authorized' });
-        }
-
-        const episode = course.episodes.id(episodeId);
-        if (!episode) {
-            return res.status(404).json({ success: false, message: 'Topic not found' });
-        }
-
-        const lesson = episode.lessons.id(lessonId);
-        if (!lesson) {
-            return res.status(404).json({ success: false, message: 'Lesson not found' });
-        }
-
-        lesson.title = title || lesson.title;
-        lesson.summary = summary || lesson.summary;
-        lesson.vimeoUrl = vimeoUrl || lesson.vimeoUrl;
-        lesson.duration = duration || lesson.duration;
-        lesson.isPreview = isPreview === 'true';
-
-        if (req.file) {
-            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
-        }
-
-        await course.save();
-
-        res.json({
-            success: true,
-            message: 'Lesson updated successfully!',
-            course: course
-        });
-    } catch (error) {
-        console.error('Error updating lesson:', error);
-        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
