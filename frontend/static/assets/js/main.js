@@ -2077,40 +2077,74 @@ $(document).ready(function () {
         }
     }
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        const currentFilesList = document.getElementById('current-files-list');
-    currentFilesList.innerHTML = ''; // Clear the list
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                // ADD THIS LINE TO DEBUG
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    const currentFilesList = document.getElementById('current-files-list');
+
+    if (courseData && currentFilesList) {
+        currentFilesList.innerHTML = ''; // Clear the list
+
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode) {
+            const lesson = episode.lessons.find(les => les._id == lessonId);
             console.log('Editing Lesson - Found lesson data:', lesson);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
+
+            if (lesson) {
+                // --- THIS IS THE NEWLY ADDED CODE ---
+                const currentFileContainer = document.getElementById('current-exercise-file-container');
+                let filesToDisplay = [];
+
+                // Check for the new 'exerciseFiles' array first
+                if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                    filesToDisplay = lesson.exerciseFiles;
+                } 
+                // Fallback to check for the old 'exerciseFile' string
+                else if (lesson.exerciseFile) {
+                    filesToDisplay.push(lesson.exerciseFile);
                 }
+
+                if (filesToDisplay.length > 0) {
+                    currentFileContainer.style.display = 'block';
+                    filesToDisplay.forEach(filePath => {
+                        const fileName = filePath.split('/').pop();
+                        const listItem = `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="/${filePath}" target="_blank" class="rbt-btn-link">${fileName}</a>
+                                <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filename="${filePath}">Remove</button>
+                            </li>
+                        `;
+                        currentFilesList.innerHTML += listItem;
+                    });
+                } else {
+                    currentFileContainer.style.display = 'none';
+                    currentFilesList.innerHTML = '<li class="list-group-item">No files attached.</li>';
+                }
+                // --- END OF NEWLY ADDED CODE ---
+
+                // --- THIS IS YOUR EXISTING, UNCHANGED CODE ---
+                document.getElementById('lesson-title').value = lesson.title || '';
+                document.getElementById('lesson-summary').value = lesson.summary || '';
+                document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                const modal = document.getElementById('Lesson');
+                modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                modal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Update Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
             }
         }
     }
+}
 
 const renderCourseBuilder = (episodes) => {
     const container = document.getElementById('course-builder-topics-container');
