@@ -1886,94 +1886,100 @@ $(document).ready(function () {
         }
     }
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-                }
-            }
+// 2. Replace your 'openUpdateLessonModal' function
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    const currentFilesList = document.getElementById('current-files-list');
+    const currentFileContainer = document.getElementById('current-exercise-file-container');
+    
+    if (courseData && currentFilesList) {
+        currentFilesList.innerHTML = '';
+        const lesson = courseData.episodes.find(e => e._id === episodeId)?.lessons.find(l => l._id === lessonId);
+        
+        if (lesson && lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+            currentFileContainer.style.display = 'block';
+            lesson.exerciseFiles.forEach(filePath => {
+                const fileName = filePath.split('/').pop();
+                currentFilesList.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="/${filePath}" target="_blank">${fileName}</a>
+                        <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filepath="${filePath}">Remove</button>
+                    </li>`;
+            });
+        } else {
+            currentFileContainer.style.display = 'none';
         }
+        // ... (rest of your logic to populate title, summary, etc.) ...
+    }
+};
+
+
+const renderCourseBuilder = (episodes) => {
+    const container = document.getElementById('course-builder-topics-container');
+    if (!container) return;
+    if (!episodes || episodes.length === 0) {
+        container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
+        return;
     }
 
-    const renderCourseBuilder = (episodes) => {
-        const container = document.getElementById('course-builder-topics-container');
-        if (!container) return;
-        if (!episodes || episodes.length === 0) {
-            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
-            return;
-        }
-        container.innerHTML = episodes.map((episode) => {
-const lessonsHtml = episode.lessons.map(lesson => `
-    <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-        <div class="col-10 inner d-flex align-items-center gap-2">
-            <i class="feather-play-circle"></i>
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-        </div>
-        <div class="col-2 inner">
-            <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                <li>
-                    <i class="feather-trash delete-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-                <li>
-                    <i class="feather-edit edit-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-            </ul>
-        </div>
-    </div>
-`).join('');
+    container.innerHTML = episodes.map((episode) => {
+        const lessonsHtml = episode.lessons.map(lesson => {
+            // This block checks for an exercise file and creates the paperclip icon
+            let exerciseFileHtml = '';
+            let filesToDisplay = [];
+            if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                filesToDisplay = lesson.exerciseFiles;
+            } else if (lesson.exerciseFile) {
+                filesToDisplay.push(lesson.exerciseFile);
+            }
+            if (filesToDisplay.length > 0) {
+                exerciseFileHtml = `<i class="feather-paperclip ms-2" title="${filesToDisplay.length} file(s) attached"></i>`;
+            }
+
             return `
-                <div class="accordion-item card mb--20">
-                    <h2 class="accordion-header card-header rbt-course">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
-                            ${episode.title}
-                        </button>
-                        <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
-                        <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
-                    </h2>
-                    <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
-                        <div class="accordion-body card-body">
-                            ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
-                            <div class="d-flex">
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper">
-                                        <span class="btn-text">Add Lesson</span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
+                <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+                    <div class="col-10 inner d-flex align-items-center gap-2">
+                        <i class="feather-play-circle"></i>
+                        <h6 class="rbt-title mb-0">${lesson.title}</h6>
+                        ${exerciseFileHtml} </div>
+                    <div class="col-2 inner">
+                        <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2 justify-content-end">
+                            <li><i class="feather-trash delete-lesson" data-episode-id="${episode._id}" data-lesson-id="${lesson._id}" style="cursor: pointer;" title="Delete Lesson"></i></li>
+                            <li><i class="feather-edit edit-lesson" data-episode-id="${episode._id}" data-lesson-id="${lesson._id}" style="cursor: pointer;" title="Edit Lesson"></i></li>
+                        </ul>
                     </div>
                 </div>
             `;
         }).join('');
-    };
+
+        return `
+            <div class="accordion-item card mb--20">
+                <h2 class="accordion-header card-header rbt-course">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
+                        ${episode.title}
+                    </button>
+                    <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')" title="Edit Topic"></span>
+                    <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}" title="Delete Topic"></span>
+                </h2>
+                <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
+                    <div class="accordion-body card-body">
+                        ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
+                        <div class="d-flex">
+                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
+                                <span class="icon-reverse-wrapper">
+                                    <span class="btn-text">Add Lesson</span>
+                                    <span class="btn-icon"><i class="feather-plus-square"></i></span>
+                                    <span class="btn-icon"><i class="feather-plus-square"></i></span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
 
     window.onload = function() {
         // --- AUTH & URL CHECK ---
@@ -2274,32 +2280,29 @@ if (lessonModal) {
             });
         }
 
-        // Delete Lesson Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteLessonBtn = e.target.closest('.delete-lesson');
-            if (deleteLessonBtn) {
-                if (confirm('Are you sure you want to delete this lesson?')) {
-                    const episodeId = deleteLessonBtn.dataset.episodeId;
-                    const lessonId = deleteLessonBtn.dataset.lessonId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting lesson:', error);
-                        alert('An error occurred while deleting the lesson.');
-                    }
-                }
-            }
-        });
+// 3. Add this new event listener inside the edit-course.html block
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('remove-file-btn')) {
+        e.preventDefault();
+        const listItem = e.target.closest('.list-group-item');
+        const filePathToDelete = e.target.dataset.filepath;
+        
+        if (!confirm(`Are you sure you want to delete this file?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}/files`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ filePathToDelete })
+            });
+            const result = await response.json();
+            if (result.success) {
+                listItem.remove();
+                courseData = result.course; // Update local data
+            } else { alert(`Error: ${result.message}`); }
+        } catch (error) { console.error('Error deleting file:', error); }
+    }
+});
 // Edit Lesson Event Listener
 document.addEventListener('click', async (e) => {
     const editLessonBtn = e.target.closest('.edit-lesson');

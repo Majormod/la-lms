@@ -20,7 +20,7 @@ const LessonSchema = new Schema({
         type: Boolean, // Can non-enrolled students watch this lesson?
         default: false
     },
-    exerciseFiles: [{ type: String }] // Changed to an array of strings
+    exerciseFiles: [String] // Changed to an array of strings
 });
 
 // Defines the schema for an Episode (Topic), which contains an array of Lessons
