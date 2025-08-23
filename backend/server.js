@@ -725,53 +725,6 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
     }
 });
 
-// PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
-    try {
-        const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
-
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'User not authorized' });
-        }
-
-        const episode = course.episodes.id(episodeId);
-        if (!episode) {
-            return res.status(404).json({ success: false, message: 'Topic not found' });
-        }
-
-        const lesson = episode.lessons.id(lessonId);
-        if (!lesson) {
-            return res.status(404).json({ success: false, message: 'Lesson not found' });
-        }
-
-        lesson.title = title || lesson.title;
-        lesson.summary = summary || lesson.summary;
-        lesson.vimeoUrl = vimeoUrl || lesson.vimeoUrl;
-        lesson.duration = duration || lesson.duration;
-        lesson.isPreview = isPreview === 'true';
-
-        if (req.file) {
-            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
-        }
-
-        await course.save();
-
-        res.json({
-            success: true,
-            message: 'Lesson updated successfully!',
-            course: course
-        });
-    } catch (error) {
-        console.error('Error updating lesson:', error);
-        res.status(500).json({ success: false, message: 'Server error', error: error.message });
-    }
-});
 
 // DELETE route remains unchanged as it doesn't handle files
 app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, async (req, res) => {
