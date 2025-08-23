@@ -1960,36 +1960,33 @@ const renderCourseBuilder = (episodes) => {
     }
 
     container.innerHTML = episodes.map((episode) => {
-        // 1. Combine all content types (lessons, quizzes, assignments) into a single 'items' array
-        //    We add a 'type' property to each so we know what it is.
+        // --- THIS SECTION IS NOW FIXED ---
+        // We convert each item to a plain object before adding the 'type' property.
         const items = [
-            ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
-            ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
-            ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
+            ...(episode.lessons || []).map(item => ({ ...item.toObject(), type: 'lesson' })),
+            ...(episode.quizzes || []).map(item => ({ ...item.toObject(), type: 'quiz' })),
+            ...(episode.assignments || []).map(item => ({ ...item.toObject(), type: 'assignment' }))
         ];
-        // Note: In the future, you can add an 'order' property to sort these correctly.
 
         const itemsHtml = items.map(item => {
             let iconClass = '';
             let editTargetModal = '';
 
-            // 2. Determine the correct icon and modal target based on the item's type
             switch (item.type) {
                 case 'lesson':
                     iconClass = 'feather-play-circle';
                     editTargetModal = '#Lesson';
                     break;
                 case 'quiz':
-                    iconClass = 'feather-help-circle'; // Quiz icon
+                    iconClass = 'feather-help-circle';
                     editTargetModal = '#Quiz';
                     break;
                 case 'assignment':
-                    iconClass = 'feather-clipboard'; // Assignment icon
+                    iconClass = 'feather-clipboard';
                     editTargetModal = '#Assignment';
                     break;
             }
 
-            // 3. Generate the HTML for a single item row
             return `
             <div class="d-flex justify-content-between rbt-course-wrape mb-4">
                 <div class="col-10 inner d-flex align-items-center gap-2">
@@ -2019,7 +2016,6 @@ const renderCourseBuilder = (episodes) => {
             `;
         }).join('');
 
-        // 4. Generate the HTML for the entire topic, including the "Add" buttons
         return `
         <div class="accordion-item card mb--20">
             <h2 class="accordion-header card-header rbt-course">
@@ -2046,7 +2042,6 @@ const renderCourseBuilder = (episodes) => {
                             </button>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
