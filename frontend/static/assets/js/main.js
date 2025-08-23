@@ -2282,26 +2282,35 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
         }
 
 // Lesson Modal Setup
+// --- CORRECTED: Lesson Modal Setup Listener ---
 if (lessonModal) {
     lessonModal.addEventListener('show.bs.modal', (e) => {
-        const button = e.relatedTarget;
+        const button = e.relatedTarget; // This is the button that triggered the modal
 
-        // The 'if (button)' check goes on the OUTSIDE
-        if (button) {
-            // All the logic that uses the 'button' variable goes INSIDE this check
-            if (button.classList.contains('add-lesson-btn')) {
-                currentEditingEpisodeId = button.dataset.episodeId;
-                currentEditingLessonId = null;
-                document.getElementById('lesson-form').reset();
-                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                    <span class="icon-reverse-wrapper">
-                        <span class="btn-text">Add Lesson</span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                    </span>
-                `;
-            }
+        // Check if the modal was opened by an "Add" button (which has the new class)
+        // This condition is true for "Add Lesson" but false for "Edit Lesson"
+        if (button && button.classList.contains('add-content-btn')) {
+
+            currentEditingEpisodeId = button.dataset.episodeId;
+            currentEditingLessonId = null; // Crucial: ensure we are in "Add" mode
+
+            // 1. Reset the form to its empty state
+            document.getElementById('lesson-form').reset();
+
+            // 2. Reset modal title and button text
+            lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
+            const saveBtn = lessonModal.querySelector('#save-lesson-btn');
+            saveBtn.innerHTML = `
+                <span class="icon-reverse-wrapper">
+                    <span class="btn-text">Add Lesson</span>
+                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                </span>
+            `;
+
+            // 3. Clear any file lists from a previous edit session
+            document.getElementById('existing-exercise-files').innerHTML = '';
+            document.getElementById('new-files-list').innerHTML = '';
         }
     });
 }
