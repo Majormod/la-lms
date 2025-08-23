@@ -1960,7 +1960,6 @@ const renderCourseBuilder = (episodes) => {
     }
 
     container.innerHTML = episodes.map((episode) => {
-        // --- CORRECTED LINES: .toObject() has been removed ---
         const items = [
             ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
             ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
@@ -2030,13 +2029,13 @@ const renderCourseBuilder = (episodes) => {
                     
                     <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
                         <div class="gap-3 d-flex flex-wrap">
-                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
+                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
                                 <span class="icon-reverse-wrapper"><span class="btn-text">Lesson</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
                             </button>
-                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2" type="button" data-bs-toggle="modal" data-bs-target="#Quiz" data-episode-id="${episode._id}">
+                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Quiz" data-episode-id="${episode._id}">
                                 <span class="icon-reverse-wrapper"><span class="btn-text">Quiz</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
                             </button>
-                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2" type="button" data-bs-toggle="modal" data-bs-target="#Assignment" data-episode-id="${episode._id}">
+                            <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Assignment" data-episode-id="${episode._id}">
                                 <span class="icon-reverse-wrapper"><span class="btn-text">Assignments</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
                             </button>
                         </div>
@@ -2047,7 +2046,6 @@ const renderCourseBuilder = (episodes) => {
         `;
     }).join('');
 };
-
     window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
