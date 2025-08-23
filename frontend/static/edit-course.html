@@ -2035,20 +2035,22 @@
                                     </div>
 
 <div class="col-12">
-<div class="form-group">
-    <label class="d-block mb-2">Exercise Files (Optional)</label><br>
-    <button type="button" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
-        <span class="btn-text">Add Files</span>
-        <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
-    </button>
-    <input type="file" id="lesson-exercise-file" name="exerciseFiles" style="display: none;" onchange="displayExerciseFileName(this)" multiple>
-    <span id="exercise-file-name" class="d-block mt--10"></span>
-    <div id="current-exercise-file-container" class="mt-3" style="display: none;">
-        <p class="b3 mb-2">Current Files:</p>
-        <ul id="current-files-list" class="list-group">
+    <div class="form-group">
+        <label class="d-block mb-2">Exercise Files (Optional)</label><br>
+        <button type="button" class="rbt-btn btn-sm btn-border-gradient" onclick="triggerExerciseFileUpload()">
+            <span class="btn-text">Add Files</span>
+            <span class="btn-icon"><i class="feather-upload-cloud"></i></span>
+        </button>
+        <input type="file" id="lesson-exercise-file" name="exerciseFiles" style="display: none;" onchange="displayExerciseFileName(this)" multiple>
+        <span id="exercise-file-name" class="d-block mt-2 text-muted small"></span>
+        
+        <div id="current-exercise-file-container" class="mt-3" style="display: none;">
+            <p class="b3 mb-2">Current Files:</p>
+            <ul id="current-files-list" class="list-group">
+                <!-- Current files will be displayed here -->
             </ul>
+        </div>
     </div>
-</div>
 </div>
 
                                     <div class="course-field mb--20">

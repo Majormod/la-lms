@@ -1865,644 +1865,6 @@ if (window.location.pathname.includes('create-course.html')) {
     });
 }
 
-// --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-// --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-if (window.location.pathname.includes('edit-course.html')) {
-$(document).ready(function () {
-    $('#language').selectpicker();
-});
-    let courseData = null; 
-    let currentEditingEpisodeId = null;
-    let currentEditingLessonId = null;
-
-    window.openUpdateTopicModal = function(episodeId) {
-        currentEditingEpisodeId = episodeId;
-        if (courseData) {
-            const topic = courseData.episodes.find(ep => ep._id == episodeId);
-            if (topic) {
-                document.getElementById('update-topic-title').value = topic.title;
-                document.getElementById('update-topic-summary').value = topic.summary || '';
-            }
-        }
-    }
-
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-                }
-            }
-        }
-    }
-
-    const renderCourseBuilder = (episodes) => {
-        const container = document.getElementById('course-builder-topics-container');
-        if (!container) return;
-        if (!episodes || episodes.length === 0) {
-            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
-            return;
-        }
-        container.innerHTML = episodes.map((episode) => {
-const lessonsHtml = episode.lessons.map(lesson => `
-    <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-        <div class="col-10 inner d-flex align-items-center gap-2">
-            <i class="feather-play-circle"></i>
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-        </div>
-        <div class="col-2 inner">
-            <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                <li>
-                    <i class="feather-trash delete-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-                <li>
-                    <i class="feather-edit edit-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-            </ul>
-        </div>
-    </div>
-`).join('');
-            return `
-                <div class="accordion-item card mb--20">
-                    <h2 class="accordion-header card-header rbt-course">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
-                            ${episode.title}
-                        </button>
-                        <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
-                        <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
-                    </h2>
-                    <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
-                        <div class="accordion-body card-body">
-                            ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
-                            <div class="d-flex">
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper">
-                                        <span class="btn-text">Add Lesson</span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    };
-
-    window.onload = function() {
-        // --- AUTH & URL CHECK ---
-        if (!token || (user && user.role !== 'instructor')) {
-            alert("Access Denied.");
-            window.location.href = '/login.html';
-            return;
-        }
-        const params = new URLSearchParams(window.location.search);
-        const courseId = params.get('courseId');
-        if (!courseId) {
-            alert('No course ID found.');
-            window.location.href = 'instructor-course.html';
-            return;
-        }
-// --- Logic for custom file upload button ---
-const triggerBtn = document.getElementById('triggerFileUploadBtn');
-const fileInput = document.getElementById('lessonExerciseInput');
-const fileListContainer = document.getElementById('exerciseFileListContainer');
-
-if (triggerBtn && fileInput) {
-    // When the visible button is clicked, trigger the hidden file input
-    triggerBtn.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // When files are selected, display their names
-    fileInput.addEventListener('change', () => {
-        if (fileListContainer) {
-            fileListContainer.innerHTML = ''; // Clear previous list
-            if (fileInput.files.length > 0) {
-                let fileListHtml = '<p class="b3 mb-2">Selected Files:</p><ul class="list-group">';
-                Array.from(fileInput.files).forEach(file => {
-                    fileListHtml += `<li class="list-group-item list-group-item-sm">${file.name}</li>`;
-                });
-                fileListHtml += '</ul>';
-                fileListContainer.innerHTML = fileListHtml;
-            }
-        }
-    });
-}
-        // --- DEFINE ALL PAGE ELEMENTS ---
-        const editCourseForm = document.getElementById('create-course-form');
-        const courseTitleInput = document.getElementById('field-1');
-        const slugInput = document.getElementById('field-2');
-        const descriptionInput = document.getElementById('aboutCourse');
-        const priceInput = document.getElementById('regularPrice-1');
-        const discountedPriceInput = document.getElementById('discountedPrice-1');
-        const videoUrlInput = document.getElementById('videoUrl');
-        const thumbnailInput = document.getElementById('createinputfile');
-        const thumbnailPreview = document.getElementById('createfileImage');
-        const submitButton = document.getElementById('create-course-btn');
-        const courseStatusSelect = document.getElementById('course-status');
-        const previewButton = document.getElementById('preview-course-btn');
-        const addTopicModal = document.getElementById('exampleModal');
-        const updateTopicModal = document.getElementById('UpdateTopic');
-        const saveTopicBtn = document.getElementById('save-topic-btn');
-        const saveUpdateTopicBtn = document.getElementById('save-update-topic-btn');
-        const lessonModal = document.getElementById('Lesson');
-        const saveLessonBtn = document.getElementById('save-lesson-btn');
-        
-
-        if (submitButton) {
-            const buttonText = submitButton.querySelector('.btn-text');
-            if (buttonText) buttonText.textContent = 'Update Course';
-        }
-    // ADD THIS EVENT LISTENER FOR THE REMOVE BUTTON
-    document.getElementById('remove-exercise-file-btn')?.addEventListener('click', () => {
-        document.getElementById('current-exercise-file-container').style.display = 'none';
-        document.getElementById('remove-exercise-file-flag').value = 'true';
-        document.getElementById('lesson-exercise-file').value = '';
-        document.getElementById('exercise-file-name').textContent = '';
-    });
-        // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
-fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
-    .then(res => res.ok ? res.json() : Promise.reject('Course not found'))
-    .then(result => {
-        if (result.success) {
-            const course = result.course;
-            courseData = course;
-            
-            console.log('Loading course data from server:', {
-                whatYoullLearn: course.whatYoullLearn,
-                tags: course.tags,
-                duration: course.duration,
-                requirements: course.requirements
-            });
-
-            // Basic fields
-            if (courseTitleInput) courseTitleInput.value = course.title || '';
-            if (slugInput) slugInput.value = course.slug || '';
-            if (descriptionInput) course.description ? descriptionInput.value = course.description : '';
-            if (priceInput) course.originalPrice ? priceInput.value = course.originalPrice : '';
-            if (discountedPriceInput) course.price ? discountedPriceInput.value = course.price : '';
-            if (videoUrlInput) videoUrlInput.value = course.previewVideoUrl || '';
-            if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
-            if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
-            
-            // Additional Information fields - FIXED
-            if (course.startDate) {
-                try {
-                    const date = new Date(course.startDate);
-                    if (!isNaN(date)) {
-                        document.getElementById('startDate').value = date.toISOString().split('T')[0];
-                    }
-                } catch (e) {
-                    console.error('Error parsing startDate:', e);
-                }
-            }
-            
-            // Language - handle both array and string
-            if (course.language && course.language.length > 0) {
-                const languageSelect = document.getElementById('language');
-                if (languageSelect) {
-                    Array.from(languageSelect.options).forEach(option => {
-                        option.selected = course.language.includes(option.value);
-                    });
-                }
-            }
-            
-            // Get all HTML elements
-            const whatLearnElement = document.getElementById('whatLearn');
-            const descriptionElement = document.getElementById('description');
-            const durationHoursElement = document.getElementById('totalDurationHours');
-            const durationMinutesElement = document.getElementById('totalDurationMinutes');
-            const courseTagElement = document.getElementById('courseTag');
-            const targetedElement = document.getElementById('targeted');
-            
-            console.log('HTML elements status:', {
-                whatLearn: !!whatLearnElement,
-                description: !!descriptionElement,
-                durationHours: !!durationHoursElement,
-                durationMinutes: !!durationMinutesElement,
-                courseTag: !!courseTagElement,
-                targeted: !!targetedElement
-            });
-            
-            // Populate fields - with null checks and fallbacks
-            if (whatLearnElement) {
-                whatLearnElement.value = course.requirements ? 
-                    (Array.isArray(course.requirements) ? course.requirements.join('\n') : course.requirements) : '';
-                console.log('Set requirements to:', whatLearnElement.value);
-            }
-            
-            if (descriptionElement) {
-                descriptionElement.value = course.whatYoullLearn ? 
-                    (Array.isArray(course.whatYoullLearn) ? course.whatYoullLearn.join('\n') : course.whatYoullLearn) : '';
-                console.log('Set whatYoullLearn to:', descriptionElement.value);
-            }
-            
-            if (durationHoursElement) {
-                durationHoursElement.value = course.duration && course.duration.hours ? course.duration.hours : 0;
-                console.log('Set duration hours to:', durationHoursElement.value);
-            }
-            
-            if (durationMinutesElement) {
-                durationMinutesElement.value = course.duration && course.duration.minutes ? course.duration.minutes : 0;
-                console.log('Set duration minutes to:', durationMinutesElement.value);
-            }
-            
-            if (courseTagElement) {
-                courseTagElement.value = course.tags ? 
-                    (Array.isArray(course.tags) ? course.tags.join(', ') : course.tags) : '';
-                console.log('Set tags to:', courseTagElement.value);
-            }
-            
-            if (targetedElement) {
-                targetedElement.value = course.targetedAudience ? 
-                    (Array.isArray(course.targetedAudience) ? course.targetedAudience.join('\n') : course.targetedAudience) : '';
-                console.log('Set targetedAudience to:', targetedElement.value);
-            }
-            
-            // Certificate template
-            if (course.certificateTemplate && course.certificateTemplate !== 'none') {
-                const selectedRadio = document.querySelector(`input[value="${course.certificateTemplate}"]`);
-                if (selectedRadio) {
-                    selectedRadio.checked = true;
-                    console.log('Set certificate template to:', course.certificateTemplate);
-                }
-                
-                if (course.certificateOrientation === 'portrait') {
-                    const portraitTab = document.getElementById('portrait-tab');
-                    if (portraitTab) {
-                        portraitTab.click();
-                        console.log('Set orientation to portrait');
-                    }
-                }
-                
-            }
-            
-            renderCourseBuilder(course.episodes);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading course:', error);
-        alert(`Error loading course data.`);
-        window.location.href = 'instructor-course.html';
-    });
-
-        // --- EVENT LISTENERS ---
-
-        // Preview Button
-        if (previewButton) {
-            previewButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.open(`course-details.html?courseId=${courseId}`, '_blank');
-            });
-        }
-
-// Lesson Modal Setup
-if (lessonModal) {
-    lessonModal.addEventListener('show.bs.modal', (e) => {
-        const button = e.relatedTarget;
-
-        // The 'if (button)' check goes on the OUTSIDE
-        if (button) {
-            // All the logic that uses the 'button' variable goes INSIDE this check
-            if (button.classList.contains('add-lesson-btn')) {
-                currentEditingEpisodeId = button.dataset.episodeId;
-                currentEditingLessonId = null;
-                document.getElementById('lesson-form').reset();
-                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                    <span class="icon-reverse-wrapper">
-                        <span class="btn-text">Add Lesson</span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                    </span>
-                `;
-            }
-        }
-    });
-}
-
-        // Save Lesson Button
-        if (saveLessonBtn) {
-            saveLessonBtn.addEventListener('click', async () => {
-                const title = document.getElementById('lesson-title').value;
-                const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
-                const hr = document.getElementById('lesson-duration-hr').value || '0';
-                const min = document.getElementById('lesson-duration-min').value || '0';
-                const sec = document.getElementById('lesson-duration-sec').value || '0';
-                const duration = `${hr} hr ${min} min ${sec} sec`;
-                const isPreview = document.getElementById('lesson-is-preview').checked;
-                const exerciseFileInput = lessonModal.querySelector('input[type="file"][name="exerciseFile"]');
-                const episodeId = currentEditingEpisodeId;
-
-                if (!title) return alert('Please enter a lesson title.');
-                if (!episodeId) return alert('No episode selected. Please try again.');
-
-                try {
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
-                    formData.append('duration', duration);
-                    formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files[0]) {
-                        formData.append('exerciseFile', exerciseFileInput.files[0]);
-                    }
-
-                    const url = currentEditingLessonId 
-                        ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
-                        : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
-                    const method = currentEditingLessonId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method,
-                        headers: { 'x-auth-token': token },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(lessonModal).hide();
-                        lessonModal.querySelector('form')?.reset();
-                        if (exerciseFileInput) exerciseFileInput.value = '';
-                        lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                        lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                            <span class="icon-reverse-wrapper">
-                                <span class="btn-text">Add Lesson</span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            </span>
-                        `;
-                        currentEditingLessonId = null;
-                        currentEditingEpisodeId = null;
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error saving lesson:', error);
-                    alert('An error occurred while saving the lesson.');
-                }
-            });
-        }
-
-        // Delete Lesson Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteLessonBtn = e.target.closest('.delete-lesson');
-            if (deleteLessonBtn) {
-                if (confirm('Are you sure you want to delete this lesson?')) {
-                    const episodeId = deleteLessonBtn.dataset.episodeId;
-                    const lessonId = deleteLessonBtn.dataset.lessonId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting lesson:', error);
-                        alert('An error occurred while deleting the lesson.');
-                    }
-                }
-            }
-        });
-// Edit Lesson Event Listener
-document.addEventListener('click', async (e) => {
-    const editLessonBtn = e.target.closest('.edit-lesson');
-    if (editLessonBtn) {
-        const episodeId = editLessonBtn.dataset.episodeId;
-        const lessonId = editLessonBtn.dataset.lessonId;
-        openUpdateLessonModal(episodeId, lessonId);
-        
-        // Manually show the modal since we're not using data-bs-target
-        const lessonModal = new bootstrap.Modal(document.getElementById('Lesson'));
-        lessonModal.show();
-    }
-});
-// Add this event listener for lesson clicks
-document.addEventListener('click', function(e) {
-    const lessonLink = e.target.closest('.lesson-link');
-    if (lessonLink) {
-        e.preventDefault();
-        
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        const episodeId = lessonLink.dataset.episodeId;
-        const lessonId = lessonLink.dataset.lessonId;
-        const lessonTitle = lessonLink.dataset.title;
-        const lessonSummary = lessonLink.dataset.summary;
-        const vimeoUrl = lessonLink.dataset.vimeoUrl;
-        
-        // Store lesson data for lesson.html
-        localStorage.setItem('currentLesson', JSON.stringify({
-            courseId,
-            episodeId,
-            lessonId,
-            title: lessonTitle,
-            summary: lessonSummary,
-            vimeoUrl: vimeoUrl
-        }));
-        
-        // Navigate to lesson page
-        window.location.href = `lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
-    }
-});
-        // "Add Topic" Modal Save Button
-        if (saveTopicBtn) {
-            saveTopicBtn.addEventListener('click', async () => {
-                const title = document.getElementById('add-topic-title').value;
-                const summary = document.getElementById('add-topic-summary').value;
-                if (!title) { return alert('Please enter a topic name.'); }
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                        body: JSON.stringify({ title, summary }),
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(addTopicModal).hide();
-                        document.getElementById('add-topic-title').value = '';
-                        document.getElementById('add-topic-summary').value = '';
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    alert('An error occurred while saving the topic.');
-                }
-            });
-        }
-
-        // Delete Topic Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteBtn = e.target.closest('.rbt-course-del');
-            if (deleteBtn) {
-                if (confirm('Are you sure you want to delete this topic?')) {
-                    const episodeId = deleteBtn.dataset.episodeId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting topic:', error);
-                        alert('An error occurred while deleting the topic.');
-                    }
-                }
-            }
-        });
-
-        // Update Topic Save Button
-        if (saveUpdateTopicBtn) {
-            saveUpdateTopicBtn.addEventListener('click', async () => {
-                const episodeId = currentEditingEpisodeId;
-                if (!episodeId) return alert('No topic selected for editing.');
-                const title = document.getElementById('update-topic-title').value;
-                const summary = document.getElementById('update-topic-summary').value;
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                        body: JSON.stringify({ title, summary })
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(updateTopicModal).hide();
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error updating topic:', error);
-                    alert('An error occurred while updating the topic.');
-                }
-            });
-        }
-
-        // Main "Update Course" Form
-if (editCourseForm) {
-    editCourseForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        
-        // Basic fields
-        formData.append('title', document.getElementById('field-1').value);
-        formData.append('slug', document.getElementById('field-2').value);
-        formData.append('description', document.getElementById('aboutCourse').value);
-        formData.append('originalPrice', document.getElementById('regularPrice-1').value);
-        formData.append('price', document.getElementById('discountedPrice-1').value);
-        formData.append('previewVideoUrl', document.getElementById('videoUrl').value);
-        formData.append('status', document.getElementById('course-status').value);
-        
-        // Additional Information fields - CORRECTED FIELD NAMES
-        formData.append('startDate', document.getElementById('startDate')?.value || '');
-        
-        // Language
-        const languageSelect = document.getElementById('language');
-        if (languageSelect) {
-            const selectedLanguages = Array.from(languageSelect.selectedOptions).map(opt => opt.value);
-            formData.append('language', JSON.stringify(selectedLanguages));
-        }
-        
-        // Use the correct field names that match your model:
-        formData.append('requirements', document.getElementById('whatLearn')?.value || '');
-        formData.append('whatYoullLearn', document.getElementById('description')?.value || ''); // This matches your model
-        formData.append('durationHours', document.getElementById('totalDurationHours')?.value || '0');
-        formData.append('durationMinutes', document.getElementById('totalDurationMinutes')?.value || '0');
-        formData.append('tags', document.getElementById('courseTag')?.value || ''); // This matches your model
-        formData.append('targetedAudience', document.getElementById('targeted')?.value || '');
-        
-        // Certificate fields
-        const selectedTemplate = document.querySelector('input[name="radio-group"]:checked') || 
-                               document.querySelector('input[name="radio-group-portrait"]:checked');
-        if (selectedTemplate) {
-            formData.append('certificateTemplate', selectedTemplate.value);
-        }
-        
-        const activeTab = document.querySelector('.advance-tab-button a.active');
-        if (activeTab) {
-            const orientation = activeTab.id === 'landscape-tab' ? 'landscape' : 'portrait';
-            formData.append('certificateOrientation', orientation);
-        }
-        
-        if (thumbnailInput.files.length > 0) {
-            formData.append('thumbnail', thumbnailInput.files[0]);
-        }
-
-        // Debug log
-        console.log('FormData being sent:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ':', value);
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
-                method: 'PUT',
-                headers: { 'x-auth-token': token },
-                body: formData,
-            });
-            const result = await response.json();
-            console.log('Server response:', result);
-            
-            if (result.success) {
-                alert('Course updated successfully!');
-                window.location.href = '/instructor-course.html';
-            } else {
-                alert(`Error: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error updating course:', error);
-            alert('An error occurred while updating the course.');
-        }
-    });
-}
-    }; // End of window.onload
-}
-
 if (window.location.pathname.includes('course-details.html')) {
 
     // These functions are now defined outside for better structure.
@@ -4970,6 +4332,70 @@ if (window.location.pathname.includes('create-course.html')) {
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 if (window.location.pathname.includes('edit-course.html')) {
+// --- Exercise File Helper Functions ---
+function triggerExerciseFileUpload() {
+    document.getElementById('lesson-exercise-file').click();
+}
+
+function displayExerciseFileName(input) {
+    const fileNameContainer = document.getElementById('exercise-file-name');
+    if (input.files.length > 0) {
+        let fileNames = '';
+        for (let i = 0; i < input.files.length; i++) {
+            fileNames += input.files[i].name;
+            if (i < input.files.length - 1) fileNames += ', ';
+        }
+        fileNameContainer.textContent = fileNames;
+    } else {
+        fileNameContainer.textContent = '';
+    }
+}
+
+function displayCurrentExerciseFiles(files) {
+    const container = document.getElementById('current-exercise-file-container');
+    const fileList = document.getElementById('current-files-list');
+    
+    if (!files || files.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    fileList.innerHTML = '';
+    files.forEach(file => {
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item list-group-item-sm d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            ${file.name}
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeExerciseFile('${file._id || file.name}')">
+                <i class="feather-trash"></i>
+            </button>
+        `;
+        fileList.appendChild(listItem);
+    });
+    
+    container.style.display = 'block';
+}
+
+function removeExerciseFile(fileIdOrName) {
+    // This will be handled in the save function using the removeExerciseFileIds array
+    if (!window.removeExerciseFileIds) {
+        window.removeExerciseFileIds = [];
+    }
+    window.removeExerciseFileIds.push(fileIdOrName);
+    
+    // Remove from UI
+    const fileItems = document.querySelectorAll('#current-files-list li');
+    fileItems.forEach(item => {
+        if (item.textContent.includes(fileIdOrName)) {
+            item.remove();
+        }
+    });
+    
+    // Hide container if no files left
+    if (document.getElementById('current-files-list').children.length === 0) {
+        document.getElementById('current-exercise-file-container').style.display = 'none';
+    }
+}
 $(document).ready(function () {
     $('#language').selectpicker();
 });
@@ -4988,36 +4414,54 @@ $(document).ready(function () {
         }
     }
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    // Reset file removal tracking
+    window.removeExerciseFileIds = [];
+    
+    if (courseData) {
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode) {
+            const lesson = episode.lessons.find(les => les._id == lessonId);
+            if (lesson) {
+                document.getElementById('lesson-title').value = lesson.title || '';
+                document.getElementById('lesson-summary').value = lesson.summary || '';
+                document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                
+                // Handle exercise files
+                const exerciseFileInput = document.getElementById('lesson-exercise-file');
+                const fileNameContainer = document.getElementById('exercise-file-name');
+                
+                if (exerciseFileInput) exerciseFileInput.value = '';
+                if (fileNameContainer) fileNameContainer.textContent = '';
+                
+                // Display current exercise files if they exist
+                if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                    displayCurrentExerciseFiles(lesson.exerciseFiles);
+                } else {
+                    document.getElementById('current-exercise-file-container').style.display = 'none';
                 }
+                
+                const modal = document.getElementById('Lesson');
+                modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                modal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Update Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
             }
         }
     }
+}
 
     const renderCourseBuilder = (episodes) => {
         const container = document.getElementById('course-builder-topics-container');
@@ -5289,14 +4733,24 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
 if (lessonModal) {
     lessonModal.addEventListener('show.bs.modal', (e) => {
         const button = e.relatedTarget;
-
-        // The 'if (button)' check goes on the OUTSIDE
         if (button) {
-            // All the logic that uses the 'button' variable goes INSIDE this check
             if (button.classList.contains('add-lesson-btn')) {
                 currentEditingEpisodeId = button.dataset.episodeId;
                 currentEditingLessonId = null;
                 document.getElementById('lesson-form').reset();
+                
+                // Reset file fields
+                const exerciseFileInput = document.getElementById('lesson-exercise-file');
+                const fileNameContainer = document.getElementById('exercise-file-name');
+                const currentFilesContainer = document.getElementById('current-exercise-file-container');
+                
+                if (exerciseFileInput) exerciseFileInput.value = '';
+                if (fileNameContainer) fileNameContainer.textContent = '';
+                if (currentFilesContainer) currentFilesContainer.style.display = 'none';
+                
+                // Reset file removal tracking
+                window.removeExerciseFileIds = [];
+                
                 lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
                 lessonModal.querySelector('#save-lesson-btn').innerHTML = `
                     <span class="icon-reverse-wrapper">
@@ -5311,70 +4765,82 @@ if (lessonModal) {
 }
 
         // Save Lesson Button
-        if (saveLessonBtn) {
-            saveLessonBtn.addEventListener('click', async () => {
-                const title = document.getElementById('lesson-title').value;
-                const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
-                const hr = document.getElementById('lesson-duration-hr').value || '0';
-                const min = document.getElementById('lesson-duration-min').value || '0';
-                const sec = document.getElementById('lesson-duration-sec').value || '0';
-                const duration = `${hr} hr ${min} min ${sec} sec`;
-                const isPreview = document.getElementById('lesson-is-preview').checked;
-                const exerciseFileInput = lessonModal.querySelector('input[type="file"][name="exerciseFile"]');
-                const episodeId = currentEditingEpisodeId;
+if (saveLessonBtn) {
+    saveLessonBtn.addEventListener('click', async () => {
+        const title = document.getElementById('lesson-title').value;
+        const summary = document.getElementById('lesson-summary').value;
+        const videoSource = document.getElementById('lesson-video-source').value;
+        const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
+        const hr = document.getElementById('lesson-duration-hr').value || '0';
+        const min = document.getElementById('lesson-duration-min').value || '0';
+        const sec = document.getElementById('lesson-duration-sec').value || '0';
+        const duration = `${hr} hr ${min} min ${sec} sec`;
+        const isPreview = document.getElementById('lesson-is-preview').checked;
+        const exerciseFileInput = document.getElementById('lesson-exercise-file');
+        const episodeId = currentEditingEpisodeId;
 
-                if (!title) return alert('Please enter a lesson title.');
-                if (!episodeId) return alert('No episode selected. Please try again.');
+        if (!title) return alert('Please enter a lesson title.');
+        if (!episodeId) return alert('No episode selected. Please try again.');
 
-                try {
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
-                    formData.append('duration', duration);
-                    formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files[0]) {
-                        formData.append('exerciseFile', exerciseFileInput.files[0]);
-                    }
-
-                    const url = currentEditingLessonId 
-                        ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
-                        : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
-                    const method = currentEditingLessonId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method,
-                        headers: { 'x-auth-token': token },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(lessonModal).hide();
-                        lessonModal.querySelector('form')?.reset();
-                        if (exerciseFileInput) exerciseFileInput.value = '';
-                        lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                        lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                            <span class="icon-reverse-wrapper">
-                                <span class="btn-text">Add Lesson</span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            </span>
-                        `;
-                        currentEditingLessonId = null;
-                        currentEditingEpisodeId = null;
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error saving lesson:', error);
-                    alert('An error occurred while saving the lesson.');
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('summary', summary);
+            formData.append('vimeoUrl', vimeoUrl);
+            formData.append('duration', duration);
+            formData.append('isPreview', isPreview);
+            
+            // Add exercise files
+            if (exerciseFileInput && exerciseFileInput.files.length > 0) {
+                for (let i = 0; i < exerciseFileInput.files.length; i++) {
+                    formData.append('exerciseFiles', exerciseFileInput.files[i]);
                 }
+            }
+            
+            // Add files to remove
+            if (window.removeExerciseFileIds && window.removeExerciseFileIds.length > 0) {
+                formData.append('removeExerciseFileIds', JSON.stringify(window.removeExerciseFileIds));
+            }
+
+            const url = currentEditingLessonId 
+                ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
+                : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
+            const method = currentEditingLessonId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'x-auth-token': token },
+                body: formData
             });
+            const result = await response.json();
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(lessonModal).hide();
+                lessonModal.querySelector('form')?.reset();
+                if (exerciseFileInput) exerciseFileInput.value = '';
+                document.getElementById('exercise-file-name').textContent = '';
+                document.getElementById('current-exercise-file-container').style.display = 'none';
+                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
+                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Add Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
+                currentEditingLessonId = null;
+                currentEditingEpisodeId = null;
+                window.removeExerciseFileIds = [];
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving lesson:', error);
+            alert('An error occurred while saving the lesson.');
         }
+    });
+}
 
         // Delete Lesson Event Listener
         document.addEventListener('click', async (e) => {
