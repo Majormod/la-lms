@@ -809,6 +809,43 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files',
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+// POST /api/courses/:courseId/episodes/:episodeId/quizzes
+app.post('/api/courses/:courseId/episodes/:episodeId/quizzes', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId } = req.params;
+        const { title, summary } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ success: false, message: 'Quiz title is required' });
+        }
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) {
+            return res.status(404).json({ success: false, message: 'Topic not found' });
+        }
+
+        const newQuiz = { title, summary };
+
+        episode.quizzes.push(newQuiz);
+        await course.save();
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Quiz added successfully!',
+            course: course 
+        });
+    } catch (error) {
+        console.error('Error adding quiz:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 

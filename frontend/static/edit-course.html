@@ -2096,9 +2096,9 @@
                                     <form class="tabs-1" id="quiz-form">
                                         <div id="question-1" class="question">
                                             <div class="course-field mb--20"><label for="modal-field-1">Quiz
-                                                    Title</label><input id="modal-field-1" type="text" placeholder="Type your quiz title here"></div>
+                                                    Title</label><input id="quiz-title" type="text" placeholder="Type your quiz title here"></div>
                                             <div class="course-field mb--20"><label for="modal-field-2">Quiz
-                                                    Summary</label><textarea id="modal-field-2"></textarea><small><i
+                                                    Summary</label><textarea id="quiz-summary"></textarea><small><i
                                                         class="feather-info"></i> Add a summary of short text to prepare
                                                     students for the activities for the Quiz. The text is shown on the
                                                     course page beside the tooltip beside the
@@ -2410,14 +2410,14 @@
                         </div>
                     </div>
                     <div class="top-circle-shape"></div>
-                    <div class="modal-footer pt--30 justify-content-between">
-                        <button type="button" class="rbt-btn btn-border btn-md radius-round-10" data-bs-dismiss="modal">Cancel</button>
-                        <div class="content">
-                            <button type="button" class="rbt-btn btn-border btn-md radius-round-10 mr--10" id="prev-btn">Back</button>
-                            <button type="button" class="rbt-btn btn-md radius-round-10 d-inline-block" id="next-btn-2">Save &
-                                Next</button>
-                        </div>
-                    </div>
+<div class="modal-footer pt--30 justify-content-between">
+    <button type="button" class="rbt-btn btn-border btn-md radius-round-10" data-bs-dismiss="modal">Cancel</button>
+    <div class="content">
+        <button type="button" class="rbt-btn btn-border btn-md radius-round-10 me-2" id="quiz-back-btn" style="display: none;">Back</button>
+        <button type="button" class="rbt-btn btn-md" id="quiz-next-btn">Save & Next</button>
+        <button type="button" class="rbt-btn btn-md" id="quiz-save-final-btn" style="display: none;">Save Quiz</button>
+    </div>
+</div>
 
                 </div>
             </div>

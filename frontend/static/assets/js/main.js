@@ -2067,6 +2067,118 @@ const renderCourseBuilder = (episodes) => {
         console.log('Window Location Search:', window.location.search);          // <-- ADD THIS
         console.log('Parsed courseId from URL:', courseId);                       // <-- ADD THIS
         // --- END DEBUGGING LOGS ---
+        // --- SAVE QUIZ ---
+const saveQuizBtn = document.getElementById('save-quiz-btn');
+if (saveQuizBtn) {
+    saveQuizBtn.addEventListener('click', async () => {
+        const quizModal = document.getElementById('Quiz');
+        const episodeId = currentEditingEpisodeId; // We'll set this when the modal opens
+
+        if (!episodeId) {
+            return alert('Error: No topic selected. Please close and try again.');
+        }
+
+        const quizData = {
+            title: document.getElementById('quiz-title').value,
+            summary: document.getElementById('quiz-summary').value,
+        };
+
+        if (!quizData.title) {
+            return alert('Please enter a quiz title.');
+        }
+
+        try {
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                },
+                body: JSON.stringify(quizData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(quizModal).hide();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving quiz:', error);
+            alert('An error occurred while saving the quiz.');
+        }
+    });
+}
+// --- QUIZ MODAL NAVIGATION LOGIC ---
+const quizModalEl = document.getElementById('Quiz');
+if (quizModalEl) {
+    const steps = quizModalEl.querySelectorAll('.question'); // Each section of the modal is a "step"
+    const nextBtn = document.getElementById('quiz-next-btn');
+    const backBtn = document.getElementById('quiz-back-btn');
+    const finalSaveBtn = document.getElementById('quiz-save-final-btn');
+    const progressSteps = quizModalEl.querySelectorAll('.quiz-modal-btn');
+    
+    let currentStep = 1;
+
+    const updateQuizModalView = () => {
+        // Hide all steps
+        steps.forEach(step => step.style.display = 'none');
+        // Show the current step
+        quizModalEl.querySelector(`#question-${currentStep}`).style.display = 'block';
+
+        // Update progress bar visuals
+        progressSteps.forEach((btn, index) => {
+            if (index + 1 < currentStep) {
+                btn.classList.add('quiz-modal__active');
+            } else {
+                btn.classList.remove('quiz-modal__active');
+            }
+        });
+        
+        // Update button visibility
+        backBtn.style.display = (currentStep > 1) ? 'inline-block' : 'none';
+        nextBtn.style.display = (currentStep < steps.length) ? 'inline-block' : 'none';
+        finalSaveBtn.style.display = (currentStep === steps.length) ? 'inline-block' : 'none';
+    };
+
+    nextBtn.addEventListener('click', () => {
+        if (currentStep < steps.length) {
+            currentStep++;
+            updateQuizModalView();
+        }
+    });
+
+    backBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateQuizModalView();
+        }
+    });
+
+    // Reset to the first step whenever the modal is shown for "Add Quiz"
+    quizModalEl.addEventListener('show.bs.modal', (e) => {
+        const button = e.relatedTarget;
+        if (button && button.dataset.bsTarget === '#Quiz') {
+            currentStep = 1;
+            updateQuizModalView();
+            // You can also add form reset logic here later
+        }
+    });
+
+    // Connect the final save button to the save logic we already wrote
+    finalSaveBtn.addEventListener('click', () => {
+        // Trigger the click of the original save button (which is now hidden)
+        document.getElementById('save-quiz-btn').click(); 
+    });
+
+    // We need to hide our original save-quiz-btn, as it's now controlled by the final save button
+    const oldSaveBtn = document.getElementById('save-quiz-btn');
+    if(oldSaveBtn) oldSaveBtn.style.display = 'none';
+}
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
