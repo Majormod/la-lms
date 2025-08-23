@@ -2449,17 +2449,27 @@ document.addEventListener('click', async (e) => {
         }
     }
 });
-// Edit Lesson Event Listener
+// --- CORRECTED: Generic Edit Item Event Listener ---
 document.addEventListener('click', async (e) => {
-    const editLessonBtn = e.target.closest('.edit-lesson');
-    if (editLessonBtn) {
-        const episodeId = editLessonBtn.dataset.episodeId;
-        const lessonId = editLessonBtn.dataset.lessonId;
-        openUpdateLessonModal(episodeId, lessonId);
-        
-        // Manually show the modal since we're not using data-bs-target
-        const lessonModal = new bootstrap.Modal(document.getElementById('Lesson'));
-        lessonModal.show();
+    // Look for the new generic class '.edit-item'
+    const editBtn = e.target.closest('.edit-item'); 
+    if (editBtn) {
+        // Get the new generic data attributes
+        const { episodeId, itemId, itemType } = editBtn.dataset; 
+
+        // Check if the item type is a lesson before proceeding
+        if (itemType === 'lesson') {
+            // Call the function to populate the lesson modal
+            openUpdateLessonModal(episodeId, itemId); 
+
+            // Manually show the modal since bootstrap's auto-init might not work here
+            const lessonModalInstance = new bootstrap.Modal(document.getElementById('Lesson'));
+            lessonModalInstance.show();
+        } 
+
+        // In the future, we will add similar blocks here for quizzes and assignments
+        // else if (itemType === 'quiz') { ... }
+        // else if (itemType === 'assignment') { ... }
     }
 });
 // Add this event listener for lesson clicks
