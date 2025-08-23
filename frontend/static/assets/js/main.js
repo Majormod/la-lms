@@ -2081,6 +2081,26 @@ if (triggerBtn && fileInput) {
         document.getElementById('lesson-exercise-file').value = '';
         document.getElementById('exercise-file-name').textContent = '';
     });
+    // --- Display Names of Newly Selected Exercise Files ---
+const lessonFileInput = document.getElementById('lesson-exercise-files');
+if (lessonFileInput) {
+    lessonFileInput.addEventListener('change', function() {
+        const newFilesListContainer = document.getElementById('new-files-list');
+        newFilesListContainer.innerHTML = ''; // Clear previous selection list
+
+        if (this.files.length > 0) {
+            let filesHtml = '<p class="b3 mb-2">Files to be uploaded:</p><ul class="list-group list-group-flush">';
+            
+            // Loop through the FileList and create a list item for each file
+            Array.from(this.files).forEach(file => {
+                filesHtml += `<li class="list-group-item list-group-item-action">${file.name}</li>`;
+            });
+
+            filesHtml += '</ul>';
+            newFilesListContainer.innerHTML = filesHtml;
+        }
+    });
+}
         // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
 fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
     .then(res => res.ok ? res.json() : Promise.reject('Course not found'))
