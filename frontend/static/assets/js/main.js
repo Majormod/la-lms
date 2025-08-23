@@ -1865,31 +1865,29 @@ if (window.location.pathname.includes('create-course.html')) {
     });
 }
 
-// --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-// --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 if (window.location.pathname.includes('edit-course.html')) {
-    // Helper function to trigger the hidden file input
-window.triggerExerciseFileUpload = function() {
-    document.getElementById('lesson-exercise-file').click();
-}
 
-// Helper function to display the chosen file's name
-window.displayExerciseFileName = function(fileInput) {
-    const fileNameDisplay = document.getElementById('exercise-file-name');
-    if (fileInput.files.length > 0) {
-        let fileNames = Array.from(fileInput.files).map(f => f.name).join(', ');
-        fileNameDisplay.textContent = `Selected: ${fileNames}`;
-    } else {
-        fileNameDisplay.textContent = '';
-    }
-}
-$(document).ready(function () {
-    $('#language').selectpicker();
-});
-    let courseData = null; 
+    // These variables are needed by multiple functions on this page
+    let courseData = null;
     let currentEditingEpisodeId = null;
     let currentEditingLessonId = null;
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId');
+    const token = localStorage.getItem('lmsToken');
 
+    // --- Global Helper Functions for onclick/onchange ---
+    window.triggerExerciseFileUpload = function() {
+        document.getElementById('lesson-exercise-file').click();
+    };
+    window.displayExerciseFileName = function(fileInput) {
+        const fileNameDisplay = document.getElementById('exercise-file-name');
+        if (fileInput.files.length > 0) {
+            let fileNames = Array.from(fileInput.files).map(f => f.name).join(', ');
+            fileNameDisplay.textContent = `Selected: ${fileNames}`;
+        } else {
+            fileNameDisplay.textContent = '';
+        }
+    };
     window.openUpdateTopicModal = function(episodeId) {
         currentEditingEpisodeId = episodeId;
         if (courseData) {
@@ -1899,682 +1897,151 @@ $(document).ready(function () {
                 document.getElementById('update-topic-summary').value = topic.summary || '';
             }
         }
-    }
-// In main.js, inside the edit-course.html logic
-document.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('remove-file-btn')) {
-        e.preventDefault();
-        
-        const listItem = e.target.closest('.list-group-item');
-        const filePathToDelete = e.target.dataset.filepath;
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        const token = localStorage.getItem('lmsToken');
-        
-        if (!confirm(`Are you sure you want to delete this file?`)) return;
+    };
+    window.openUpdateLessonModal = function(episodeId, lessonId) {
+        currentEditingEpisodeId = episodeId;
+        currentEditingLessonId = lessonId;
+        const currentFilesList = document.getElementById('current-files-list');
+        const currentFileContainer = document.getElementById('current-exercise-file-container');
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}/files`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token
-                },
-                body: JSON.stringify({ filePathToDelete })
-            });
+        if (courseData && currentFilesList) {
+            const lesson = courseData.episodes.find(e => e._id === episodeId)?.lessons.find(l => l._id === lessonId);
+            if (lesson) {
+                // Populate standard form fields
+                document.getElementById('lesson-title').value = lesson.title || '';
+                document.getElementById('lesson-summary').value = lesson.summary || '';
+                document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
 
-            const result = await response.json();
-            if (result.success) {
-                listItem.remove(); // Remove the item from the list instantly
-                courseData = result.course; // Update the global course data with the new state
-            } else {
-                alert(`Error: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error deleting file:', error);
-            alert('An error occurred while deleting the file.');
-        }
-    }
-});
-window.openUpdateLessonModal = function(episodeId, lessonId) {
-    currentEditingEpisodeId = episodeId;
-    currentEditingLessonId = lessonId;
-    
-    const currentFileContainer = document.getElementById('current-exercise-file-container');
-    const currentFilesList = document.getElementById('current-files-list');
-
-    if (courseData && currentFilesList) {
-        const lesson = courseData.episodes.find(e => e._id === episodeId)?.lessons.find(l => l._id === lessonId);
-        // --- ADD THIS LINE TO DEBUG ---
-            console.log('Attempting to load data for lesson:', lesson);
-        if (lesson) {
-            // Populate standard form fields (title, summary, etc.)
-            document.getElementById('lesson-title').value = lesson.title || '';
-            // ... (populate your other form fields here) ...
-
-            // --- Logic to display the list of current files ---
-            currentFilesList.innerHTML = ''; // Clear previous list
-            if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
-                currentFileContainer.style.display = 'block';
-                lesson.exerciseFiles.forEach(filePath => {
-                    const fileName = filePath.split('/').pop();
-                    currentFilesList.innerHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="/${filePath}" target="_blank">${fileName}</a>
-                            <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filepath="${filePath}">Remove</button>
-                        </li>`;
-                });
-            } else {
-                currentFileContainer.style.display = 'none';
+                // Handle exercise file display
+                let filesToDisplay = (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) ? lesson.exerciseFiles : (lesson.exerciseFile ? [lesson.exerciseFile] : []);
+                
+                currentFilesList.innerHTML = '';
+                if (filesToDisplay.length > 0) {
+                    currentFileContainer.style.display = 'block';
+                    filesToDisplay.forEach(filePath => {
+                        const fileName = filePath.split('/').pop();
+                        currentFilesList.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><a href="/${filePath}" target="_blank">${fileName}</a><button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filepath="${filePath}">Remove</button></li>`;
+                    });
+                } else {
+                    currentFileContainer.style.display = 'none';
+                }
             }
         }
-    }
-};
-
-    const renderCourseBuilder = (episodes) => {
-        const container = document.getElementById('course-builder-topics-container');
-        if (!container) return;
-        if (!episodes || episodes.length === 0) {
-            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
-            return;
-        }
-        container.innerHTML = episodes.map((episode) => {
-const lessonsHtml = episode.lessons.map(lesson => `
-    <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-        <div class="col-10 inner d-flex align-items-center gap-2">
-            <i class="feather-play-circle"></i>
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
-        </div>
-        <div class="col-2 inner">
-            <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                <li>
-                    <i class="feather-trash delete-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-                <li>
-                    <i class="feather-edit edit-lesson" 
-                       data-episode-id="${episode._id}" 
-                       data-lesson-id="${lesson._id}"></i>
-                </li>
-            </ul>
-        </div>
-    </div>
-`).join('');
-            return `
-                <div class="accordion-item card mb--20">
-                    <h2 class="accordion-header card-header rbt-course">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
-                            ${episode.title}
-                        </button>
-                        <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
-                        <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
-                    </h2>
-                    <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
-                        <div class="accordion-body card-body">
-                            ${lessonsHtml || '<p class="mb-4">No lessons.</p>'}
-                            <div class="d-flex">
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-lesson-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper">
-                                        <span class="btn-text">Add Lesson</span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                        <span class="btn-icon"><i class="feather-plus-square"></i></span>
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
     };
 
-    window.onload = function() {
-        // --- AUTH & URL CHECK ---
-        if (!token || (user && user.role !== 'instructor')) {
-            alert("Access Denied.");
-            window.location.href = '/login.html';
+
+    // --- Main script execution ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const userString = localStorage.getItem('lmsUser');
+        const user = JSON.parse(userString || '{}');
+
+        // Security Check
+        if (!token || !courseId || user.role !== 'instructor') {
+            alert("Access Denied or Course ID missing.");
+            window.location.href = 'login.html';
             return;
         }
-        const params = new URLSearchParams(window.location.search);
-        const courseId = params.get('courseId');
-        if (!courseId) {
-            alert('No course ID found.');
-            window.location.href = 'instructor-course.html';
-            return;
-        }
-        // --- Event Listener for the "Edit Lesson" Icon ---
-document.addEventListener('click', (e) => {
-    // Check if the clicked element is an edit icon
-    const editLessonBtn = e.target.closest('.edit-lesson');
-    if (editLessonBtn) {
-        
-        // Get the IDs from the icon's data attributes
-        const episodeId = editLessonBtn.dataset.episodeId;
-        const lessonId = editLessonBtn.dataset.lessonId;
-        
-        // Call the function to populate the modal with data
-        window.openUpdateLessonModal(episodeId, lessonId);
-        
-        // Manually create an instance of the modal and show it
-        const lessonModalEl = document.getElementById('Lesson');
-        if (lessonModalEl) {
-            const lessonModal = new bootstrap.Modal(lessonModalEl);
-            lessonModal.show();
-        }
-    }
-});
-// --- Logic for custom file upload button ---
-const triggerBtn = document.getElementById('triggerFileUploadBtn');
-const fileInput = document.getElementById('lessonExerciseInput');
-const fileListContainer = document.getElementById('exerciseFileListContainer');
 
-if (triggerBtn && fileInput) {
-    // When the visible button is clicked, trigger the hidden file input
-    triggerBtn.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // When files are selected, display their names
-    fileInput.addEventListener('change', () => {
-        if (fileListContainer) {
-            fileListContainer.innerHTML = ''; // Clear previous list
-            if (fileInput.files.length > 0) {
-                let fileListHtml = '<p class="b3 mb-2">Selected Files:</p><ul class="list-group">';
-                Array.from(fileInput.files).forEach(file => {
-                    fileListHtml += `<li class="list-group-item list-group-item-sm">${file.name}</li>`;
-                });
-                fileListHtml += '</ul>';
-                fileListContainer.innerHTML = fileListHtml;
-            }
-        }
-    });
-}
-        // --- DEFINE ALL PAGE ELEMENTS ---
-        const editCourseForm = document.getElementById('create-course-form');
-        const courseTitleInput = document.getElementById('field-1');
-        const slugInput = document.getElementById('field-2');
-        const descriptionInput = document.getElementById('aboutCourse');
-        const priceInput = document.getElementById('regularPrice-1');
-        const discountedPriceInput = document.getElementById('discountedPrice-1');
-        const videoUrlInput = document.getElementById('videoUrl');
-        const thumbnailInput = document.getElementById('createinputfile');
-        const thumbnailPreview = document.getElementById('createfileImage');
-        const submitButton = document.getElementById('create-course-btn');
-        const courseStatusSelect = document.getElementById('course-status');
-        const previewButton = document.getElementById('preview-course-btn');
-        const addTopicModal = document.getElementById('exampleModal');
-        const updateTopicModal = document.getElementById('UpdateTopic');
-        const saveTopicBtn = document.getElementById('save-topic-btn');
-        const saveUpdateTopicBtn = document.getElementById('save-update-topic-btn');
-        const lessonModal = document.getElementById('Lesson');
-        const saveLessonBtn = document.getElementById('save-lesson-btn');
-        
-
-        if (submitButton) {
-            const buttonText = submitButton.querySelector('.btn-text');
-            if (buttonText) buttonText.textContent = 'Update Course';
-        }
-    // ADD THIS EVENT LISTENER FOR THE REMOVE BUTTON
-    document.getElementById('remove-exercise-file-btn')?.addEventListener('click', () => {
-        document.getElementById('current-exercise-file-container').style.display = 'none';
-        document.getElementById('remove-exercise-file-flag').value = 'true';
-        document.getElementById('lesson-exercise-file').value = '';
-        document.getElementById('exercise-file-name').textContent = '';
-    });
-        // --- FETCH AND POPULATE ALL DATA ON PAGE LOAD ---
-fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
-    .then(res => res.ok ? res.json() : Promise.reject('Course not found'))
-    .then(result => {
-        if (result.success) {
-            const course = result.course;
-            courseData = course;
-            
-            console.log('Loading course data from server:', {
-                whatYoullLearn: course.whatYoullLearn,
-                tags: course.tags,
-                duration: course.duration,
-                requirements: course.requirements
+        // --- Initial Page Load ---
+        fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    courseData = result.course;
+                    // Populate main form fields...
+                    document.getElementById('field-1').value = courseData.title;
+                    // ... (populate all other main form fields like description, price, etc.) ...
+                    renderCourseBuilder(courseData.episodes);
+                }
             });
 
-            // Basic fields
-            if (courseTitleInput) courseTitleInput.value = course.title || '';
-            if (slugInput) slugInput.value = course.slug || '';
-            if (descriptionInput) course.description ? descriptionInput.value = course.description : '';
-            if (priceInput) course.originalPrice ? priceInput.value = course.originalPrice : '';
-            if (discountedPriceInput) course.price ? discountedPriceInput.value = course.price : '';
-            if (videoUrlInput) videoUrlInput.value = course.previewVideoUrl || '';
-            if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
-            if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
-            
-            // Additional Information fields - FIXED
-            if (course.startDate) {
-                try {
-                    const date = new Date(course.startDate);
-                    if (!isNaN(date)) {
-                        document.getElementById('startDate').value = date.toISOString().split('T')[0];
-                    }
-                } catch (e) {
-                    console.error('Error parsing startDate:', e);
-                }
+        // --- All Event Listeners ---
+        document.addEventListener('click', async (e) => {
+            // Handle Edit Lesson
+            if (e.target.closest('.edit-lesson')) {
+                const editBtn = e.target.closest('.edit-lesson');
+                openUpdateLessonModal(editBtn.dataset.episodeId, editBtn.dataset.lessonId);
+                const modal = new bootstrap.Modal(document.getElementById('Lesson'));
+                modal.show();
             }
-            
-            // Language - handle both array and string
-            if (course.language && course.language.length > 0) {
-                const languageSelect = document.getElementById('language');
-                if (languageSelect) {
-                    Array.from(languageSelect.options).forEach(option => {
-                        option.selected = course.language.includes(option.value);
+
+            // Handle Delete Lesson
+            if (e.target.closest('.delete-lesson')) {
+                const deleteBtn = e.target.closest('.delete-lesson');
+                if (confirm('Are you sure you want to delete this lesson?')) {
+                    const { episodeId, lessonId } = deleteBtn.dataset;
+                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
+                        method: 'DELETE',
+                        headers: { 'x-auth-token': token }
                     });
+                    const result = await response.json();
+                    if (result.success) {
+                        courseData = result.course;
+                        renderCourseBuilder(courseData.episodes);
+                    } else { alert(`Error: ${result.message}`); }
                 }
             }
             
-            // Get all HTML elements
-            const whatLearnElement = document.getElementById('whatLearn');
-            const descriptionElement = document.getElementById('description');
-            const durationHoursElement = document.getElementById('totalDurationHours');
-            const durationMinutesElement = document.getElementById('totalDurationMinutes');
-            const courseTagElement = document.getElementById('courseTag');
-            const targetedElement = document.getElementById('targeted');
-            
-            console.log('HTML elements status:', {
-                whatLearn: !!whatLearnElement,
-                description: !!descriptionElement,
-                durationHours: !!durationHoursElement,
-                durationMinutes: !!durationMinutesElement,
-                courseTag: !!courseTagElement,
-                targeted: !!targetedElement
-            });
-            
-            // Populate fields - with null checks and fallbacks
-            if (whatLearnElement) {
-                whatLearnElement.value = course.requirements ? 
-                    (Array.isArray(course.requirements) ? course.requirements.join('\n') : course.requirements) : '';
-                console.log('Set requirements to:', whatLearnElement.value);
-            }
-            
-            if (descriptionElement) {
-                descriptionElement.value = course.whatYoullLearn ? 
-                    (Array.isArray(course.whatYoullLearn) ? course.whatYoullLearn.join('\n') : course.whatYoullLearn) : '';
-                console.log('Set whatYoullLearn to:', descriptionElement.value);
-            }
-            
-            if (durationHoursElement) {
-                durationHoursElement.value = course.duration && course.duration.hours ? course.duration.hours : 0;
-                console.log('Set duration hours to:', durationHoursElement.value);
-            }
-            
-            if (durationMinutesElement) {
-                durationMinutesElement.value = course.duration && course.duration.minutes ? course.duration.minutes : 0;
-                console.log('Set duration minutes to:', durationMinutesElement.value);
-            }
-            
-            if (courseTagElement) {
-                courseTagElement.value = course.tags ? 
-                    (Array.isArray(course.tags) ? course.tags.join(', ') : course.tags) : '';
-                console.log('Set tags to:', courseTagElement.value);
-            }
-            
-            if (targetedElement) {
-                targetedElement.value = course.targetedAudience ? 
-                    (Array.isArray(course.targetedAudience) ? course.targetedAudience.join('\n') : course.targetedAudience) : '';
-                console.log('Set targetedAudience to:', targetedElement.value);
-            }
-            
-            // Certificate template
-            if (course.certificateTemplate && course.certificateTemplate !== 'none') {
-                const selectedRadio = document.querySelector(`input[value="${course.certificateTemplate}"]`);
-                if (selectedRadio) {
-                    selectedRadio.checked = true;
-                    console.log('Set certificate template to:', course.certificateTemplate);
+            // Handle Remove Exercise File
+            if (e.target.closest('.remove-file-btn')) {
+                const removeBtn = e.target.closest('.remove-file-btn');
+                const filePathToDelete = removeBtn.dataset.filepath;
+                if (confirm(`Are you sure you want to delete this file?`)) {
+                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}/files`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        body: JSON.stringify({ filePathToDelete })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        removeBtn.closest('.list-group-item').remove();
+                        courseData = result.course;
+                    } else { alert(`Error: ${result.message}`); }
                 }
-                
-                if (course.certificateOrientation === 'portrait') {
-                    const portraitTab = document.getElementById('portrait-tab');
-                    if (portraitTab) {
-                        portraitTab.click();
-                        console.log('Set orientation to portrait');
-                    }
-                }
-                
             }
-            
-            renderCourseBuilder(course.episodes);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading course:', error);
-        alert(`Error loading course data.`);
-        window.location.href = 'instructor-course.html';
-    });
-
-        // --- EVENT LISTENERS ---
-
-        // Preview Button
-        if (previewButton) {
-            previewButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.open(`course-details.html?courseId=${courseId}`, '_blank');
-            });
-        }
-
-// Lesson Modal Setup
-if (lessonModal) {
-    lessonModal.addEventListener('show.bs.modal', (e) => {
-        const button = e.relatedTarget;
-
-        // The 'if (button)' check goes on the OUTSIDE
-        if (button) {
-            // All the logic that uses the 'button' variable goes INSIDE this check
-            if (button.classList.contains('add-lesson-btn')) {
-                currentEditingEpisodeId = button.dataset.episodeId;
-                currentEditingLessonId = null;
-                document.getElementById('lesson-form').reset();
-                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                    <span class="icon-reverse-wrapper">
-                        <span class="btn-text">Add Lesson</span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                    </span>
-                `;
-            }
-        }
-    });
-}
+        });
 
         // Save Lesson Button
-        if (saveLessonBtn) {
-            saveLessonBtn.addEventListener('click', async () => {
-                const title = document.getElementById('lesson-title').value;
-                const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
-                const hr = document.getElementById('lesson-duration-hr').value || '0';
-                const min = document.getElementById('lesson-duration-min').value || '0';
-                const sec = document.getElementById('lesson-duration-sec').value || '0';
-                const duration = `${hr} hr ${min} min ${sec} sec`;
-                const isPreview = document.getElementById('lesson-is-preview').checked;
-                const exerciseFileInput = lessonModal.querySelector('input[type="file"][name="exerciseFile"]');
-                const episodeId = currentEditingEpisodeId;
+        document.getElementById('save-lesson-btn')?.addEventListener('click', async () => {
+            const form = document.getElementById('lesson-form');
+            const formData = new FormData(form);
+            formData.append('removeExerciseFile', document.getElementById('remove-exercise-file-flag').value);
 
-                if (!title) return alert('Please enter a lesson title.');
-                if (!episodeId) return alert('No episode selected. Please try again.');
+            const url = currentEditingLessonId 
+                ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}`
+                : `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons`;
+            const method = currentEditingLessonId ? 'PUT' : 'POST';
 
-                try {
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
-                    formData.append('duration', duration);
-                    formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files[0]) {
-                        formData.append('exerciseFile', exerciseFileInput.files[0]);
-                    }
-
-                    const url = currentEditingLessonId 
-                        ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
-                        : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
-                    const method = currentEditingLessonId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method,
-                        headers: { 'x-auth-token': token },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(lessonModal).hide();
-                        lessonModal.querySelector('form')?.reset();
-                        if (exerciseFileInput) exerciseFileInput.value = '';
-                        lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                        lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                            <span class="icon-reverse-wrapper">
-                                <span class="btn-text">Add Lesson</span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            </span>
-                        `;
-                        currentEditingLessonId = null;
-                        currentEditingEpisodeId = null;
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error saving lesson:', error);
-                    alert('An error occurred while saving the lesson.');
-                }
-            });
-        }
-
-        // Delete Lesson Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteLessonBtn = e.target.closest('.delete-lesson');
-            if (deleteLessonBtn) {
-                if (confirm('Are you sure you want to delete this lesson?')) {
-                    const episodeId = deleteLessonBtn.dataset.episodeId;
-                    const lessonId = deleteLessonBtn.dataset.lessonId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting lesson:', error);
-                        alert('An error occurred while deleting the lesson.');
-                    }
-                }
-            }
+            const response = await fetch(url, { method, headers: { 'x-auth-token': token }, body: formData });
+            const result = await response.json();
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(document.getElementById('Lesson')).hide();
+            } else { alert(`Error: ${result.message}`); }
         });
-// Edit Lesson Event Listener
-document.addEventListener('click', async (e) => {
-    const editLessonBtn = e.target.closest('.edit-lesson');
-    if (editLessonBtn) {
-        const episodeId = editLessonBtn.dataset.episodeId;
-        const lessonId = editLessonBtn.dataset.lessonId;
-        openUpdateLessonModal(episodeId, lessonId);
         
-        // Manually show the modal since we're not using data-bs-target
-        const lessonModal = new bootstrap.Modal(document.getElementById('Lesson'));
-        lessonModal.show();
-    }
-});
-// Add this event listener for lesson clicks
-document.addEventListener('click', function(e) {
-    const lessonLink = e.target.closest('.lesson-link');
-    if (lessonLink) {
-        e.preventDefault();
-        
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        const episodeId = lessonLink.dataset.episodeId;
-        const lessonId = lessonLink.dataset.lessonId;
-        const lessonTitle = lessonLink.dataset.title;
-        const lessonSummary = lessonLink.dataset.summary;
-        const vimeoUrl = lessonLink.dataset.vimeoUrl;
-        
-        // Store lesson data for lesson.html
-        localStorage.setItem('currentLesson', JSON.stringify({
-            courseId,
-            episodeId,
-            lessonId,
-            title: lessonTitle,
-            summary: lessonSummary,
-            vimeoUrl: vimeoUrl
-        }));
-        
-        // Navigate to lesson page
-        window.location.href = `lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
-    }
-});
-        // "Add Topic" Modal Save Button
-        if (saveTopicBtn) {
-            saveTopicBtn.addEventListener('click', async () => {
-                const title = document.getElementById('add-topic-title').value;
-                const summary = document.getElementById('add-topic-summary').value;
-                if (!title) { return alert('Please enter a topic name.'); }
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                        body: JSON.stringify({ title, summary }),
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(addTopicModal).hide();
-                        document.getElementById('add-topic-title').value = '';
-                        document.getElementById('add-topic-summary').value = '';
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    alert('An error occurred while saving the topic.');
-                }
-            });
-        }
-
-        // Delete Topic Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteBtn = e.target.closest('.rbt-course-del');
-            if (deleteBtn) {
-                if (confirm('Are you sure you want to delete this topic?')) {
-                    const episodeId = deleteBtn.dataset.episodeId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting topic:', error);
-                        alert('An error occurred while deleting the topic.');
-                    }
-                }
-            }
-        });
-
-        // Update Topic Save Button
-        if (saveUpdateTopicBtn) {
-            saveUpdateTopicBtn.addEventListener('click', async () => {
-                const episodeId = currentEditingEpisodeId;
-                if (!episodeId) return alert('No topic selected for editing.');
-                const title = document.getElementById('update-topic-title').value;
-                const summary = document.getElementById('update-topic-summary').value;
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                        body: JSON.stringify({ title, summary })
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(updateTopicModal).hide();
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error updating topic:', error);
-                    alert('An error occurred while updating the topic.');
-                }
-            });
-        }
-
         // Main "Update Course" Form
-if (editCourseForm) {
-    editCourseForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        
-        // Basic fields
-        formData.append('title', document.getElementById('field-1').value);
-        formData.append('slug', document.getElementById('field-2').value);
-        formData.append('description', document.getElementById('aboutCourse').value);
-        formData.append('originalPrice', document.getElementById('regularPrice-1').value);
-        formData.append('price', document.getElementById('discountedPrice-1').value);
-        formData.append('previewVideoUrl', document.getElementById('videoUrl').value);
-        formData.append('status', document.getElementById('course-status').value);
-        
-        // Additional Information fields - CORRECTED FIELD NAMES
-        formData.append('startDate', document.getElementById('startDate')?.value || '');
-        
-        // Language
-        const languageSelect = document.getElementById('language');
-        if (languageSelect) {
-            const selectedLanguages = Array.from(languageSelect.selectedOptions).map(opt => opt.value);
-            formData.append('language', JSON.stringify(selectedLanguages));
-        }
-        
-        // Use the correct field names that match your model:
-        formData.append('requirements', document.getElementById('whatLearn')?.value || '');
-        formData.append('whatYoullLearn', document.getElementById('description')?.value || ''); // This matches your model
-        formData.append('durationHours', document.getElementById('totalDurationHours')?.value || '0');
-        formData.append('durationMinutes', document.getElementById('totalDurationMinutes')?.value || '0');
-        formData.append('tags', document.getElementById('courseTag')?.value || ''); // This matches your model
-        formData.append('targetedAudience', document.getElementById('targeted')?.value || '');
-        
-        // Certificate fields
-        const selectedTemplate = document.querySelector('input[name="radio-group"]:checked') || 
-                               document.querySelector('input[name="radio-group-portrait"]:checked');
-        if (selectedTemplate) {
-            formData.append('certificateTemplate', selectedTemplate.value);
-        }
-        
-        const activeTab = document.querySelector('.advance-tab-button a.active');
-        if (activeTab) {
-            const orientation = activeTab.id === 'landscape-tab' ? 'landscape' : 'portrait';
-            formData.append('certificateOrientation', orientation);
-        }
-        
-        if (thumbnailInput.files.length > 0) {
-            formData.append('thumbnail', thumbnailInput.files[0]);
-        }
-
-        // Debug log
-        console.log('FormData being sent:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ':', value);
-        }
-
-        try {
+        document.getElementById('create-course-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
             const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
                 method: 'PUT',
                 headers: { 'x-auth-token': token },
                 body: formData,
             });
             const result = await response.json();
-            console.log('Server response:', result);
-            
             if (result.success) {
                 alert('Course updated successfully!');
-                window.location.href = '/instructor-course.html';
-            } else {
-                alert(`Error: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error updating course:', error);
-            alert('An error occurred while updating the course.');
-        }
+                window.location.reload();
+            } else { alert(`Error: ${result.message}`); }
+        });
     });
-}
-    }; // End of window.onload
 }
 
 if (window.location.pathname.includes('course-details.html')) {
