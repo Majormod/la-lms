@@ -759,7 +759,7 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     }
 });
 
-/ Add this new route with your other API routes
+// Add this new route with your other API routes
 app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files', auth, async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
