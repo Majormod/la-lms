@@ -629,6 +629,10 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
 // PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles'), async (req, res) => {
+    console.log('--- UPDATE LESSON ROUTE TRIGGERED ---');
+    console.log('--- req.body (text fields) ---', req.body);
+    console.log('--- req.files (uploaded files) ---', req.files); // <-- THIS IS THE MOST IMPORTANT LOG
+
     try {
         const { courseId, episodeId, lessonId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview } = req.body;
