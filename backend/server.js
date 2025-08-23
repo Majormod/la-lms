@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
+const fs = require('fs');
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
@@ -755,6 +756,38 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     } catch (error) {
         console.error('Error deleting lesson:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
+/ Add this new route with your other API routes
+app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, lessonId } = req.params;
+        const { filePathToDelete } = req.body; // File path sent from the frontend
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+        
+        const episode = course.episodes.id(episodeId);
+        const lesson = episode.lessons.id(lessonId);
+
+        // Remove the file path from the array in the database
+        lesson.exerciseFiles.pull(filePathToDelete);
+        await course.save();
+
+        // Delete the physical file from the server
+        const physicalPath = path.join(__dirname, '../frontend/static', filePathToDelete);
+        fs.unlink(physicalPath, (err) => {
+            if (err) console.error("Error deleting physical file:", err);
+            else console.log("Successfully deleted physical file:", physicalPath);
+        });
+
+        res.json({ success: true, message: 'File deleted successfully!', course });
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 

@@ -1900,37 +1900,74 @@ $(document).ready(function () {
             }
         }
     }
+// In main.js, inside the edit-course.html logic
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('remove-file-btn')) {
+        e.preventDefault();
+        
+        const listItem = e.target.closest('.list-group-item');
+        const filePathToDelete = e.target.dataset.filepath;
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        const token = localStorage.getItem('lmsToken');
+        
+        if (!confirm(`Are you sure you want to delete this file?`)) return;
 
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-                }
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/lessons/${currentEditingLessonId}/files`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                },
+                body: JSON.stringify({ filePathToDelete })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                listItem.remove(); // Remove the item from the list instantly
+                courseData = result.course; // Update the global course data with the new state
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            alert('An error occurred while deleting the file.');
+        }
+    }
+});
+window.openUpdateLessonModal = function(episodeId, lessonId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingLessonId = lessonId;
+    
+    const currentFileContainer = document.getElementById('current-exercise-file-container');
+    const currentFilesList = document.getElementById('current-files-list');
+
+    if (courseData && currentFilesList) {
+        const lesson = courseData.episodes.find(e => e._id === episodeId)?.lessons.find(l => l._id === lessonId);
+        
+        if (lesson) {
+            // Populate standard form fields (title, summary, etc.)
+            document.getElementById('lesson-title').value = lesson.title || '';
+            // ... (populate your other form fields here) ...
+
+            // --- Logic to display the list of current files ---
+            currentFilesList.innerHTML = ''; // Clear previous list
+            if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                currentFileContainer.style.display = 'block';
+                lesson.exerciseFiles.forEach(filePath => {
+                    const fileName = filePath.split('/').pop();
+                    currentFilesList.innerHTML += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="/${filePath}" target="_blank">${fileName}</a>
+                            <button type="button" class="rbt-btn btn-xs bg-color-danger-opacity color-danger remove-file-btn" data-filepath="${filePath}">Remove</button>
+                        </li>`;
+                });
+            } else {
+                currentFileContainer.style.display = 'none';
             }
         }
     }
+};
 
     const renderCourseBuilder = (episodes) => {
         const container = document.getElementById('course-builder-topics-container');
