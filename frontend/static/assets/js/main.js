@@ -1887,6 +1887,8 @@ $(document).ready(function () {
     }
 
     window.openUpdateLessonModal = function(episodeId, lessonId) {
+        // --- THIS IS THE NEW LINE TO FIX THE ERROR ---
+    const courseId = new URLSearchParams(window.location.search).get('courseId');
         currentEditingEpisodeId = episodeId;
         currentEditingLessonId = lessonId;
         if (courseData) {
