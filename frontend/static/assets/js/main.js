@@ -2241,73 +2241,76 @@ if (lessonModal) {
 }
 
         // Save Lesson Button
-        if (saveLessonBtn) {
-            saveLessonBtn.addEventListener('click', async () => {
-                const title = document.getElementById('lesson-title').value;
-                const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
-                const hr = document.getElementById('lesson-duration-hr').value || '0';
-                const min = document.getElementById('lesson-duration-min').value || '0';
-                const sec = document.getElementById('lesson-duration-sec').value || '0';
-                const duration = `${hr} hr ${min} min ${sec} sec`;
-                const isPreview = document.getElementById('lesson-is-preview').checked;
-                const exerciseFileInput = lessonModal.querySelector('input[type="file"][name="exerciseFile"]');
-                const episodeId = currentEditingEpisodeId;
+if (saveLessonBtn) {
+    saveLessonBtn.addEventListener('click', async () => {
+        const title = document.getElementById('lesson-title').value;
+        const summary = document.getElementById('lesson-summary').value;
+        const videoSource = document.getElementById('lesson-video-source').value;
+        const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
+        const hr = document.getElementById('lesson-duration-hr').value || '0';
+        const min = document.getElementById('lesson-duration-min').value || '0';
+        const sec = document.getElementById('lesson-duration-sec').value || '0';
+        const duration = `${hr} hr ${min} min ${sec} sec`;
+        const isPreview = document.getElementById('lesson-is-preview').checked;
+        
+        // --- THIS IS THE CORRECTED LINE ---
+        const exerciseFileInput = document.getElementById('lesson-exercise-files'); 
+        
+        const episodeId = currentEditingEpisodeId;
 
-                if (!title) return alert('Please enter a lesson title.');
-                if (!episodeId) return alert('No episode selected. Please try again.');
+        if (!title) return alert('Please enter a lesson title.');
+        if (!episodeId) return alert('No episode selected. Please try again.');
 
-                try {
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
-                    formData.append('duration', duration);
-                    formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files.length > 0) {
-    for (const file of exerciseFileInput.files) {
-        // The key 'exerciseFiles' must match what your backend (e.g., multer) expects for multiple files
-        formData.append('exerciseFiles', file);
-    }
-}
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('summary', summary);
+            formData.append('vimeoUrl', vimeoUrl);
+            formData.append('duration', duration);
+            formData.append('isPreview', isPreview);
 
-                    const url = currentEditingLessonId 
-                        ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
-                        : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
-                    const method = currentEditingLessonId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method,
-                        headers: { 'x-auth-token': token },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes);
-                        bootstrap.Modal.getInstance(lessonModal).hide();
-                        lessonModal.querySelector('form')?.reset();
-                        if (exerciseFileInput) exerciseFileInput.value = '';
-                        lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
-                        lessonModal.querySelector('#save-lesson-btn').innerHTML = `
-                            <span class="icon-reverse-wrapper">
-                                <span class="btn-text">Add Lesson</span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            </span>
-                        `;
-                        currentEditingLessonId = null;
-                        currentEditingEpisodeId = null;
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error saving lesson:', error);
-                    alert('An error occurred while saving the lesson.');
+            if (exerciseFileInput && exerciseFileInput.files.length > 0) {
+                for (const file of exerciseFileInput.files) {
+                    formData.append('exerciseFiles', file);
                 }
+            }
+
+            const url = currentEditingLessonId 
+                ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
+                : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
+            const method = currentEditingLessonId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'x-auth-token': token },
+                body: formData
             });
+            const result = await response.json();
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(lessonModal).hide();
+                lessonModal.querySelector('form')?.reset();
+                if (exerciseFileInput) exerciseFileInput.value = '';
+                lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
+                lessonModal.querySelector('#save-lesson-btn').innerHTML = `
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Add Lesson</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                `;
+                currentEditingLessonId = null;
+                currentEditingEpisodeId = null;
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving lesson:', error);
+            alert('An error occurred while saving the lesson.');
         }
+    });
+}
 
         // Delete Lesson Event Listener
         document.addEventListener('click', async (e) => {
