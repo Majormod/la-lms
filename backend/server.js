@@ -455,7 +455,10 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
         }
         res.json({ success: true, course: course });
     } catch (error) {
-        console.error('Error fetching course for edit:', error);
+        // --- MODIFIED LOGGING FOR DEBUGGING ---
+        console.error('---! ERROR: FAILED TO FETCH COURSE FOR EDIT PAGE !---');
+        console.error(`The failing Course ID was: ${req.params.id}`);
+        console.error('The full error object is:', error); // This will print the detailed error
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
