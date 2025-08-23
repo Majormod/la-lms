@@ -2138,7 +2138,27 @@ if (quizModalEl) {
                 btn.classList.remove('quiz-modal__active');
             }
         });
-        
+// Reset to the first step whenever the modal is shown for "Add Quiz"
+quizModalEl.addEventListener('show.bs.modal', (e) => {
+    const button = e.relatedTarget; // The "Add Quiz" button
+
+    // Check if the modal was opened by an "Add" button
+    if (button && button.classList.contains('add-content-btn')) {
+
+        // 1. Set the current episode ID so the save button knows where to save the quiz
+        currentEditingEpisodeId = button.dataset.episodeId;
+
+        // 2. Reset the form fields to be empty
+        const titleInput = document.getElementById('quiz-title');
+        const summaryInput = document.getElementById('quiz-summary');
+        if(titleInput) titleInput.value = '';
+        if(summaryInput) summaryInput.value = '';
+
+        // 3. Reset the navigation to the first step
+        currentStep = 1;
+        updateQuizModalView();
+    }
+});
         // Update button visibility
         backBtn.style.display = (currentStep > 1) ? 'inline-block' : 'none';
         nextBtn.style.display = (currentStep < steps.length) ? 'inline-block' : 'none';
@@ -2156,16 +2176,6 @@ if (quizModalEl) {
         if (currentStep > 1) {
             currentStep--;
             updateQuizModalView();
-        }
-    });
-
-    // Reset to the first step whenever the modal is shown for "Add Quiz"
-    quizModalEl.addEventListener('show.bs.modal', (e) => {
-        const button = e.relatedTarget;
-        if (button && button.dataset.bsTarget === '#Quiz') {
-            currentStep = 1;
-            updateQuizModalView();
-            // You can also add form reset logic here later
         }
     });
 
@@ -2205,6 +2215,8 @@ if (triggerBtn && fileInput) {
         }
     });
 }
+
+
         // --- DEFINE ALL PAGE ELEMENTS ---
         const editCourseForm = document.getElementById('create-course-form');
         const courseTitleInput = document.getElementById('field-1');
