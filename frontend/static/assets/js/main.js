@@ -1944,7 +1944,8 @@ window.openUpdateLessonModal = function(episodeId, lessonId) {
 
     if (courseData && currentFilesList) {
         const lesson = courseData.episodes.find(e => e._id === episodeId)?.lessons.find(l => l._id === lessonId);
-        
+        // --- ADD THIS LINE TO DEBUG ---
+            console.log('Attempting to load data for lesson:', lesson);
         if (lesson) {
             // Populate standard form fields (title, summary, etc.)
             document.getElementById('lesson-title').value = lesson.title || '';
