@@ -4415,13 +4415,7 @@ function displayCurrentExerciseFiles(files) {
 }
 
 function removeExerciseFile(fileIdOrName) {
-    // This will be handled in the save function using the removeExerciseFileIds array
-    if (!window.removeExerciseFileIds) {
-        window.removeExerciseFileIds = [];
-    }
-    window.removeExerciseFileIds.push(fileIdOrName);
-    
-    // Remove from UI
+    // Just remove from UI for now - backend removal will need separate API call
     const fileItems = document.querySelectorAll('#current-files-list li');
     fileItems.forEach(item => {
         if (item.textContent.includes(fileIdOrName)) {
@@ -4433,6 +4427,9 @@ function removeExerciseFile(fileIdOrName) {
     if (document.getElementById('current-files-list').children.length === 0) {
         document.getElementById('current-exercise-file-container').style.display = 'none';
     }
+    
+    // Note: You'll need to implement a separate API call to actually remove files from the backend
+    console.log('File removal requested for:', fileIdOrName);
 }
 $(document).ready(function () {
     $('#language').selectpicker();
@@ -4473,11 +4470,8 @@ window.openUpdateLessonModal = function(episodeId, lessonId) {
                 document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
                 document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
                 
-                // Handle exercise files
-                const exerciseFileInput = document.getElementById('lesson-exercise-file');
+                // Handle exercise files display
                 const fileNameContainer = document.getElementById('exercise-file-name');
-                
-                if (exerciseFileInput) exerciseFileInput.value = '';
                 if (fileNameContainer) fileNameContainer.textContent = '';
                 
                 // Display current exercise files if they exist
