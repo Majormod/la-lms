@@ -619,7 +619,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // In server.js
 
 // 1. Replace your existing 'lessonUploads' multer instance with this one
-const path = require('path'); // Ensure path is imported at the top of your file
+// Ensure path is imported at the top of your file
 const fs = require('fs');     // Ensure fs is imported for file deletion
 
 const upload = multer({
