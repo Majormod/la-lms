@@ -2042,6 +2042,27 @@ const lessonsHtml = episode.lessons.map(lesson => `
             window.location.href = 'instructor-course.html';
             return;
         }
+        // --- Event Listener for the "Edit Lesson" Icon ---
+document.addEventListener('click', (e) => {
+    // Check if the clicked element is an edit icon
+    const editLessonBtn = e.target.closest('.edit-lesson');
+    if (editLessonBtn) {
+        
+        // Get the IDs from the icon's data attributes
+        const episodeId = editLessonBtn.dataset.episodeId;
+        const lessonId = editLessonBtn.dataset.lessonId;
+        
+        // Call the function to populate the modal with data
+        window.openUpdateLessonModal(episodeId, lessonId);
+        
+        // Manually create an instance of the modal and show it
+        const lessonModalEl = document.getElementById('Lesson');
+        if (lessonModalEl) {
+            const lessonModal = new bootstrap.Modal(lessonModalEl);
+            lessonModal.show();
+        }
+    }
+});
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
