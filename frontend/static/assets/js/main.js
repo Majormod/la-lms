@@ -2063,6 +2063,11 @@ const renderCourseBuilder = (episodes) => {
             window.location.href = 'instructor-course.html';
             return;
         }
+         // --- NEW DEBUGGING LOGS ---
+        console.log('--- DEBUGGING DATA LOAD ---');                               // <-- ADD THIS
+        console.log('Window Location Search:', window.location.search);          // <-- ADD THIS
+        console.log('Parsed courseId from URL:', courseId);                       // <-- ADD THIS
+        // --- END DEBUGGING LOGS ---
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
