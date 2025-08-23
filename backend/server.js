@@ -13,6 +13,25 @@ const User = require('./models/User');
 const Course = require('./models/Course');
 const auth = require('./authMiddleware');
 
+// Using multer's .fields() method to accept up to two different files
+// In server.js
+
+// 1. Replace your existing 'lessonUploads' multer instance with this one
+// Ensure path is imported at the top of your file
+const fs = require('fs');     // Ensure fs is imported for file deletion
+
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            const uploadPath = path.join(__dirname, '../frontend/uploads/courses');
+            fs.mkdirSync(uploadPath, { recursive: true }); // Ensure directory exists
+            cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+        }
+    }),
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -604,25 +623,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // ADD A NEW LESSON TO A SPECIFIC TOPIC (EPISODE)
 // In server.js
 
-// Using multer's .fields() method to accept up to two different files
-// In server.js
 
-// 1. Replace your existing 'lessonUploads' multer instance with this one
-// Ensure path is imported at the top of your file
-const fs = require('fs');     // Ensure fs is imported for file deletion
-
-const upload = multer({
-    storage: multer.diskStorage({
-        destination: (req, file, cb) => {
-            const uploadPath = path.join(__dirname, '../frontend/uploads/courses');
-            fs.mkdirSync(uploadPath, { recursive: true }); // Ensure directory exists
-            cb(null, uploadPath);
-        },
-        filename: (req, file, cb) => {
-            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
-        }
-    }),
-});
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
