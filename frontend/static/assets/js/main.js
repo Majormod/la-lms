@@ -1372,10 +1372,10 @@ const renderCourses = (containerSelector, courseList) => {
         const starsHtml = Array.from({ length: 5 }, (_, i) => `<i class="fas fa-star ${i < (course.rating || 0) ? '' : 'off'}"></i>`).join('');
         
         // --- NEW PRICE LOGIC ---
-        let priceHtml = `<span class="current-price">₹${course.price}</span>`;
+        let priceHtml = `<span class="current-price">$${course.price}</span>`;
         // Only show the original price if it exists and is greater than the final price
         if (course.originalPrice && course.originalPrice > course.price) {
-            priceHtml += `<span class="off-price">₹${course.originalPrice}</span>`;
+            priceHtml += `<span class="off-price">$${course.originalPrice}</span>`;
         }
         // --- END NEW PRICE LOGIC ---
 
@@ -2313,7 +2313,7 @@ if (lessonModal) {
             document.getElementById('new-files-list').innerHTML = '';
         }
     });
-
+}
         // Save Lesson Button
 if (saveLessonBtn) {
     saveLessonBtn.addEventListener('click', async () => {
