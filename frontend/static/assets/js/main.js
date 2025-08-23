@@ -4330,8 +4330,46 @@ if (window.location.pathname.includes('create-course.html')) {
 }
 
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-// --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
-if (window.location.pathname.includes('edit-course.html')) {
+if (window.location.pathname.includes('edit-course.html')) {// Separate function to handle file uploads
+async function uploadExerciseFiles(lessonId) {
+    const exerciseFileInput = document.getElementById('lesson-exercise-file');
+    
+    if (!exerciseFileInput || !exerciseFileInput.files.length) {
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        for (let i = 0; i < exerciseFileInput.files.length; i++) {
+            formData.append('exerciseFiles', exerciseFileInput.files[i]);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/lessons/${lessonId}/exercise-files`, {
+            method: 'POST',
+            headers: { 'x-auth-token': token },
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Files uploaded successfully');
+            // Refresh the course data to show the new files
+            const refreshResponse = await fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, {
+                headers: { 'x-auth-token': token }
+            });
+            const refreshResult = await refreshResponse.json();
+            if (refreshResult.success) {
+                courseData = refreshResult.course;
+                renderCourseBuilder(courseData.episodes);
+            }
+        } else {
+            console.error('File upload failed:', result.message);
+        }
+    } catch (error) {
+        console.error('Error uploading files:', error);
+    }
+}
+
 // --- Exercise File Helper Functions ---
 function triggerExerciseFileUpload() {
     document.getElementById('lesson-exercise-file').click();
@@ -4779,51 +4817,35 @@ if (saveLessonBtn) {
         const sec = document.getElementById('lesson-duration-sec').value || '0';
         const duration = `${hr} hr ${min} min ${sec} sec`;
         const isPreview = document.getElementById('lesson-is-preview').checked;
-        const exerciseFileInput = document.getElementById('lesson-exercise-file');
         const episodeId = currentEditingEpisodeId;
 
         if (!title) return alert('Please enter a lesson title.');
         if (!episodeId) return alert('No episode selected. Please try again.');
 
         try {
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('summary', summary);
-            formData.append('vimeoUrl', vimeoUrl);
-            formData.append('duration', duration);
-            formData.append('isPreview', isPreview);
-            
-            // Add exercise files
-            if (exerciseFileInput && exerciseFileInput.files.length > 0) {
-                for (let i = 0; i < exerciseFileInput.files.length; i++) {
-                    formData.append('exerciseFiles', exerciseFileInput.files[i]);
-                }
-            }
-            
-            // Add files to remove
-            if (window.removeExerciseFileIds && window.removeExerciseFileIds.length > 0) {
-                formData.append('removeExerciseFileIds', JSON.stringify(window.removeExerciseFileIds));
-            }
+            // Create lesson data object (without files for now)
+            const lessonData = {
+                title,
+                summary,
+                vimeoUrl,
+                duration,
+                isPreview
+            };
 
             const url = currentEditingLessonId 
                 ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
                 : `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons`;
             const method = currentEditingLessonId ? 'PUT' : 'POST';
 
-            console.log('Sending lesson data:', {
-                title,
-                summary,
-                vimeoUrl,
-                duration,
-                isPreview,
-                exerciseFilesCount: exerciseFileInput?.files.length || 0,
-                filesToRemove: window.removeExerciseFileIds || []
-            });
+            console.log('Sending lesson data:', lessonData);
 
             const response = await fetch(url, {
                 method,
-                headers: { 'x-auth-token': token },
-                body: formData
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token 
+                },
+                body: JSON.stringify(lessonData)
             });
             
             const result = await response.json();
@@ -4832,11 +4854,27 @@ if (saveLessonBtn) {
             if (result.success) {
                 courseData = result.course;
                 renderCourseBuilder(courseData.episodes);
+                // Upload files after successful lesson save
+    if (currentEditingLessonId) {
+        // For updating existing lesson
+        await uploadExerciseFiles(currentEditingLessonId);
+    } else {
+        // For new lesson, find the newly created lesson ID
+        const newEpisode = courseData.episodes.find(ep => ep._id === episodeId);
+        if (newEpisode && newEpisode.lessons.length > 0) {
+            const newLesson = newEpisode.lessons[newEpisode.lessons.length - 1];
+            await uploadExerciseFiles(newLesson._id);
+        }
+    }
                 bootstrap.Modal.getInstance(lessonModal).hide();
                 lessonModal.querySelector('form')?.reset();
+                
+                // Reset file fields
+                const exerciseFileInput = document.getElementById('lesson-exercise-file');
                 if (exerciseFileInput) exerciseFileInput.value = '';
                 document.getElementById('exercise-file-name').textContent = '';
                 document.getElementById('current-exercise-file-container').style.display = 'none';
+                
                 lessonModal.querySelector('.modal-title').textContent = 'Add Lesson';
                 lessonModal.querySelector('#save-lesson-btn').innerHTML = `
                     <span class="icon-reverse-wrapper">
