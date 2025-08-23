@@ -26,19 +26,23 @@ const LessonSchema = new Schema({
 }]
 });
 
+// Add these two new schemas right here
+const QuizSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    summary: { type: String }
+});
+
+const AssignmentSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    summary: { type: String }
+});
 // Defines the schema for an Episode (Topic), which contains an array of Lessons
-const EpisodeSchema = new Schema({
-    title: { 
-        type: String, 
-        required: true 
-    },
-    summary: { 
-        type: String, 
-        required: false, 
-        default: '' // Added summary field
-    },
-    lessons: [LessonSchema], // An array of lessons nested within the episode
-    _id: { type: mongoose.Schema.Types.ObjectId, auto: true } // Ensure _id is generated
+const EpisodeSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    summary: { type: String },
+    lessons: [LessonSchema],
+    quizzes: [QuizSchema],         // <-- ADD THIS LINE
+    assignments: [AssignmentSchema] // <-- ADD THIS LINE
 });
 
 // Your main Course Schema, with the 'episodes' field
