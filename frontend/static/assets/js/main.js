@@ -1925,7 +1925,7 @@ newFilesListContainer.innerHTML = '';
 fileInput.value = ''; // Reset file input
 
 if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
-    let filesHtml = '<p class="b3 mb-2">Attached Files:</p><ul class="list-group list-group-flush">';
+    let filesHtml = '<p class="b3 mb-2">Attached Files:</p><br><ul class="list-group list-group-flush">';
     lesson.exerciseFiles.forEach(file => {
         // NOTE: The file.path should be the URL to access the file, e.g., 'uploads/courses/file.pdf'
         filesHtml += `
