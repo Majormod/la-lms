@@ -2451,22 +2451,20 @@ document.addEventListener('click', async (e) => {
 });
 // --- CORRECTED: Generic Edit Item Event Listener ---
 document.addEventListener('click', async (e) => {
-    // Look for the new generic class '.edit-item'
     const editBtn = e.target.closest('.edit-item'); 
     if (editBtn) {
-        // Get the new generic data attributes
         const { episodeId, itemId, itemType } = editBtn.dataset; 
 
-        // Check if the item type is a lesson before proceeding
         if (itemType === 'lesson') {
-            // Call the function to populate the lesson modal
             openUpdateLessonModal(episodeId, itemId); 
-
-            // Manually show the modal since bootstrap's auto-init might not work here
-            const lessonModalInstance = new bootstrap.Modal(document.getElementById('Lesson'));
+            
+            // --- THIS IS THE CORRECTED LINE ---
+            // Use getOrCreateInstance to prevent duplicate modal objects
+            const lessonModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Lesson'));
+            
             lessonModalInstance.show();
         } 
-
+        
         // In the future, we will add similar blocks here for quizzes and assignments
         // else if (itemType === 'quiz') { ... }
         // else if (itemType === 'assignment') { ... }
