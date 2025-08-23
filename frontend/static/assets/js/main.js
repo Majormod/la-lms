@@ -2314,7 +2314,6 @@ if (lessonModal) {
         }
     });
 }
-
         // Save Lesson Button
 if (saveLessonBtn) {
     saveLessonBtn.addEventListener('click', async () => {
