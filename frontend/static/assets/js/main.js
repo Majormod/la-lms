@@ -1960,12 +1960,11 @@ const renderCourseBuilder = (episodes) => {
     }
 
     container.innerHTML = episodes.map((episode) => {
-        // --- THIS SECTION IS NOW FIXED ---
-        // We convert each item to a plain object before adding the 'type' property.
+        // --- CORRECTED LINES: .toObject() has been removed ---
         const items = [
-            ...(episode.lessons || []).map(item => ({ ...item.toObject(), type: 'lesson' })),
-            ...(episode.quizzes || []).map(item => ({ ...item.toObject(), type: 'quiz' })),
-            ...(episode.assignments || []).map(item => ({ ...item.toObject(), type: 'assignment' }))
+            ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
+            ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
+            ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
         ];
 
         const itemsHtml = items.map(item => {
