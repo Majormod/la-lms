@@ -1868,6 +1868,21 @@ if (window.location.pathname.includes('create-course.html')) {
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 if (window.location.pathname.includes('edit-course.html')) {
+    // Helper function to trigger the hidden file input
+window.triggerExerciseFileUpload = function() {
+    document.getElementById('lesson-exercise-file').click();
+}
+
+// Helper function to display the chosen file's name
+window.displayExerciseFileName = function(fileInput) {
+    const fileNameDisplay = document.getElementById('exercise-file-name');
+    if (fileInput.files.length > 0) {
+        let fileNames = Array.from(fileInput.files).map(f => f.name).join(', ');
+        fileNameDisplay.textContent = `Selected: ${fileNames}`;
+    } else {
+        fileNameDisplay.textContent = '';
+    }
+}
 $(document).ready(function () {
     $('#language').selectpicker();
 });
