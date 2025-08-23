@@ -1912,6 +1912,37 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
+                    // START: Add this new code block
+const existingFilesContainer = document.getElementById('existing-exercise-files');
+const newFilesListContainer = document.getElementById('new-files-list');
+const fileInput = document.getElementById('lesson-exercise-files');
+
+// Clear any previous state
+existingFilesContainer.innerHTML = '';
+newFilesListContainer.innerHTML = '';
+fileInput.value = ''; // Reset file input
+
+if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+    let filesHtml = '<p class="b3 mb-2">Attached Files:</p><ul class="list-group list-group-flush">';
+    lesson.exerciseFiles.forEach(file => {
+        // NOTE: The file.path should be the URL to access the file, e.g., 'uploads/courses/file.pdf'
+        filesHtml += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="/${file.path}" target="_blank">${file.filename}</a>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-existing-file-btn"
+                        data-course-id="${courseId}"
+                        data-episode-id="${episodeId}"
+                        data-lesson-id="${lessonId}"
+                        data-file-path="${file.path}">
+                    Remove
+                </button>
+            </li>
+        `;
+    });
+    filesHtml += '</ul>';
+    existingFilesContainer.innerHTML = filesHtml;
+}
+// END: New code block
                 }
             }
         }
@@ -1929,7 +1960,8 @@ const lessonsHtml = episode.lessons.map(lesson => `
     <div class="d-flex justify-content-between rbt-course-wrape mb-4">
         <div class="col-10 inner d-flex align-items-center gap-2">
             <i class="feather-play-circle"></i>
-            <h6 class="rbt-title mb-0">${lesson.title}</h6>
+<h6 class="rbt-title mb-0">${lesson.title}</h6>
+${lesson.exerciseFiles && lesson.exerciseFiles.length > 0 ? '<i class="feather-paperclip ms-2"></i>' : ''}
         </div>
         <div class="col-2 inner">
             <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
@@ -2233,9 +2265,12 @@ if (lessonModal) {
                     formData.append('vimeoUrl', vimeoUrl);
                     formData.append('duration', duration);
                     formData.append('isPreview', isPreview);
-                    if (exerciseFileInput && exerciseFileInput.files[0]) {
-                        formData.append('exerciseFile', exerciseFileInput.files[0]);
-                    }
+                    if (exerciseFileInput && exerciseFileInput.files.length > 0) {
+    for (const file of exerciseFileInput.files) {
+        // The key 'exerciseFiles' must match what your backend (e.g., multer) expects for multiple files
+        formData.append('exerciseFiles', file);
+    }
+}
 
                     const url = currentEditingLessonId 
                         ? `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${currentEditingLessonId}`
@@ -2300,6 +2335,51 @@ if (lessonModal) {
                 }
             }
         });
+        // --- NEW: Remove Exercise File Event Listener ---
+document.addEventListener('click', async (e) => {
+    const removeBtn = e.target.closest('.remove-existing-file-btn');
+    if (removeBtn) {
+        e.preventDefault(); // Prevent any default button action
+
+        if (confirm('Are you sure you want to remove this file?')) {
+            const { courseId, episodeId, lessonId, filePath } = removeBtn.dataset;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}/files`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ filePath: filePath }) // Send the file path to identify which file to delete
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update global data and re-render the main list
+                    courseData = result.course;
+                    renderCourseBuilder(courseData.episodes);
+                    
+                    // Visually remove the file from the modal list immediately
+                    removeBtn.closest('li').remove(); 
+                    
+                    // Optional: If the list is now empty, remove the "Attached Files" heading
+                    const fileList = removeBtn.closest('ul');
+                    if (fileList && fileList.children.length === 0) {
+                        fileList.previousElementSibling.remove(); // Removes the <p> heading
+                        fileList.remove();
+                    }
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error removing exercise file:', error);
+                alert('An error occurred while removing the file.');
+            }
+        }
+    }
+});
 // Edit Lesson Event Listener
 document.addEventListener('click', async (e) => {
     const editLessonBtn = e.target.closest('.edit-lesson');

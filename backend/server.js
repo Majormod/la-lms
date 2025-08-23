@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
@@ -620,19 +619,29 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 // In server.js
 
 // 1. Replace your existing 'lessonUploads' multer instance with this one
-const lessonUploads = multer({
+const path = require('path'); // Ensure path is imported at the top of your file
+const fs = require('fs');     // Ensure fs is imported for file deletion
+
+const upload = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, path.join(__dirname, '../frontend/static/assets/images/uploads/')),
-        filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+        destination: (req, file, cb) => {
+            const uploadPath = path.join(__dirname, '../frontend/uploads/courses');
+            fs.mkdirSync(uploadPath, { recursive: true }); // Ensure directory exists
+            cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+        }
     }),
-}).single('exerciseFile');
+});
 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
-app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, lessonUploads, async (req, res) => {
+// PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
+app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, upload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview, removeExerciseFile } = req.body;
+        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -647,20 +656,18 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
 
         // Update text fields
         lesson.title = title || lesson.title;
-        lesson.summary = summary || lesson.summary;
+        lesson.summary = summary; // Allow empty summary
         lesson.vimeoUrl = vimeoUrl; // Allow clearing the URL
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
-        // Handle file removal
-        if (removeExerciseFile === 'true') {
-            // Optional: Add code here to delete the actual file from the server's disk
-            lesson.exerciseFile = undefined; 
-        }
-
-        // Handle new file upload
-        if (req.file) {
-            lesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        // Handle new file uploads by adding them to the existing array
+        if (req.files && req.files.length > 0) {
+            const newFiles = req.files.map(file => ({
+                filename: file.originalname,
+                path: `uploads/courses/${file.filename}`
+            }));
+            lesson.exerciseFiles.push(...newFiles);
         }
 
         await course.save();
@@ -669,10 +676,11 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, le
         console.error('Error updating lesson:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
-}); // Only handle exerciseFile
+});
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
-app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploads, async (req, res) => {
+// POST /api/courses/:courseId/episodes/:episodeId/lessons
+app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, upload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
         const { title, summary, vimeoUrl, duration, isPreview } = req.body;
@@ -682,12 +690,8 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         }
 
         const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
-
-        if (course.instructor.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'User not authorized' });
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Course not found or user not authorized' });
         }
 
         const episode = course.episodes.id(episodeId);
@@ -700,17 +704,17 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
             summary,
             vimeoUrl,
             duration,
-            isPreview: isPreview === 'true'
+            isPreview: isPreview === 'true',
+            exerciseFiles: [] // Initialize as an empty array
         };
 
-        if (req.file) {
-            newLesson.exerciseFile = `assets/images/uploads/${req.file.filename}`;
+        // If files were uploaded, map them to the correct format
+        if (req.files && req.files.length > 0) {
+            newLesson.exerciseFiles = req.files.map(file => ({
+                filename: file.originalname,
+                path: `uploads/courses/${file.filename}` // Store the relative path
+            }));
         }
-        
-// --- ADD THESE LOGS TO DEBUG ---
-        console.log('--- DEBUG: PREPARING TO SAVE NEW LESSON ---');
-        console.log(newLesson);
-        // --- END OF LOGS ---
 
         episode.lessons.push(newLesson);
         await course.save();
@@ -722,7 +726,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, lessonUploa
         });
     } catch (error) {
         console.error('Error adding lesson:', error);
-        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
@@ -759,11 +763,16 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth,
     }
 });
 
-// Add this new route with your other API routes
+
+// DELETE /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files
 app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files', auth, async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        const { filePathToDelete } = req.body; // File path sent from the frontend
+        const { filePath } = req.body; // File path sent from the frontend
+
+        if (!filePath) {
+            return res.status(400).json({ success: false, message: 'File path is required.' });
+        }
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -771,17 +780,30 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files',
         }
         
         const episode = course.episodes.id(episodeId);
-        const lesson = episode.lessons.id(lessonId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
 
-        // Remove the file path from the array in the database
-        lesson.exerciseFiles.pull(filePathToDelete);
+        const lesson = episode.lessons.id(lessonId);
+        if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+
+        // Find the file to be removed
+        const fileToRemove = lesson.exerciseFiles.find(file => file.path === filePath);
+        if (!fileToRemove) {
+             return res.status(404).json({ success: false, message: 'File not found in this lesson.' });
+        }
+
+        // Remove the file object from the array in the database using its _id
+        lesson.exerciseFiles.pull(fileToRemove._id);
         await course.save();
 
-        // Delete the physical file from the server
-        const physicalPath = path.join(__dirname, '../frontend/static', filePathToDelete);
+        // Delete the physical file from the server's disk
+        const physicalPath = path.join(__dirname, '../frontend', filePath);
         fs.unlink(physicalPath, (err) => {
-            if (err) console.error("Error deleting physical file:", err);
-            else console.log("Successfully deleted physical file:", physicalPath);
+            if (err) {
+                console.error("Error deleting physical file:", err);
+                // Don't block success response if DB entry was removed but file was already gone
+            } else {
+                console.log("Successfully deleted physical file:", physicalPath);
+            }
         });
 
         res.json({ success: true, message: 'File deleted successfully!', course });
@@ -790,7 +812,6 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files',
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 app.use(express.static(staticPath));
 
 
