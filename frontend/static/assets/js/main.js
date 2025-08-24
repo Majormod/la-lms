@@ -2329,6 +2329,96 @@ if (backBtn) {
             finalSaveBtn.textContent = 'Save Quiz';
         }
     });
+
+    // --- RENDER & SAVE QUESTION LOGIC ---
+
+// Helper function to display the list of questions
+const renderQuizQuestionsList = () => {
+    const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+    if (!episode) return;
+
+    const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+    if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+        document.getElementById('quiz-questions-list').innerHTML = '<p>No questions have been added to this quiz yet.</p>';
+        return;
+    }
+
+    const questionsListEl = document.getElementById('quiz-questions-list');
+    questionsListEl.innerHTML = quiz.questions.map((question, index) => `
+        <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+            <div class="inner d-flex align-items-center gap-2">
+                <h6 class="rbt-title mb-0">Question #${index + 1}: ${question.questionText}</h6>
+            </div>
+            <div class="inner">
+                <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
+                    <li><i class="feather-trash delete-question-btn" data-question-id="${question._id}"></i></li>
+                    <li><i class="feather-edit edit-question-btn" data-question-id="${question._id}"></i></li>
+                </ul>
+            </div>
+        </div>
+    `).join('');
+};
+
+
+// Event listener for the "Save Question" button
+const saveQuestionBtn = document.getElementById('save-question-btn');
+if (saveQuestionBtn) {
+    saveQuestionBtn.addEventListener('click', async () => {
+        
+        // 1. Gather all the data from the form
+        const options = [];
+        const optionRows = document.querySelectorAll('#quiz-answer-options-container .quiz-option-row');
+        optionRows.forEach(row => {
+            const textInput = row.querySelector('.quiz-option-text');
+            const isCorrectInput = row.querySelector('.quiz-option-iscorrect');
+            if (textInput && isCorrectInput) {
+                options.push({
+                    text: textInput.value,
+                    isCorrect: isCorrectInput.checked
+                });
+            }
+        });
+
+        const questionData = {
+            questionText: document.getElementById('quiz-question-text').value,
+            questionType: document.getElementById('quiz-question-type').value,
+            points: document.getElementById('quiz-question-points').value,
+            options: options
+        };
+
+        if (!questionData.questionText) {
+            return alert('Please enter the question text.');
+        }
+
+        // 2. Send the data to the new backend route
+        try {
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(questionData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 3. Update the UI
+                courseData = result.course;
+                renderQuizQuestionsList(); // Refresh the questions list
+                currentStep = 2; // Go back to the questions list view
+                updateQuizModalView();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Error saving question:', error);
+            alert('An error occurred while saving the question.');
+        }
+    });
+}
 }
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');

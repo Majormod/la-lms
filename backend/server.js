@@ -881,6 +881,39 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId', auth, a
     }
 });
 
+// POST /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions
+app.post('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, quizId } = req.params;
+        const questionData = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+        
+        const quiz = episode.quizzes.id(quizId);
+        if (!quiz) return res.status(404).json({ success: false, message: 'Quiz not found' });
+
+        // Add the new question to the quiz's questions array
+        quiz.questions.push(questionData);
+        await course.save();
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Question added successfully!',
+            course: course.toObject() 
+        });
+
+    } catch (error) {
+        console.error('Error adding question to quiz:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 
