@@ -40739,3 +40739,9 @@ padding: 0 10px 0 10px;
     color: #6c757d; /* A standard, soft gray color for muted text */
     margin-top: 3px;
 }
+.remove-option-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+}
