@@ -2165,10 +2165,15 @@ const toggleAnswerOptions = () => {
 };
 
 // Function to add a new answer option input field
+// REPLACE your existing addAnswerOption function with this one
 const addAnswerOption = () => {
     const questionType = questionTypeSelect.value;
     const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
-    const optionName = `is-correct-option-${answerOptionsContainer.children.length}`;
+    
+    // Create a unique ID for the input and label to link them
+    const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // For single choice, all radio buttons need the same 'name' to work correctly
+    const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
 
     const optionHtml = `
         <div class="d-flex align-items-center mb-2 quiz-option-row">
@@ -2176,11 +2181,11 @@ const addAnswerOption = () => {
                 <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
             </div>
             <div class="form-check me-3">
-                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}">
-                <label class="form-check-label">Correct</label>
+                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}">
+                <label class="form-check-label" for="${uniqueId}">Correct</label>
             </div>
             <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
-                <i class="feather-x"></i>
+                <i class="feather-x" style="pointer-events: none;"></i>
             </button>
         </div>
     `;
