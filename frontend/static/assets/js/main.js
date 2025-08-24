@@ -2062,7 +2062,11 @@ document.addEventListener('click', async (e) => {
     if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
         try {
             // The URL is built dynamically based on the item type (e.g., /lessons/, /quizzes/)
-            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${itemType}s/${itemId}`;
+let pathSegment = `${itemType}s`;
+if (itemType === 'quiz') {
+    pathSegment = 'quizzes';
+}
+const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
 
              // --- ADD THIS DEBUGGING LOG ---
             console.log("Attempting to send DELETE request to this URL:", url);
