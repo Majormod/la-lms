@@ -2148,8 +2148,6 @@ const answerOptionsWrapper = document.getElementById('quiz-answer-options-wrappe
 const answerOptionsContainer = document.getElementById('quiz-answer-options-container');
 const addOptionBtn = document.getElementById('add-answer-option-btn');
 const addQuestionBtn = document.getElementById('add-question-btn');
-// --- ADD THIS LOG ---
-console.log("Attempting to find 'Add New Question' button:", addQuestionBtn);
 const cancelQuestionBtn = document.getElementById('cancel-question-btn');
 
 // Function to show/hide the answer options based on question type
