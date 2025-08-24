@@ -1916,6 +1916,7 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
+                };
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
@@ -3545,7 +3546,7 @@ if (window.location.pathname.includes('lesson.html')) {
         }
     }
 }
-        };
+};
 
 if (window.location.pathname.includes('explore-courses.html')) {
 
