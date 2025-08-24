@@ -2315,25 +2315,14 @@ if (backBtn) {
             const result = await response.json();
 
             // --- REPLACE THE OLD if(result.success) BLOCK WITH THIS ONE ---
-            if (result.success) {
-                courseData = result.course;
-                renderCourseBuilder(courseData.episodes);
+            // Find the 'if (result.success)' block and replace its contents with this:
+if (result.success) {
+    courseData = result.course;
+    renderCourseBuilder(courseData.episodes);
 
-            // If we just CREATED a quiz, find its new ID from the server's response
-            if (!isEditing) {
-                const newEpisode = courseData.episodes.find(ep => ep._id == episodeId);
-                // The new quiz will be the last one in the array
-                const newQuiz = newEpisode.quizzes[newEpisode.quizzes.length - 1]; 
-                currentEditingQuizId = newQuiz._id;
-            }
-
-            // Now, instead of closing the modal, go to the "Questions" list view
-            currentStep = 2; 
-            updateQuizModalView();
-            renderQuizQuestionsList(); // Render the (currently empty) list of questions
-            } else {
-                throw new Error(result.message);
-            }
+    // This single line correctly closes the modal
+    bootstrap.Modal.getInstance(quizModalEl).hide();
+}
         } catch (error) {
             console.error('Error saving quiz:', error);
             alert(`An error occurred: ${error.message}`);
