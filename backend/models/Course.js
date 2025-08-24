@@ -25,7 +25,20 @@ const LessonSchema = new Schema({
     path: String
 }]
 });
-
+const OptionSchema = new mongoose.Schema({
+    text: { type: String, required: true },
+    isCorrect: { type: Boolean, default: false }
+});
+const QuestionSchema = new mongoose.Schema({
+    questionText: { type: String, required: true },
+    questionType: { 
+        type: String, 
+        required: true,
+        enum: ['single-choice', 'multiple-choice', 'open-ended']
+    },
+    points: { type: Number, default: 10 },
+    options: [OptionSchema]
+});
 // Add these two new schemas right here
 const QuizSchema = new mongoose.Schema({
     title: { type: String, required: true },
@@ -45,21 +58,7 @@ const EpisodeSchema = new mongoose.Schema({
     quizzes: [QuizSchema],         // <-- ADD THIS LINE
     assignments: [AssignmentSchema] // <-- ADD THIS LINE
 });
-const OptionSchema = new mongoose.Schema({
-    text: { type: String, required: true },
-    isCorrect: { type: Boolean, default: false }
-});
 
-const QuestionSchema = new mongoose.Schema({
-    questionText: { type: String, required: true },
-    questionType: { 
-        type: String, 
-        required: true,
-        enum: ['single-choice', 'multiple-choice', 'open-ended']
-    },
-    points: { type: Number, default: 10 },
-    options: [OptionSchema]
-});
 // Your main Course Schema, with the 'episodes' field
 const CourseSchema = new Schema({
     title: { type: String, required: true },
