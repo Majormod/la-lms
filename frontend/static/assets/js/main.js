@@ -2132,21 +2132,6 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
     }
 };
 
-// This listener prepares the modal for adding a NEW quiz
-const quizModalEl = document.getElementById('Quiz');
-if (quizModalEl) {
-    quizModalEl.addEventListener('show.bs.modal', (e) => {
-        const button = e.relatedTarget;
-        if (button && button.classList.contains('add-content-btn')) {
-            currentEditingEpisodeId = button.dataset.episodeId;
-            currentEditingQuizId = null; // Clear editing ID for "Add" mode
-            
-            // Reset the form fields
-            document.getElementById('quiz-title').value = '';
-            document.getElementById('quiz-summary').value = '';
-        }
-    });
-}
 
 // This is the single, reliable save button listener
 const saveQuizBtn = document.getElementById('save-quiz-btn');
