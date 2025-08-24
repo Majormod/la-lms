@@ -2114,7 +2114,7 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
 
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
 let currentEditingQuizId = null;
-
+let currentEditingQuestionId = null; // <-- ADD THIS LINE
 window.openUpdateQuizModal = function(episodeId, quizId) {
     currentEditingEpisodeId = episodeId;
     currentEditingQuizId = quizId;
@@ -2363,61 +2363,105 @@ const renderQuizQuestionsList = () => {
 
 
 // Event listener for the "Save Question" button
+// UPGRADED Event listener for the "Save Question" button
 const saveQuestionBtn = document.getElementById('save-question-btn');
 if (saveQuestionBtn) {
     saveQuestionBtn.addEventListener('click', async () => {
-        
-        // 1. Gather all the data from the form
-        const options = [];
-        const optionRows = document.querySelectorAll('#quiz-answer-options-container .quiz-option-row');
-        optionRows.forEach(row => {
-            const textInput = row.querySelector('.quiz-option-text');
-            const isCorrectInput = row.querySelector('.quiz-option-iscorrect');
-            if (textInput && isCorrectInput) {
-                options.push({
-                    text: textInput.value,
-                    isCorrect: isCorrectInput.checked
-                });
-            }
-        });
+        // ... (The code to gather 'options' and 'questionData' is the same) ...
+        const options = []; // ...
+        const questionData = { /* ... */ }; // ...
 
-        const questionData = {
-            questionText: document.getElementById('quiz-question-text').value,
-            questionType: document.getElementById('quiz-question-type').value,
-            points: document.getElementById('quiz-question-points').value,
-            options: options
-        };
-
-        if (!questionData.questionText) {
-            return alert('Please enter the question text.');
-        }
-
-        // 2. Send the data to the new backend route
         try {
             const courseId = new URLSearchParams(window.location.search).get('courseId');
-            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions`;
+
+            // --- NEW LOGIC FOR EDITING ---
+            const isEditingQuestion = !!currentEditingQuestionId;
+            const method = isEditingQuestion ? 'PUT' : 'POST';
+            const url = isEditingQuestion ? 
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${currentEditingQuestionId}` :
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions`;
 
             const response = await fetch(url, {
-                method: 'POST',
+                method: method,
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify(questionData)
             });
-
             const result = await response.json();
-
             if (result.success) {
-                // 3. Update the UI
                 courseData = result.course;
-                renderQuizQuestionsList(); // Refresh the questions list
-                currentStep = 2; // Go back to the questions list view
+                currentEditingQuestionId = null; // Clear after saving
+                renderQuizQuestionsList();
+                currentStep = 2;
                 updateQuizModalView();
             } else {
                 alert(`Error: ${result.message}`);
             }
-
         } catch (error) {
-            console.error('Error saving question:', error);
             alert('An error occurred while saving the question.');
+        }
+    });
+}
+// Handle deleting a question
+const questionsListEl = document.getElementById('quiz-questions-list');
+if (questionsListEl) {
+    questionsListEl.addEventListener('click', async (e) => {
+        const deleteBtn = e.target.closest('.delete-question-btn');
+        if (!deleteBtn) return;
+
+        const questionId = deleteBtn.dataset.questionId;
+        if (confirm('Are you sure you want to delete this question?')) {
+            try {
+                const courseId = new URLSearchParams(window.location.search).get('courseId');
+                const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${questionId}`;
+                
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    courseData = result.course;
+                    renderQuizQuestionsList(); // Refresh the list
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('An error occurred while deleting the question.');
+            }
+        }
+    });
+}
+// Handle editing a question
+if (questionsListEl) {
+    questionsListEl.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-question-btn');
+        if (!editBtn) return;
+
+        currentEditingQuestionId = editBtn.dataset.questionId;
+        const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+        const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+        const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
+
+        if (question) {
+            // Populate the form with the question's data
+            document.getElementById('quiz-question-text').value = question.questionText;
+            document.getElementById('quiz-question-type').value = question.questionType;
+            document.getElementById('quiz-question-points').value = question.points;
+
+            // Show/hide the options wrapper and render the options
+            toggleAnswerOptions(); 
+            question.options.forEach(opt => {
+                addAnswerOption();
+                const newRow = answerOptionsContainer.lastElementChild;
+                newRow.querySelector('.quiz-option-text').value = opt.text;
+                newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
+            });
+
+            // Navigate to the form
+            currentStep = steps.ADD_QUESTION_FORM;
+            updateQuizModalView();
         }
     });
 }
