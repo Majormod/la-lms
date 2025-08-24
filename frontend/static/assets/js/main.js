@@ -2050,6 +2050,28 @@ const renderCourseBuilder = (episodes) => {
     }).join('');
 };
 
+
+
+    window.onload = function() {
+        // --- AUTH & URL CHECK ---
+        if (!token || (user && user.role !== 'instructor')) {
+            alert("Access Denied.");
+            window.location.href = '/login.html';
+            return;
+        }
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get('courseId');
+        if (!courseId) {
+            alert('No course ID found.');
+            window.location.href = 'instructor-course.html';
+            return;
+        }
+         // --- NEW DEBUGGING LOGS ---
+        console.log('--- DEBUGGING DATA LOAD ---');                               // <-- ADD THIS
+        console.log('Window Location Search:', window.location.search);          // <-- ADD THIS
+        console.log('Parsed courseId from URL:', courseId);                       // <-- ADD THIS
+        // --- END DEBUGGING LOGS ---
+
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
 let currentEditingQuizId = null;
 
@@ -2160,28 +2182,6 @@ if (quizModalEl) {
         }
     });
 }
-
-    window.onload = function() {
-        // --- AUTH & URL CHECK ---
-        if (!token || (user && user.role !== 'instructor')) {
-            alert("Access Denied.");
-            window.location.href = '/login.html';
-            return;
-        }
-        const params = new URLSearchParams(window.location.search);
-        const courseId = params.get('courseId');
-        if (!courseId) {
-            alert('No course ID found.');
-            window.location.href = 'instructor-course.html';
-            return;
-        }
-         // --- NEW DEBUGGING LOGS ---
-        console.log('--- DEBUGGING DATA LOAD ---');                               // <-- ADD THIS
-        console.log('Window Location Search:', window.location.search);          // <-- ADD THIS
-        console.log('Parsed courseId from URL:', courseId);                       // <-- ADD THIS
-        // --- END DEBUGGING LOGS ---
-
-
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
