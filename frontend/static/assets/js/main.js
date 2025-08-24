@@ -2131,6 +2131,19 @@ if (quizModalEl) {
     } else {
         console.error("ERROR: Could not find the 'Next' button to attach a listener.");
     }
+    // --- PASTE THE NEW "BACK" BUTTON CODE HERE ---
+if (backBtn) {
+    backBtn.addEventListener('click', () => {
+        console.log("'Back' button was clicked!"); // For debugging
+
+        if (currentStep > 1) {
+            currentStep--;
+            updateQuizModalView();
+        }
+    });
+} else {
+    console.error("ERROR: Could not find the 'Back' button to attach a listener.");
+}
     if(firstProgressStep) {
         firstProgressStep.addEventListener('reset', () => {
             currentStep = 1;
