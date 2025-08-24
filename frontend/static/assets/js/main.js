@@ -2113,8 +2113,6 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
         // --- END DEBUGGING LOGS ---
 
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
-// --- SIMPLIFIED QUIZ ADD/EDIT LOGIC ---
-// --- FINAL, COMPLETE QUIZ LOGIC (ADD/EDIT/NAVIGATE/SAVE) ---
 let currentEditingQuizId = null;
 
 window.openUpdateQuizModal = function(episodeId, quizId) {
@@ -2127,63 +2125,311 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
             if (quiz) {
                 document.getElementById('quiz-title').value = quiz.title || '';
                 document.getElementById('quiz-summary').value = quiz.summary || '';
-                renderQuizQuestionsList();
             }
         }
     }
 };
 
-const quizModalEl = document.getElementById('Quiz');
+// Generic listener to handle EDITING any item type
+document.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.edit-item');
+    if (editBtn) {
+        const { episodeId, itemId, itemType } = editBtn.dataset;
+        if (itemType === 'lesson') {
+            openUpdateLessonModal(episodeId, itemId);
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('Lesson')).show();
+        } else if (itemType === 'quiz') {
+            openUpdateQuizModal(episodeId, itemId);
+            const quizModalEl = document.getElementById('Quiz');
+// --- NEW DEBUG LOG ---
+console.log("Attempting to find Quiz Modal element:", quizModalEl);
 if (quizModalEl) {
-    // --- Element Definitions ---
-    const backBtn = document.getElementById('quiz-back-btn');
+    const steps = quizModalEl.querySelectorAll('.question');
     const nextBtn = document.getElementById('quiz-next-btn');
-    const saveQuizBtn = document.getElementById('save-quiz-btn');
-    const questionTypeSelect = document.getElementById('quiz-question-type');
-    const answerOptionsWrapper = document.getElementById('quiz-answer-options-wrapper');
-    const answerOptionsContainer = document.getElementById('quiz-answer-options-container');
-    const addOptionBtn = document.getElementById('add-answer-option-btn');
-    const addQuestionBtn = document.getElementById('add-question-btn');
-    const cancelQuestionBtn = document.getElementById('cancel-question-btn');
-    const saveQuestionBtn = document.getElementById('save-question-btn');
+    // --- NEW DEBUG LOG ---
+    console.log("Attempting to find 'Next' button element:", nextBtn);
+    const backBtn = document.getElementById('quiz-back-btn');
+    const finalSaveBtn = document.getElementById('quiz-save-final-btn');
+    const progressSteps = quizModalEl.querySelectorAll('.quiz-modal-btn');
+    const firstProgressStep = quizModalEl.querySelector('.quiz-modal-btn');
+    // --- DYNAMIC QUESTION FORM LOGIC ---
+const questionTypeSelect = document.getElementById('quiz-question-type');
+const answerOptionsWrapper = document.getElementById('quiz-answer-options-wrapper');
+const answerOptionsContainer = document.getElementById('quiz-answer-options-container');
+const addOptionBtn = document.getElementById('add-answer-option-btn');
+const addQuestionBtn = document.getElementById('add-question-btn');
+// --- ADD THIS LOG ---
+console.log("Attempting to find 'Add New Question' button:", addQuestionBtn);
+const cancelQuestionBtn = document.getElementById('cancel-question-btn');
 
-    // --- State & Navigation ---
-    const steps = { INFO: 1, QUESTIONS_LIST: 2, ADD_QUESTION_FORM: 3, SETTINGS: 4 };
-    let currentStep = steps.INFO;
+// Function to show/hide the answer options based on question type
+const toggleAnswerOptions = () => {
+    const selectedType = questionTypeSelect.value;
+    if (selectedType === 'single-choice' || selectedType === 'multiple-choice') {
+        answerOptionsWrapper.style.display = 'block';
+    } else {
+        answerOptionsWrapper.style.display = 'none';
+    }
+    // Also clear any existing options when the type changes
+    answerOptionsContainer.innerHTML = ''; 
+};
 
-    const updateQuizModalView = () => {
-        quizModalEl.querySelectorAll('.question').forEach(el => el.style.display = 'none');
-        const currentStepEl = quizModalEl.querySelector(`#question-${currentStep}`);
-        if(currentStepEl) currentStepEl.style.display = 'block';
+// Function to add a new answer option input field
+const addAnswerOption = () => {
+    const questionType = questionTypeSelect.value;
+    const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
+    const optionName = `is-correct-option-${answerOptionsContainer.children.length}`;
 
-        backBtn.style.display = (currentStep === steps.QUESTIONS_LIST || currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
-        nextBtn.style.display = (currentStep === steps.INFO || currentStep === steps.QUESTIONS_LIST) ? 'inline-block' : 'none';
-        saveQuizBtn.style.display = (currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
-    };
+    const optionHtml = `
+        <div class="d-flex align-items-center mb-2 quiz-option-row">
+            <div class="flex-grow-1 me-2">
+                <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
+            </div>
+            <div class="form-check me-3">
+                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}">
+                <label class="form-check-label">Correct</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
+                <i class="feather-x"></i>
+            </button>
+        </div>
+    `;
+    answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+};
 
-    // --- Helper Functions for Question Form ---
-    const toggleAnswerOptions = () => { /* ... implementation from before ... */ };
-    const addAnswerOption = () => { /* ... implementation from before ... */ };
-    const renderQuizQuestionsList = () => { /* ... implementation from before ... */ };
-    
-    // --- Event Listeners ---
-    if(nextBtn) nextBtn.addEventListener('click', () => { /* ... implementation from before ... */ });
-    if(backBtn) backBtn.addEventListener('click', () => { /* ... implementation from before ... */ });
-    
-    quizModalEl.addEventListener('show.bs.modal', (e) => { /* ... implementation from before ... */ });
-    
-    if(saveQuizBtn) saveQuizBtn.addEventListener('click', async () => { /* ... implementation from before ... */ });
-    
-    if(questionTypeSelect) questionTypeSelect.addEventListener('change', toggleAnswerOptions);
-    if(addOptionBtn) addOptionBtn.addEventListener('click', addAnswerOption);
-    if(addQuestionBtn) addQuestionBtn.addEventListener('click', () => { currentStep = steps.ADD_QUESTION_FORM; updateQuizModalView(); toggleAnswerOptions(); });
-    if(cancelQuestionBtn) cancelQuestionBtn.addEventListener('click', () => { currentStep = steps.QUESTIONS_LIST; renderQuizQuestionsList(); updateQuizModalView(); });
-    if(answerOptionsContainer) answerOptionsContainer.addEventListener('click', (e) => { if (e.target.closest('.remove-option-btn')) e.target.closest('.quiz-option-row').remove(); });
-    
-    if(saveQuestionBtn) saveQuestionBtn.addEventListener('click', async () => { /* ... full save question logic ... */ });
+// --- Event Listeners for the dynamic form ---
+
+// When the question type changes
+if(questionTypeSelect) {
+    questionTypeSelect.addEventListener('change', toggleAnswerOptions);
 }
 
+// When the "Add Option" button is clicked
+if(addOptionBtn) {
+    addOptionBtn.addEventListener('click', addAnswerOption);
+}
 
+// When the "Add New Question" button is clicked, go to the question form
+if (addQuestionBtn) {
+    addQuestionBtn.addEventListener('click', () => {
+        currentStep = 3; // The ID of the "Add Question" form is "question-3"
+        updateQuizModalView();
+        toggleAnswerOptions(); // Set initial state of the form
+    });
+}
+
+// When "Cancel" is clicked on the question form, go back to the questions list
+if (cancelQuestionBtn) {
+    cancelQuestionBtn.addEventListener('click', () => {
+        currentStep = 2; // The ID of the questions list is "question-2"
+        updateQuizModalView();
+    });
+}
+
+// Handle removing an answer option
+answerOptionsContainer.addEventListener('click', (e) => {
+    if (e.target.closest('.remove-option-btn')) {
+        e.target.closest('.quiz-option-row').remove();
+    }
+});
+    let currentStep = 1;
+
+        const updateQuizModalView = () => {
+        steps.forEach(step => step.style.display = 'none');
+            const currentStepEl = quizModalEl.querySelector(`#question-${currentStep}`);
+        if(currentStepEl) currentStepEl.style.display = 'block';
+
+        progressSteps.forEach((btn, index) => {
+            btn.classList.toggle('quiz-modal__active', index + 1 < currentStep);
+        });
+        
+        backBtn.style.display = (currentStep > 1) ? 'inline-block' : 'none';
+        nextBtn.style.display = (currentStep < steps.length) ? 'inline-block' : 'none';
+        finalSaveBtn.style.display = (currentStep === steps.length) ? 'inline-block' : 'none';
+        };
+// --- PASTE THE MISSING CODE BLOCK HERE ---
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            console.log("'Save & Next' button was clicked!"); // For debugging
+
+            if (currentStep < steps.length) {
+                currentStep++;
+            updateQuizModalView();
+            }
+        });
+    } else {
+        console.error("ERROR: Could not find the 'Next' button to attach a listener.");
+    }
+    // --- PASTE THE NEW "BACK" BUTTON CODE HERE ---
+if (backBtn) {
+    backBtn.addEventListener('click', () => {
+        console.log("'Back' button was clicked!"); // For debugging
+
+        if (currentStep > 1) {
+            currentStep--;
+            updateQuizModalView();
+        }
+    });
+} else {
+    console.error("ERROR: Could not find the 'Back' button to attach a listener.");
+}
+    if(firstProgressStep) {
+        firstProgressStep.addEventListener('reset', () => {
+            currentStep = 1;
+            updateQuizModalView();
+        });
+    }
+
+        quizModalEl.addEventListener('show.bs.modal', (e) => {
+            const button = e.relatedTarget;
+            if (button && button.classList.contains('add-content-btn')) {
+                currentEditingEpisodeId = button.dataset.episodeId;
+                currentEditingQuizId = null;
+            
+                document.getElementById('quiz-title').value = '';
+                document.getElementById('quiz-summary').value = '';
+
+            currentStep = 1;
+                updateQuizModalView();
+            }
+        });
+
+    finalSaveBtn.addEventListener('click', async () => {
+        finalSaveBtn.disabled = true;
+        finalSaveBtn.textContent = 'Saving...';
+
+        try {
+            const episodeId = currentEditingEpisodeId;
+            if (!episodeId) throw new Error('No topic selected.');
+
+            const quizData = {
+                title: document.getElementById('quiz-title').value,
+                summary: document.getElementById('quiz-summary').value,
+            };
+            if (!quizData.title) throw new Error('Please enter a quiz title.');
+
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            
+            const isEditing = !!currentEditingQuizId;
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing ?
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(quizData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(quizModalEl).hide();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error saving quiz:', error);
+            alert(`An error occurred: ${error.message}`);
+        } finally {
+            finalSaveBtn.disabled = false;
+            finalSaveBtn.textContent = 'Save Quiz';
+        }
+    });
+
+    // --- RENDER & SAVE QUESTION LOGIC ---
+
+// Helper function to display the list of questions
+const renderQuizQuestionsList = () => {
+    const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+    if (!episode) return;
+
+    const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+    if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+        document.getElementById('quiz-questions-list').innerHTML = '<p>No questions have been added to this quiz yet.</p>';
+        return;
+    }
+
+    const questionsListEl = document.getElementById('quiz-questions-list');
+    questionsListEl.innerHTML = quiz.questions.map((question, index) => `
+        <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+            <div class="inner d-flex align-items-center gap-2">
+                <h6 class="rbt-title mb-0">Question #${index + 1}: ${question.questionText}</h6>
+            </div>
+            <div class="inner">
+                <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
+                    <li><i class="feather-trash delete-question-btn" data-question-id="${question._id}"></i></li>
+                    <li><i class="feather-edit edit-question-btn" data-question-id="${question._id}"></i></li>
+                </ul>
+            </div>
+        </div>
+    `).join('');
+};
+
+
+// Event listener for the "Save Question" button
+const saveQuestionBtn = document.getElementById('save-question-btn');
+if (saveQuestionBtn) {
+    saveQuestionBtn.addEventListener('click', async () => {
+        
+        // 1. Gather all the data from the form
+        const options = [];
+        const optionRows = document.querySelectorAll('#quiz-answer-options-container .quiz-option-row');
+        optionRows.forEach(row => {
+            const textInput = row.querySelector('.quiz-option-text');
+            const isCorrectInput = row.querySelector('.quiz-option-iscorrect');
+            if (textInput && isCorrectInput) {
+                options.push({
+                    text: textInput.value,
+                    isCorrect: isCorrectInput.checked
+                });
+            }
+        });
+
+        const questionData = {
+            questionText: document.getElementById('quiz-question-text').value,
+            questionType: document.getElementById('quiz-question-type').value,
+            points: document.getElementById('quiz-question-points').value,
+            options: options
+        };
+
+        if (!questionData.questionText) {
+            return alert('Please enter the question text.');
+    }
+    
+        // 2. Send the data to the new backend route
+        try {
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(questionData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 3. Update the UI
+                courseData = result.course;
+                renderQuizQuestionsList(); // Refresh the questions list
+                currentStep = 2; // Go back to the questions list view
+                updateQuizModalView();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Error saving question:', error);
+            alert('An error occurred while saving the question.');
+        }
+    });
+}
+}
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
