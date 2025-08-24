@@ -2142,7 +2142,86 @@ if (quizModalEl) {
     const finalSaveBtn = document.getElementById('quiz-save-final-btn');
     const progressSteps = quizModalEl.querySelectorAll('.quiz-modal-btn');
     const firstProgressStep = quizModalEl.querySelector('.quiz-modal-btn');
+    // --- DYNAMIC QUESTION FORM LOGIC ---
+const questionTypeSelect = document.getElementById('quiz-question-type');
+const answerOptionsWrapper = document.getElementById('quiz-answer-options-wrapper');
+const answerOptionsContainer = document.getElementById('quiz-answer-options-container');
+const addOptionBtn = document.getElementById('add-answer-option-btn');
+const addQuestionBtn = document.getElementById('add-question-btn');
+// --- ADD THIS LOG ---
+console.log("Attempting to find 'Add New Question' button:", addQuestionBtn);
+const cancelQuestionBtn = document.getElementById('cancel-question-btn');
 
+// Function to show/hide the answer options based on question type
+const toggleAnswerOptions = () => {
+    const selectedType = questionTypeSelect.value;
+    if (selectedType === 'single-choice' || selectedType === 'multiple-choice') {
+        answerOptionsWrapper.style.display = 'block';
+    } else {
+        answerOptionsWrapper.style.display = 'none';
+    }
+    // Also clear any existing options when the type changes
+    answerOptionsContainer.innerHTML = ''; 
+};
+
+// Function to add a new answer option input field
+const addAnswerOption = () => {
+    const questionType = questionTypeSelect.value;
+    const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
+    const optionName = `is-correct-option-${answerOptionsContainer.children.length}`;
+
+    const optionHtml = `
+        <div class="d-flex align-items-center mb-2 quiz-option-row">
+            <div class="flex-grow-1 me-2">
+                <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
+            </div>
+            <div class="form-check me-3">
+                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}">
+                <label class="form-check-label">Correct</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
+                <i class="feather-x"></i>
+            </button>
+        </div>
+    `;
+    answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+};
+
+// --- Event Listeners for the dynamic form ---
+
+// When the question type changes
+if(questionTypeSelect) {
+    questionTypeSelect.addEventListener('change', toggleAnswerOptions);
+}
+
+// When the "Add Option" button is clicked
+if(addOptionBtn) {
+    addOptionBtn.addEventListener('click', addAnswerOption);
+}
+
+// When the "Add New Question" button is clicked, go to the question form
+if (addQuestionBtn) {
+    addQuestionBtn.addEventListener('click', () => {
+        currentStep = 3; // The ID of the "Add Question" form is "question-3"
+        updateQuizModalView();
+        toggleAnswerOptions(); // Set initial state of the form
+    });
+}
+
+// When "Cancel" is clicked on the question form, go back to the questions list
+if (cancelQuestionBtn) {
+    cancelQuestionBtn.addEventListener('click', () => {
+        currentStep = 2; // The ID of the questions list is "question-2"
+        updateQuizModalView();
+    });
+}
+
+// Handle removing an answer option
+answerOptionsContainer.addEventListener('click', (e) => {
+    if (e.target.closest('.remove-option-btn')) {
+        e.target.closest('.quiz-option-row').remove();
+    }
+});
     let currentStep = 1;
 
     const updateQuizModalView = () => {
