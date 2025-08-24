@@ -2221,10 +2221,12 @@ if (cancelQuestionBtn) {
     });
 }
 
-// Handle removing an answer option
+// Replace your existing listener for answerOptionsContainer with this one
 answerOptionsContainer.addEventListener('click', (e) => {
-    if (e.target.closest('.remove-option-btn')) {
-        e.target.closest('.quiz-option-row').remove();
+    const deleteBtn = e.target.closest('.remove-option-btn');
+    if (deleteBtn) {
+        e.stopPropagation(); // This stops the click from "bubbling up"
+        deleteBtn.closest('.quiz-option-row').remove();
     }
 });
     let currentStep = 1;
