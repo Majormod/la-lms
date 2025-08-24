@@ -1915,8 +1915,8 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
-                    `
-                };
+                    `;
+                    
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
@@ -1952,6 +1952,7 @@ if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
             }
         }
     }
+}; // <-- THIS WAS THE MISSING LINE
 
 const renderCourseBuilder = (episodes) => {
     console.trace('renderCourseBuilder was called'); // <-- ADD THIS LINE
