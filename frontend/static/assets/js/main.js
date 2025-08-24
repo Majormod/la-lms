@@ -1916,7 +1916,6 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
-                    
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
@@ -1952,7 +1951,6 @@ if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
             }
         }
     }
-}; // <-- THIS WAS THE MISSING LINE
 
 const renderCourseBuilder = (episodes) => {
     console.trace('renderCourseBuilder was called'); // <-- ADD THIS LINE
@@ -2354,6 +2352,21 @@ const renderQuizQuestionsList = () => {
         return;
     }
 
+    const questionsListEl = document.getElementById('quiz-questions-list');
+    questionsListEl.innerHTML = quiz.questions.map((question, index) => `
+        <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+            <div class="inner d-flex align-items-center gap-2">
+                <h6 class="rbt-title mb-0">Question #${index + 1}: ${question.questionText}</h6>
+            </div>
+            <div class="inner">
+                <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
+                    <li><i class="feather-trash delete-question-btn" data-question-id="${question._id}"></i></li>
+                    <li><i class="feather-edit edit-question-btn" data-question-id="${question._id}"></i></li>
+                </ul>
+            </div>
+        </div>
+    `).join('');
+};
 
 
 // Event listener for the "Save Question" button
@@ -2423,63 +2436,34 @@ if (saveQuestionBtn) {
         }
     });
 }
-// This single listener handles BOTH editing and deleting questions
+// Handle deleting a question
 const questionsListEl = document.getElementById('quiz-questions-list');
 if (questionsListEl) {
     questionsListEl.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.edit-question-btn');
         const deleteBtn = e.target.closest('.delete-question-btn');
+        if (!deleteBtn) return;
 
-        // --- LOGIC FOR EDIT BUTTON ---
-        if (editBtn) {
-            currentEditingQuestionId = editBtn.dataset.questionId;
-            const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
-            const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
-            const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
-
-            if (question) {
-                // Populate the form with the question's data
-                document.getElementById('quiz-question-text').value = question.questionText;
-                document.getElementById('quiz-question-type').value = question.questionType;
-                document.getElementById('quiz-question-points').value = question.points;
+        const questionId = deleteBtn.dataset.questionId;
+        if (confirm('Are you sure you want to delete this question?')) {
+            try {
+                const courseId = new URLSearchParams(window.location.search).get('courseId');
+                const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${questionId}`;
                 
-                // Show the options wrapper and render the saved options
-                toggleAnswerOptions(); 
-                question.options.forEach(opt => {
-                    addAnswerOption();
-                    const newRow = answerOptionsContainer.lastElementChild;
-                    newRow.querySelector('.quiz-option-text').value = opt.text;
-                    newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
                 });
 
-                // Navigate to the form
-                currentStep = steps.ADD_QUESTION_FORM;
-                updateQuizModalView();
-            }
-        }
+                const result = await response.json();
 
-        // --- LOGIC FOR DELETE BUTTON ---
-        if (deleteBtn) {
-            const questionId = deleteBtn.dataset.questionId;
-            if (confirm('Are you sure you want to delete this question?')) {
-                try {
-                    const courseId = new URLSearchParams(window.location.search).get('courseId');
-                    const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${questionId}`;
-                    
-                    const response = await fetch(url, {
-                        method: 'DELETE',
-                        headers: { 'x-auth-token': token }
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderQuizQuestionsList(); // Refresh the list
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    alert('An error occurred while deleting the question.');
+                if (result.success) {
+                    courseData = result.course;
+                    renderQuizQuestionsList(); // Refresh the list
+                } else {
+                    alert(`Error: ${result.message}`);
                 }
+            } catch (error) {
+                alert('An error occurred while deleting the question.');
             }
         }
     });
@@ -3547,7 +3531,7 @@ if (window.location.pathname.includes('lesson.html')) {
         }
     }
 }
-};
+        };
 
 if (window.location.pathname.includes('explore-courses.html')) {
 
