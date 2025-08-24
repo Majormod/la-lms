@@ -1069,7 +1069,7 @@
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
-        const API_BASE_URL = '';
+        const API_BASE_URL = 'http://54.221.189.159:5000';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
@@ -2063,6 +2063,9 @@ document.addEventListener('click', async (e) => {
         try {
             // The URL is built dynamically based on the item type (e.g., /lessons/, /quizzes/)
             const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${itemType}s/${itemId}`;
+
+             // --- ADD THIS DEBUGGING LOG ---
+            console.log("Attempting to send DELETE request to this URL:", url);
 
             const response = await fetch(url, {
                 method: 'DELETE',
