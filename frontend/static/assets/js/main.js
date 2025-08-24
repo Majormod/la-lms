@@ -2091,9 +2091,13 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
 };
 
 const quizModalEl = document.getElementById('Quiz');
+// --- NEW DEBUG LOG ---
+console.log("Attempting to find Quiz Modal element:", quizModalEl);
 if (quizModalEl) {
     const steps = quizModalEl.querySelectorAll('.question');
     const nextBtn = document.getElementById('quiz-next-btn');
+    // --- NEW DEBUG LOG ---
+    console.log("Attempting to find 'Next' button element:", nextBtn);
     const backBtn = document.getElementById('quiz-back-btn');
     const finalSaveBtn = document.getElementById('quiz-save-final-btn');
     const progressSteps = quizModalEl.querySelectorAll('.quiz-modal-btn');
@@ -2114,7 +2118,19 @@ if (quizModalEl) {
         nextBtn.style.display = (currentStep < steps.length) ? 'inline-block' : 'none';
         finalSaveBtn.style.display = (currentStep === steps.length) ? 'inline-block' : 'none';
     };
+// --- PASTE THE MISSING CODE BLOCK HERE ---
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            console.log("'Save & Next' button was clicked!"); // For debugging
 
+            if (currentStep < steps.length) {
+                currentStep++;
+                updateQuizModalView();
+            }
+        });
+    } else {
+        console.error("ERROR: Could not find the 'Next' button to attach a listener.");
+    }
     if(firstProgressStep) {
         firstProgressStep.addEventListener('reset', () => {
             currentStep = 1;
