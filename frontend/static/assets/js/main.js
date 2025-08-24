@@ -2113,8 +2113,10 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
         // --- END DEBUGGING LOGS ---
 
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
+// --- SIMPLIFIED QUIZ ADD/EDIT LOGIC ---
 let currentEditingQuizId = null;
 
+// This function populates the modal when editing an existing quiz
 window.openUpdateQuizModal = function(episodeId, quizId) {
     currentEditingEpisodeId = episodeId;
     currentEditingQuizId = quizId;
@@ -2129,6 +2131,72 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
         }
     }
 };
+
+// This listener prepares the modal for adding a NEW quiz
+const quizModalEl = document.getElementById('Quiz');
+if (quizModalEl) {
+    quizModalEl.addEventListener('show.bs.modal', (e) => {
+        const button = e.relatedTarget;
+        if (button && button.classList.contains('add-content-btn')) {
+            currentEditingEpisodeId = button.dataset.episodeId;
+            currentEditingQuizId = null; // Clear editing ID for "Add" mode
+            
+            // Reset the form fields
+            document.getElementById('quiz-title').value = '';
+            document.getElementById('quiz-summary').value = '';
+        }
+    });
+}
+
+// This is the single, reliable save button listener
+const saveQuizBtn = document.getElementById('save-quiz-btn');
+if (saveQuizBtn) {
+    saveQuizBtn.addEventListener('click', async () => {
+        saveQuizBtn.disabled = true;
+        saveQuizBtn.textContent = 'Saving...';
+
+        try {
+            const episodeId = currentEditingEpisodeId;
+            if (!episodeId) throw new Error('No topic selected.');
+
+            const quizData = {
+                title: document.getElementById('quiz-title').value,
+                summary: document.getElementById('quiz-summary').value,
+            };
+            if (!quizData.title) throw new Error('Please enter a quiz title.');
+
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            
+            const isEditing = !!currentEditingQuizId;
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing ?
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(quizData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(quizModalEl).hide();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error saving quiz:', error);
+            alert(`An error occurred: ${error.message}`);
+        } finally {
+            saveQuizBtn.disabled = false;
+            saveQuizBtn.textContent = 'Save Quiz';
+        }
+    });
+}
 
 const quizModalEl = document.getElementById('Quiz');
 // --- NEW DEBUG LOG ---
