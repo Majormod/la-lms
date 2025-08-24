@@ -2050,6 +2050,39 @@ const renderCourseBuilder = (episodes) => {
     }).join('');
 };
 
+// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-item');
+    if (!deleteBtn) return;
+
+    const { episodeId, itemId, itemType } = deleteBtn.dataset;
+    const courseId = new URLSearchParams(window.location.search).get('courseId');
+    let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); // Capitalizes 'quiz' to 'Quiz'
+
+    if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
+        try {
+            // The URL is built dynamically based on the item type (e.g., /lessons/, /quizzes/)
+            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${itemType}s/${itemId}`;
+
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'x-auth-token': token }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error(`Error deleting ${itemType}:`, error);
+            alert(`An error occurred while deleting the ${itemTypeName}.`);
+        }
+    }
+});
 
 
     window.onload = function() {

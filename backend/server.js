@@ -851,6 +851,36 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes', auth, async (req,
     }
 });
 
+// DELETE /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId
+app.delete('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, quizId } = req.params;
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+
+        // Find and remove the quiz from the array
+        episode.quizzes.pull({ _id: quizId });
+        
+        await course.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Quiz deleted successfully!',
+            course: course.toObject() 
+        });
+
+    } catch (error) {
+        console.error('Error deleting quiz:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 
