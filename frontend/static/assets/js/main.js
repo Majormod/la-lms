@@ -1954,6 +1954,7 @@ if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
     }
 
 const renderCourseBuilder = (episodes) => {
+    console.trace('renderCourseBuilder was called'); // <-- ADD THIS LINE
     const container = document.getElementById('course-builder-topics-container');
     if (!container) return;
 
@@ -2050,7 +2051,6 @@ const renderCourseBuilder = (episodes) => {
     }).join('');
 };
 
-// --- COMPLETE QUIZ MODAL NAVIGATION AND SAVE LOGIC ---
 // --- UPGRADED QUIZ MODAL NAVIGATION AND SAVE LOGIC ---
 const quizModalEl = document.getElementById('Quiz');
 if (quizModalEl) {
