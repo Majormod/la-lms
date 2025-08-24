@@ -1872,7 +1872,6 @@ if (window.location.pathname.includes('edit-course.html')) {
 let courseData = null; 
 let currentEditingEpisodeId = null;
 let currentEditingLessonId = null;
-let currentEditingQuizId = null; // <-- ADD THIS NEW VARIABLE
 
 $(document).ready(function () {
     $('#language').selectpicker();
@@ -2051,7 +2050,24 @@ const renderCourseBuilder = (episodes) => {
     }).join('');
 };
 
-// --- UPGRADED QUIZ MODAL NAVIGATION AND SAVE LOGIC ---
+// --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
+let currentEditingQuizId = null;
+
+window.openUpdateQuizModal = function(episodeId, quizId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingQuizId = quizId;
+    if (courseData) {
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode && episode.quizzes) {
+            const quiz = episode.quizzes.find(q => q._id == quizId);
+            if (quiz) {
+                document.getElementById('quiz-title').value = quiz.title || '';
+                document.getElementById('quiz-summary').value = quiz.summary || '';
+            }
+        }
+    }
+};
+
 const quizModalEl = document.getElementById('Quiz');
 if (quizModalEl) {
     const steps = quizModalEl.querySelectorAll('.question');
@@ -2077,21 +2093,6 @@ if (quizModalEl) {
         finalSaveBtn.style.display = (currentStep === steps.length) ? 'inline-block' : 'none';
     };
 
-    nextBtn.addEventListener('click', () => {
-        if (currentStep < steps.length) {
-            currentStep++;
-            updateQuizModalView();
-        }
-    });
-
-    backBtn.addEventListener('click', () => {
-        if (currentStep > 1) {
-            currentStep--;
-            updateQuizModalView();
-        }
-    });
-    
-    // Custom event to reset the modal view
     if(firstProgressStep) {
         firstProgressStep.addEventListener('reset', () => {
             currentStep = 1;
@@ -2103,7 +2104,7 @@ if (quizModalEl) {
         const button = e.relatedTarget;
         if (button && button.classList.contains('add-content-btn')) {
             currentEditingEpisodeId = button.dataset.episodeId;
-            currentEditingQuizId = null; // Clear editing ID for "Add" mode
+            currentEditingQuizId = null;
             
             document.getElementById('quiz-title').value = '';
             document.getElementById('quiz-summary').value = '';
@@ -2113,70 +2114,53 @@ if (quizModalEl) {
         }
     });
 
-// Replace your existing finalSaveBtn listener with this one
-finalSaveBtn.addEventListener('click', async () => {
-    // 1. Disable the button and show a "Saving..." message immediately
-    finalSaveBtn.disabled = true;
-    finalSaveBtn.textContent = 'Saving...';
+    finalSaveBtn.addEventListener('click', async () => {
+        finalSaveBtn.disabled = true;
+        finalSaveBtn.textContent = 'Saving...';
 
-    try {
-        const episodeId = currentEditingEpisodeId;
-        if (!episodeId) throw new Error('No topic selected.');
+        try {
+            const episodeId = currentEditingEpisodeId;
+            if (!episodeId) throw new Error('No topic selected.');
 
-        const quizData = {
-            title: document.getElementById('quiz-title').value,
-            summary: document.getElementById('quiz-summary').value,
-        };
-        if (!quizData.title) throw new Error('Please enter a quiz title.');
+            const quizData = {
+                title: document.getElementById('quiz-title').value,
+                summary: document.getElementById('quiz-summary').value,
+            };
+            if (!quizData.title) throw new Error('Please enter a quiz title.');
 
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        
-        const isEditing = !!currentEditingQuizId;
-        const method = isEditing ? 'PUT' : 'POST';
-        const url = isEditing ?
-            `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
-            `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            
+            const isEditing = !!currentEditingQuizId;
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing ?
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
+                `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
 
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-            body: JSON.stringify(quizData)
-        });
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(quizData)
+            });
 
-        const result = await response.json();
+            const result = await response.json();
 
-        if (result.success) {
-            courseData = result.course;
-            renderCourseBuilder(courseData.episodes);
-            bootstrap.Modal.getInstance(quizModalEl).hide();
-        } else {
-            throw new Error(result.message);
-        }
-    } catch (error) {
-        console.error('Error saving quiz:', error);
-        alert(`An error occurred: ${error.message}`);
-    } finally {
-        // 2. Re-enable the button and restore its text after the process is complete
-        finalSaveBtn.disabled = false;
-        finalSaveBtn.textContent = 'Save Quiz';
-    }
-});
-}
-window.openUpdateQuizModal = function(episodeId, quizId) {
-    currentEditingEpisodeId = episodeId;
-    currentEditingQuizId = quizId; // Store the ID of the quiz we are editing
-    if (courseData) {
-        const episode = courseData.episodes.find(ep => ep._id == episodeId);
-        if (episode && episode.quizzes) {
-            const quiz = episode.quizzes.find(q => q._id == quizId);
-            if (quiz) {
-                // Populate the modal fields with the quiz data
-                document.getElementById('quiz-title').value = quiz.title || '';
-                document.getElementById('quiz-summary').value = quiz.summary || '';
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+                bootstrap.Modal.getInstance(quizModalEl).hide();
+            } else {
+                throw new Error(result.message);
             }
+        } catch (error) {
+            console.error('Error saving quiz:', error);
+            alert(`An error occurred: ${error.message}`);
+        } finally {
+            finalSaveBtn.disabled = false;
+            finalSaveBtn.textContent = 'Save Quiz';
         }
-    }
+    });
 }
+
     window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
