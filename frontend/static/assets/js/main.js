@@ -2114,10 +2114,9 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
 
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
 // --- SIMPLIFIED QUIZ ADD/EDIT LOGIC ---
-// --- FINAL, COMPLETE QUIZ LOGIC ---
+// --- FINAL, COMPLETE QUIZ LOGIC (ADD/EDIT/NAVIGATE/SAVE) ---
 let currentEditingQuizId = null;
 
-// Populates the modal with data when editing an existing quiz
 window.openUpdateQuizModal = function(episodeId, quizId) {
     currentEditingEpisodeId = episodeId;
     currentEditingQuizId = quizId;
@@ -2128,7 +2127,7 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
             if (quiz) {
                 document.getElementById('quiz-title').value = quiz.title || '';
                 document.getElementById('quiz-summary').value = quiz.summary || '';
-                renderQuizQuestionsList(); // Render any existing questions
+                renderQuizQuestionsList();
             }
         }
     }
@@ -2139,14 +2138,14 @@ if (quizModalEl) {
     // --- Element Definitions ---
     const backBtn = document.getElementById('quiz-back-btn');
     const nextBtn = document.getElementById('quiz-next-btn');
-    const saveQuizBtn = document.getElementById('save-quiz-btn'); // The main save button
+    const saveQuizBtn = document.getElementById('save-quiz-btn');
     const questionTypeSelect = document.getElementById('quiz-question-type');
     const answerOptionsWrapper = document.getElementById('quiz-answer-options-wrapper');
     const answerOptionsContainer = document.getElementById('quiz-answer-options-container');
     const addOptionBtn = document.getElementById('add-answer-option-btn');
     const addQuestionBtn = document.getElementById('add-question-btn');
     const cancelQuestionBtn = document.getElementById('cancel-question-btn');
-    const saveQuestionBtn = document.getElementById('save-question-btn'); // Save button for individual questions
+    const saveQuestionBtn = document.getElementById('save-question-btn');
 
     // --- State & Navigation ---
     const steps = { INFO: 1, QUESTIONS_LIST: 2, ADD_QUESTION_FORM: 3, SETTINGS: 4 };
@@ -2183,6 +2182,8 @@ if (quizModalEl) {
     
     if(saveQuestionBtn) saveQuestionBtn.addEventListener('click', async () => { /* ... full save question logic ... */ });
 }
+
+
 // --- Logic for custom file upload button ---
 const triggerBtn = document.getElementById('triggerFileUploadBtn');
 const fileInput = document.getElementById('lessonExerciseInput');
