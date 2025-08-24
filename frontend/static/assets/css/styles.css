@@ -40744,4 +40744,7 @@ padding: 0 10px 0 10px;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-}
+        width: 32px;  /* Forces a specific width */
+        height: 32px; /* Forces a specific height */
+        padding: 0;   /* Removes default horizontal padding */
+    }
