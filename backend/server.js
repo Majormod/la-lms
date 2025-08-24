@@ -838,7 +838,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes', auth, async (req,
         res.status(201).json({ 
             success: true, 
             message: 'Quiz added successfully!',
-            course: course 
+            course: course.toObject() 
         });
     } catch (error) {
         console.error('Error adding quiz:', error);

@@ -1868,12 +1868,15 @@ if (window.location.pathname.includes('create-course.html')) {
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 // --- NEW LOGIC FOR THE EDIT COURSE PAGE ---
 if (window.location.pathname.includes('edit-course.html')) {
+// At the top of your script block
+let courseData = null; 
+let currentEditingEpisodeId = null;
+let currentEditingLessonId = null;
+let currentEditingQuizId = null; // <-- ADD THIS NEW VARIABLE
+
 $(document).ready(function () {
     $('#language').selectpicker();
 });
-    let courseData = null; 
-    let currentEditingEpisodeId = null;
-    let currentEditingLessonId = null;
 
     window.openUpdateTopicModal = function(episodeId) {
         currentEditingEpisodeId = episodeId;
@@ -2048,6 +2051,7 @@ const renderCourseBuilder = (episodes) => {
 };
 
 // --- COMPLETE QUIZ MODAL NAVIGATION AND SAVE LOGIC ---
+// --- UPGRADED QUIZ MODAL NAVIGATION AND SAVE LOGIC ---
 const quizModalEl = document.getElementById('Quiz');
 if (quizModalEl) {
     const steps = quizModalEl.querySelectorAll('.question');
@@ -2055,19 +2059,17 @@ if (quizModalEl) {
     const backBtn = document.getElementById('quiz-back-btn');
     const finalSaveBtn = document.getElementById('quiz-save-final-btn');
     const progressSteps = quizModalEl.querySelectorAll('.quiz-modal-btn');
-    
+    const firstProgressStep = quizModalEl.querySelector('.quiz-modal-btn');
+
     let currentStep = 1;
 
     const updateQuizModalView = () => {
         steps.forEach(step => step.style.display = 'none');
-        quizModalEl.querySelector(`#question-${currentStep}`).style.display = 'block';
+        const currentStepEl = quizModalEl.querySelector(`#question-${currentStep}`);
+        if(currentStepEl) currentStepEl.style.display = 'block';
 
         progressSteps.forEach((btn, index) => {
-            if (index + 1 < currentStep) {
-                btn.classList.add('quiz-modal__active');
-            } else {
-                btn.classList.remove('quiz-modal__active');
-            }
+            btn.classList.toggle('quiz-modal__active', index + 1 < currentStep);
         });
         
         backBtn.style.display = (currentStep > 1) ? 'inline-block' : 'none';
@@ -2088,64 +2090,93 @@ if (quizModalEl) {
             updateQuizModalView();
         }
     });
+    
+    // Custom event to reset the modal view
+    if(firstProgressStep) {
+        firstProgressStep.addEventListener('reset', () => {
+            currentStep = 1;
+            updateQuizModalView();
+        });
+    }
 
     quizModalEl.addEventListener('show.bs.modal', (e) => {
         const button = e.relatedTarget;
         if (button && button.classList.contains('add-content-btn')) {
             currentEditingEpisodeId = button.dataset.episodeId;
+            currentEditingQuizId = null; // Clear editing ID for "Add" mode
             
-            const titleInput = document.getElementById('quiz-title');
-            const summaryInput = document.getElementById('quiz-summary');
-            if(titleInput) titleInput.value = '';
-            if(summaryInput) summaryInput.value = '';
+            document.getElementById('quiz-title').value = '';
+            document.getElementById('quiz-summary').value = '';
 
             currentStep = 1;
             updateQuizModalView();
         }
     });
 
-    // This is the listener that was missing. It contains the full save logic.
-    finalSaveBtn.addEventListener('click', async () => {
+// Replace your existing finalSaveBtn listener with this one
+finalSaveBtn.addEventListener('click', async () => {
+    // 1. Disable the button and show a "Saving..." message immediately
+    finalSaveBtn.disabled = true;
+    finalSaveBtn.textContent = 'Saving...';
+
+    try {
         const episodeId = currentEditingEpisodeId;
-        
-        if (!episodeId) {
-            return alert('Error: No topic selected. Please close and try again.');
-        }
+        if (!episodeId) throw new Error('No topic selected.');
 
         const quizData = {
             title: document.getElementById('quiz-title').value,
             summary: document.getElementById('quiz-summary').value,
         };
+        if (!quizData.title) throw new Error('Please enter a quiz title.');
 
-        if (!quizData.title) {
-            return alert('Please enter a quiz title.');
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        
+        const isEditing = !!currentEditingQuizId;
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ?
+            `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
+            `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
+
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+            body: JSON.stringify(quizData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            courseData = result.course;
+            renderCourseBuilder(courseData.episodes);
+            bootstrap.Modal.getInstance(quizModalEl).hide();
+        } else {
+            throw new Error(result.message);
         }
-
-        try {
-            const courseId = new URLSearchParams(window.location.search).get('courseId');
-            
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                body: JSON.stringify(quizData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                courseData = result.course;
-                renderCourseBuilder(courseData.episodes);
-                bootstrap.Modal.getInstance(quizModalEl).hide();
-            } else {
-                alert(`Error: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error saving quiz:', error);
-            alert('An error occurred while saving the quiz.');
-        }
-    });
+    } catch (error) {
+        console.error('Error saving quiz:', error);
+        alert(`An error occurred: ${error.message}`);
+    } finally {
+        // 2. Re-enable the button and restore its text after the process is complete
+        finalSaveBtn.disabled = false;
+        finalSaveBtn.textContent = 'Save Quiz';
+    }
+});
 }
-
+window.openUpdateQuizModal = function(episodeId, quizId) {
+    currentEditingEpisodeId = episodeId;
+    currentEditingQuizId = quizId; // Store the ID of the quiz we are editing
+    if (courseData) {
+        const episode = courseData.episodes.find(ep => ep._id == episodeId);
+        if (episode && episode.quizzes) {
+            const quiz = episode.quizzes.find(q => q._id == quizId);
+            if (quiz) {
+                // Populate the modal fields with the quiz data
+                document.getElementById('quiz-title').value = quiz.title || '';
+                document.getElementById('quiz-summary').value = quiz.summary || '';
+            }
+        }
+    }
+}
     window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
@@ -2567,17 +2598,19 @@ document.addEventListener('click', async (e) => {
 
         if (itemType === 'lesson') {
             openUpdateLessonModal(episodeId, itemId); 
-            
-            // --- THIS IS THE CORRECTED LINE ---
-            // Use getOrCreateInstance to prevent duplicate modal objects
             const lessonModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Lesson'));
-            
             lessonModalInstance.show();
         } 
-        
-        // In the future, we will add similar blocks here for quizzes and assignments
-        // else if (itemType === 'quiz') { ... }
-        // else if (itemType === 'assignment') { ... }
+        else if (itemType === 'quiz') {
+            openUpdateQuizModal(episodeId, itemId);
+
+            // This resets the quiz modal to step 1 when editing
+            const quizNav = document.querySelector('#Quiz .quiz-modal-btn');
+            if (quizNav) quizNav.dispatchEvent(new Event('reset'));
+
+            const quizModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Quiz'));
+            quizModalInstance.show();
+        }
     }
 });
 // Add this event listener for lesson clicks
