@@ -2305,7 +2305,16 @@ if (backBtn) {
             const url = isEditing ?
                 `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes/${currentEditingQuizId}` :
                 `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/quizzes`;
-
+            // --- ADD THESE DEBUGGING LOGS ---
+    console.log("--- DEBUGGING QUIZ SAVE ---");
+    console.log("Is Editing:", isEditing);
+    console.log("Variables:", {
+        courseId: courseId,
+        episodeId: episodeId,
+        quizId: currentEditingQuizId
+    });
+    console.log("Final URL:", url);
+    // --- END DEBUGGING LOGS ---
             const response = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
@@ -2416,7 +2425,7 @@ if (saveQuestionBtn) {
             quizId: currentEditingQuizId
         });
         // --- END DEBUGGING LOGS ---
-        
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },

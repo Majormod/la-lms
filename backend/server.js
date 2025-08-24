@@ -913,6 +913,40 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions',
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+// PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId
+app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, quizId } = req.params;
+        const { title, summary } = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+        
+        const quiz = episode.quizzes.id(quizId);
+        if (!quiz) return res.status(404).json({ success: false, message: 'Quiz not found' });
+
+        // Update the quiz fields
+        quiz.title = title || quiz.title;
+        quiz.summary = summary;
+
+        await course.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Quiz updated successfully!', 
+            course: course.toObject()
+        });
+
+    } catch (error) {
+        console.error('Error updating quiz:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 app.use(express.static(staticPath));
 
