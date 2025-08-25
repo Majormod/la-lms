@@ -1079,9 +1079,14 @@ console.log("------------------------------");
     };
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
-    eduJs.lmsInit = function () {
-        const API_BASE_URL = 'http://54.221.189.159';
-        const token = localStorage.getItem('lmsToken');
+   eduJs.lmsInit = function () {
+    // This function is now empty
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const API_BASE_URL = 'http://54.221.189.159';
+    const token = localStorage.getItem('lmsToken');
 // Add this right after you define API_BASE_URL
 const getAuth = () => {
     const token = localStorage.getItem('lmsToken');
@@ -4404,7 +4409,8 @@ if (window.location.pathname.includes('login.html')) {
 }
 
         handlePageLogic();
-    };
+
+}); // <-- Make sure to add the closing brace and parenthesis
 
     eduJs.i();
 
