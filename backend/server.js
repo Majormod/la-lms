@@ -1194,6 +1194,40 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     }
 });
 
+// GET /api/quiz-results/:resultId - Fetches a single quiz result
+app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
+    try {
+        const result = await QuizResult.findById(req.params.resultId)
+            .populate({
+                path: 'course',
+                select: 'title episodes'
+            });
+
+        // Security check: ensure the user is either the student who took the quiz or the instructor
+        const isStudentOwner = result.user.equals(req.user.id);
+        const isInstructorOwner = result.course.instructor.equals(req.user.id);
+
+        if (!isStudentOwner && !isInstructorOwner) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+
+        // We need to find the quiz title for the header
+        let quizTitle = 'Quiz Result';
+        for (const episode of result.course.episodes) {
+            const quiz = episode.quizzes.id(result.quiz);
+            if (quiz) {
+                quizTitle = quiz.title;
+                break;
+            }
+        }
+
+        res.json({ success: true, result, quizTitle });
+    } catch (error) {
+        console.error('Error fetching quiz result:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 
