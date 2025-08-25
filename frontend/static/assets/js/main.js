@@ -4058,6 +4058,139 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
         }
     }
 }
+
+// =================================================================
+// FINAL, ISOLATED SCRIPT FOR student-settings.html
+// =================================================================
+if (window.location.pathname.includes('student-settings.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+    /**
+     * This function populates ALL dynamic user data on the settings page.
+     * It's safely contained and will not affect other pages.
+     */
+    const populatePageWithUserData = (user) => {
+        if (!user) return;
+
+        const fullName = `${user.firstName} ${user.lastName}`;
+
+        // 1. Update Top Banner & Sidebar Welcome
+        document.querySelector('.rbt-tutor-information .title').textContent = fullName;
+        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
+
+        // 2. Update All Avatars
+        if (user.avatar) {
+            const avatarPath = `/${user.avatar}`;
+            // This targets all possible avatar images on the page
+            document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
+                if (img) img.src = avatarPath;
+            });
+        }
+        
+        // 3. Populate the Profile Form Fields
+        const profileForm = document.getElementById('profile-settings-form');
+        if (profileForm) {
+            profileForm.querySelector('#firstname').value = user.firstName || '';
+            profileForm.querySelector('#lastname').value = user.lastName || '';
+            profileForm.querySelector('#username').value = user.username || '';
+            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+            profileForm.querySelector('#skill').value = user.occupation || '';
+            profileForm.querySelector('#bio').value = user.bio || '';
+        }
+    };
+    
+    // Function to handle image uploads
+    const uploadImage = async (file, type) => {
+        const formData = new FormData();
+        formData.append(type, file);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            alert('Image updated successfully!');
+            localStorage.setItem('lmsUser', JSON.stringify(result.user));
+            populatePageWithUserData(result.user); // Instantly update all UI elements
+
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
+    };
+
+    // === MAIN LOGIC AND EVENT LISTENERS FOR THIS PAGE ===
+    
+    // On page load, fetch the user's data and populate everything.
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    // NOTE: Using result.data to match your existing API response
+                    populatePageWithUserData(result.data); 
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load profile data:', err);
+                alert('Could not load your profile data.');
+            });
+    });
+
+    // Add event listener for the profile update form.
+    const profileForm = document.getElementById('profile-settings-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                firstName: profileForm.querySelector('#firstname').value,
+                lastName: profileForm.querySelector('#lastname').value,
+                username: profileForm.querySelector('#username').value,
+                phoneNumber: profileForm.querySelector('#phonenumber').value,
+                occupation: profileForm.querySelector('#skill').value,
+                bio: profileForm.querySelector('#bio').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert('Profile updated successfully!');
+                localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                populatePageWithUserData(result.user);
+
+            } catch (error) {
+                alert(`Update failed: ${error.message}`);
+            }
+        });
+    }
+
+    // Add event listeners for avatar upload.
+    const avatarUploadButton = document.querySelector('.rbt-edit-photo');
+    const avatarUploadInput = document.getElementById('avatar-upload-input');
+    if (avatarUploadButton && avatarUploadInput) {
+        avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
+        avatarUploadInput.addEventListener('change', () => {
+            const file = avatarUploadInput.files[0];
+            if (file) {
+                uploadImage(file, 'avatar');
+            }
+        });
+    }
+}
+
         handlePageLogic();
     };
 
