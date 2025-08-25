@@ -2231,7 +2231,10 @@ const cancelQuestionBtn = document.getElementById('cancel-question-btn');
 if(questionTypeSelect) {
     questionTypeSelect.addEventListener('change', toggleAnswerOptions);
 }
-
+// --- ADD THIS BLOCK ---
+if(addOptionBtn) {
+    addOptionBtn.addEventListener('click', addAnswerOption);
+}
 // When the "Add Option" button is clicked
 if(addOptionBtn) {
     addOptionBtn.addEventListener('click', addAnswerOption);
