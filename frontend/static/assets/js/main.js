@@ -2123,8 +2123,13 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
         if (episode && episode.quizzes) {
             const quiz = episode.quizzes.find(q => q._id == quizId);
             if (quiz) {
+                // Populate the main quiz details
                 document.getElementById('quiz-title').value = quiz.title || '';
                 document.getElementById('quiz-summary').value = quiz.summary || '';
+                
+                // --- THIS IS THE MISSING LINE ---
+                // Now, render the list of questions for this quiz
+                renderQuizQuestionsList(); 
             }
         }
     }
