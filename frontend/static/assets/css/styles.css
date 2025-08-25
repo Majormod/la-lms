@@ -40762,12 +40762,19 @@ padding: 0 10px 0 10px;
 }
 
 .remove-option-btn {
-    /* Your existing styles */
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
+    /* Define a predictable, square click area */
+    width: 32px;
+    height: 32px;
+    padding: 0;
 
-    /* --- Add these lines --- */
+    /* CRITICAL: Stop the parent flex container from shrinking this button */
+    flex-shrink: 0;
+
+    /* Perfectly center the 'X' icon inside the button */
     display: flex;
     align-items: center;
     justify-content: center;
+
+    /* Optional but recommended: make it a circle for a cleaner look */
+    border-radius: 50%; 
 }
