@@ -2116,43 +2116,6 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
 let currentEditingQuizId = null;
 let currentEditingQuestionId = null;
 
-    const updateQuizModalView = () => {
-        quizModalEl.querySelectorAll('.question').forEach(el => el.style.display = 'none');
-        const currentStepEl = quizModalEl.querySelector(`#question-${currentStep}`);
-        if (currentStepEl) currentStepEl.style.display = 'block';
-        if (backBtn) backBtn.style.display = (currentStep === steps.QUESTIONS_LIST || currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
-        if (nextBtn) nextBtn.style.display = (currentStep === steps.INFO || currentStep === steps.QUESTIONS_LIST) ? 'inline-block' : 'none';
-        if (mainSaveQuizBtn) mainSaveQuizBtn.style.display = (currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
-    };
-
-        const toggleAnswerOptions = () => {
-        if (!questionTypeSelect || !answerOptionsWrapper) return;
-        const selectedType = questionTypeSelect.value;
-        answerOptionsWrapper.style.display = (selectedType === 'single-choice' || selectedType === 'multiple-choice') ? 'block' : 'none';
-    };
-
-        const addAnswerOption = () => {
-        if (!questionTypeSelect || !answerOptionsContainer) return;
-        const questionType = questionTypeSelect.value;
-        const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
-        const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
-        const optionHtml = `<div class="d-flex align-items-center mb-2 quiz-option-row"><div class="flex-grow-1 me-2"><input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text"></div><div class="form-check me-3"><input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}"><label class="form-check-label" for="${uniqueId}">Correct</label></div><button type="button" class="btn btn-sm btn-outline-danger remove-option-btn"><i class="feather-x" style="pointer-events: none;"></i></button></div>`;
-        answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
-    };
-
-        const renderQuizQuestionsList = () => {
-        if (!courseData) return;
-        const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
-        if (!episode || !episode.quizzes) return;
-        const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
-        if (!quiz || !quiz.questions || quiz.questions.length === 0) {
-            questionsListEl.innerHTML = '<p>No questions have been added to this quiz yet.</p>';
-            return;
-        }
-        questionsListEl.innerHTML = quiz.questions.map((q, i) => `<div class="d-flex justify-content-between rbt-course-wrape mb-4"><div class="inner d-flex align-items-center gap-2"><h6 class="rbt-title mb-0">Question #${i + 1}: ${q.questionText}</h6></div><div class="inner"><ul class="rbt-list-style-1 rbt-course-list d-flex gap-2"><li><i class="feather-trash delete-question-btn" data-question-id="${q._id}"></i></li><li><i class="feather-edit edit-question-btn" data-question-id="${q._id}"></i></li></ul></div></div>`).join('');
-    };
-
 window.openUpdateQuizModal = function(episodeId, quizId) {
     currentEditingEpisodeId = episodeId;
     currentEditingQuizId = quizId;
@@ -2187,6 +2150,43 @@ if (quizModalEl) {
     // --- 2. DEFINE STATE & HELPER FUNCTIONS ---
     const steps = { INFO: 1, QUESTIONS_LIST: 2, ADD_QUESTION_FORM: 3, SETTINGS: 4 };
     let currentStep = steps.INFO;
+
+    const updateQuizModalView = () => {
+        quizModalEl.querySelectorAll('.question').forEach(el => el.style.display = 'none');
+        const currentStepEl = quizModalEl.querySelector(`#question-${currentStep}`);
+        if (currentStepEl) currentStepEl.style.display = 'block';
+        if (backBtn) backBtn.style.display = (currentStep === steps.QUESTIONS_LIST || currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
+        if (nextBtn) nextBtn.style.display = (currentStep === steps.INFO || currentStep === steps.QUESTIONS_LIST) ? 'inline-block' : 'none';
+        if (mainSaveQuizBtn) mainSaveQuizBtn.style.display = (currentStep === steps.SETTINGS) ? 'inline-block' : 'none';
+    };
+
+    const toggleAnswerOptions = () => {
+        if (!questionTypeSelect || !answerOptionsWrapper) return;
+        const selectedType = questionTypeSelect.value;
+        answerOptionsWrapper.style.display = (selectedType === 'single-choice' || selectedType === 'multiple-choice') ? 'block' : 'none';
+    };
+
+    const addAnswerOption = () => {
+        if (!questionTypeSelect || !answerOptionsContainer) return;
+        const questionType = questionTypeSelect.value;
+        const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
+        const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
+        const optionHtml = `<div class="d-flex align-items-center mb-2 quiz-option-row"><div class="flex-grow-1 me-2"><input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text"></div><div class="form-check me-3"><input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}"><label class="form-check-label" for="${uniqueId}">Correct</label></div><button type="button" class="btn btn-sm btn-outline-danger remove-option-btn"><i class="feather-x" style="pointer-events: none;"></i></button></div>`;
+        answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+    };
+
+    const renderQuizQuestionsList = () => {
+        if (!courseData) return;
+        const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+        if (!episode || !episode.quizzes) return;
+        const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+        if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+            questionsListEl.innerHTML = '<p>No questions have been added to this quiz yet.</p>';
+            return;
+        }
+        questionsListEl.innerHTML = quiz.questions.map((q, i) => `<div class="d-flex justify-content-between rbt-course-wrape mb-4"><div class="inner d-flex align-items-center gap-2"><h6 class="rbt-title mb-0">Question #${i + 1}: ${q.questionText}</h6></div><div class="inner"><ul class="rbt-list-style-1 rbt-course-list d-flex gap-2"><li><i class="feather-trash delete-question-btn" data-question-id="${q._id}"></i></li><li><i class="feather-edit edit-question-btn" data-question-id="${q._id}"></i></li></ul></div></div>`).join('');
+    };
 
     // --- 3. ATTACH EVENT LISTENERS ---
     if (nextBtn) nextBtn.addEventListener('click', () => {
