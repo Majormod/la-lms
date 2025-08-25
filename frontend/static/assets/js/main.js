@@ -4075,11 +4075,12 @@ if (window.location.pathname.includes('student-settings.html')) {
         document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
 
         if (user.avatar) {
-            const avatarPath = `/${user.avatar}`;
-            document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
-                if (img) img.src = avatarPath;
-            });
-        }
+        const avatarPath = `/${user.avatar}`;
+        // Use the new class to select all avatar images, plus the header one by its ID
+        document.querySelectorAll('.user-avatar-img, #header-dropdown-avatar').forEach(img => {
+            if (img) img.src = avatarPath;
+        });
+    }
         
         // NEW: Update cover photos
         if (user.coverPhoto) {
