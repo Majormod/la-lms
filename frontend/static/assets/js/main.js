@@ -4074,21 +4074,23 @@ if (window.location.pathname.includes('student-settings.html')) {
         document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
         document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
 
-        if (user.avatar) {
-        const avatarPath = `/${user.avatar}`;
-        // Use the new class to select all avatar images, plus the header one by its ID
+       // --- Modify the "if (user.avatar)" block ---
+    if (user.avatar) {
+        // Add a timestamp to prevent browser caching of the old image
+        const avatarPath = `/${user.avatar}?t=${new Date().getTime()}`; // <-- MODIFY THIS LINE
         document.querySelectorAll('.user-avatar-img, #header-dropdown-avatar').forEach(img => {
             if (img) img.src = avatarPath;
         });
     }
         
-        // NEW: Update cover photos
-        if (user.coverPhoto) {
-            const coverPath = `/${user.coverPhoto}`;
-            document.querySelectorAll('.tutor-bg-photo').forEach(div => {
-                if(div) div.style.backgroundImage = `url(${coverPath})`;
-            });
-        }
+        // --- Modify the "if (user.coverPhoto)" block ---
+    if (user.coverPhoto) {
+        // Also add the cache-busting trick for the cover photo
+        const coverPath = `/${user.coverPhoto}?t=${new Date().getTime()}`; // <-- MODIFY THIS LINE
+        document.querySelectorAll('.tutor-bg-photo').forEach(div => {
+            if (div) div.style.backgroundImage = `url(${coverPath})`;
+        });
+    }
 
         const profileForm = document.getElementById('profile-settings-form');
         if (profileForm) {
@@ -4111,6 +4113,7 @@ if (window.location.pathname.includes('student-settings.html')) {
                 body: formData,
             });
             const result = await response.json();
+            console.log('Server response after upload:', result); // <-- ADD THIS LINE
             if (!response.ok) throw new Error(result.message);
             
             alert('Image updated successfully!');
