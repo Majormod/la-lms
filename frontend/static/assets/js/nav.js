@@ -1,17 +1,15 @@
-// Replace everything in nav.js with this code
+// Replace everything in nav.js with this final, corrected code
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // This is a safe helper function to get user data without crashing
+    // Safe helper function to get user data without crashing
     const getAuth = () => {
         const token = localStorage.getItem('lmsToken');
         const userJSON = localStorage.getItem('lmsUser');
         if (token && userJSON) {
             try {
-                const user = JSON.parse(userJSON);
-                return { token, user };
+                return { token, user: JSON.parse(userJSON) };
             } catch (error) {
-                // If JSON is corrupted, clear storage and treat as logged out
                 localStorage.clear();
                 return { token: null, user: null };
             }
@@ -19,45 +17,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return { token: null, user: null };
     };
 
-    const { user } = getAuth();
-    const navDropdown = document.getElementById('nav-user-dropdown');
-    const navLoginButton = document.getElementById('nav-login-button');
+    const { token, user } = getAuth();
 
-    if (user && navDropdown) {
-        // --- USER IS LOGGED IN ---
-        navDropdown.style.display = 'block';
-        if (navLoginButton) navLoginButton.style.display = 'none';
+    // --- Selectors that match YOUR HTML structure ---
+    const loginLink = document.getElementById('nav-login-link');
+    const userLink = document.getElementById('nav-user-link');
 
-        // Populate user info
-        const userNameEl = document.getElementById('header-dropdown-name');
-        const userAvatarEl = document.getElementById('header-dropdown-avatar');
-        
-        if (userNameEl) {
-            userNameEl.textContent = `${user.firstName} ${user.lastName}`;
-        }
-        if (userAvatarEl && user.avatar) {
-            userAvatarEl.src = `/${user.avatar}`;
+    if (token && user) {
+        // --- 1. USER IS LOGGED IN ---
+        if (loginLink) loginLink.classList.add('d-none');
+        if (userLink) userLink.classList.remove('d-none');
+
+        // Populate user info (Handles both 'name' and 'firstName'/'lastName')
+        const userNameEl = document.getElementById('nav-user-name');
+        const userNameDropdownEl = document.getElementById('nav-user-name-dropdown');
+        const userAvatarEl = document.getElementById('nav-user-avatar');
+
+        if (userNameEl) userNameEl.textContent = user.firstName || user.name.split(' ')[0];
+        if (userNameDropdownEl) userNameDropdownEl.textContent = user.name || `${user.firstName} ${user.lastName}`;
+        if (userAvatarEl && user.avatar) userAvatarEl.src = `/${user.avatar}`;
+
+        // Handle role-specific links
+        if (user.role === 'instructor') {
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
+        } else {
+            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
         }
 
-        // Add role-specific dashboard link
-        const dashboardLink = document.getElementById('dashboard-link');
-        if (dashboardLink) {
-            dashboardLink.href = user.role === 'instructor' ? 'instructor-dashboard.html' : 'student-dashboard.html';
-        }
-        
-        // Setup Logout Button
-        const logoutButton = document.getElementById('logout-button');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('lmsToken');
-                localStorage.removeItem('lmsUser');
-                window.location.href = 'login.html';
-            });
-        }
     } else {
-        // --- USER IS NOT LOGGED IN ---
-        if (navDropdown) navDropdown.style.display = 'none';
-        if (navLoginButton) navLoginButton.style.display = 'block';
+        // --- 2. USER IS LOGGED OUT ---
+        if (loginLink) loginLink.classList.remove('d-none');
+        if (userLink) userLink.classList.add('d-none');
     }
+
+    // --- 3. UNIVERSAL LOGOUT HANDLER ---
+    // This runs regardless of login state and finds ALL logout buttons.
+    const logoutButtons = document.querySelectorAll('.logout-btn, #nav-logout-btn');
+    logoutButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            localStorage.removeItem('lmsToken');
+            localStorage.removeItem('lmsUser');
+            window.location.href = 'login.html';
+        });
+    });
 });
