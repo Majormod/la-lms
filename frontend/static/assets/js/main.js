@@ -3118,15 +3118,13 @@ if (editCourseForm) {
 }
 
 // =================================================================
-// UPDATED SCRIPT FOR course-details.html
-// =================================================================
-// =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
 // =================================================================
 if (window.location.pathname.includes('course-details.html')) {
 
     /**
      * NEW HELPER FUNCTION: Renders all contents of an episode (lessons AND quizzes).
+     * This replaces your old 'renderLessons' function.
      */
     function renderEpisodeContents(episode, courseId) {
         // Combine lessons and quizzes into a single array, adding a 'type' property.
@@ -3184,7 +3182,8 @@ if (window.location.pathname.includes('course-details.html')) {
     }
 
     /**
-     * MODIFIED: This function now builds the accordion using the new helper function.
+     * MODIFIED: This function builds the entire accordion using the new helper function.
+     * This replaces your old 'renderCourseContent' function.
      */
     function renderCourseContent(episodes, courseId) {
         const accordionContainer = document.querySelector('#coursecontent .rbt-accordion-02.accordion');
@@ -3239,11 +3238,11 @@ if (window.location.pathname.includes('course-details.html')) {
                 if (result.success) {
                     const course = result.course;
 
-                    // 1. Populate Header Section
+                    // --- 1. Populate Header Section ---
                     document.getElementById('course-title').textContent = course.title;
                     document.getElementById('course-subtitle').textContent = course.description.substring(0, 100) + '...';
                     
-                    // 2. Populate Instructor Info & Avatar
+                    // --- 2. Populate Instructor Info & Avatar ---
                     if (course.instructor) {
                         const instructorName = `${course.instructor.firstName} ${course.instructor.lastName}`;
                         document.getElementById('instructor-info').innerHTML = `By <a href="#">${instructorName}</a>`;
@@ -3254,42 +3253,83 @@ if (window.location.pathname.includes('course-details.html')) {
                         }
                     }
 
-                    // 3. Populate Video/Thumbnail
+                    // --- 3. Populate Video/Thumbnail ---
                     document.getElementById('course-thumbnail').src = `/${course.thumbnail}`;
                     const sidebarImage = document.getElementById('sidebar-thumbnail');
-                    if (sidebarImage) sidebarImage.src = `/${course.thumbnail}`;
+                    if (sidebarImage) {
+                        sidebarImage.src = `/${course.thumbnail}`;
+                    }
                     if (course.previewVideoUrl) {
                         document.getElementById('video-preview-link').href = course.previewVideoUrl;
                         const sidebarVideoLink = document.getElementById('sidebar-video-link');
-                        if (sidebarVideoLink) sidebarVideoLink.href = course.previewVideoUrl;
+                        if (sidebarVideoLink) {
+                            sidebarVideoLink.href = course.previewVideoUrl;
+                        }
                     }
 
-                    // 4. Populate Main Content Overview
+                    // --- 4. Populate Main Content Overview ---
                     const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
                     if (overviewContainer) {
                         overviewContainer.innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3">Overview</h4></div><p>${course.description}</p>`;
                     }
 
-                    // 5. Populate Course Content Accordion (THIS NOW WORKS FOR QUIZZES)
+                    // --- 5. Populate Course Content Accordion (THIS NOW WORKS FOR QUIZZES) ---
                     renderCourseContent(course.episodes, course._id);
 
-                    // 6. Display Certificate Information
+                    // --- 6. Display Certificate Information ---
                     const certificateSection = document.getElementById('course-certificate-section');
-                    if (certificateSection && course.certificateTemplate && course.certificateTemplate !== 'none') {
-                        // ... your certificate logic ...
+                    const certificateImage = document.getElementById('course-certificate');
+                    const certificateInfo = document.getElementById('certificate-info');
+                    if (certificateSection && certificateImage && certificateInfo) {
+                        if (course.certificateTemplate && course.certificateTemplate !== 'none') {
+                            certificateSection.style.display = 'block';
+                            const templateImages = { 'option1': 'assets/images/icons/certificate-none.svg', 'option2': 'assets/images/others/preview-01.png', 'option3': 'assets/images/others/preview-02.png', 'option4': 'assets/images/others/preview-03.png', 'option5': 'assets/images/others/preview-04.png', 'option6': 'assets/images/others/preview-05.png', 'optionport1': 'assets/images/icons/certificate-none-portrait.svg', 'optionport2': 'assets/images/others/preview-port-01.png', 'optionport3': 'assets/images/others/preview-port-02.png', 'optionport4': 'assets/images/others/preview-port-03.png', 'optionport5': 'assets/images/others/preview-port-05.png', 'optionport6': 'assets/images/others/preview-port-06.png' };
+                            const imagePath = templateImages[course.certificateTemplate];
+                            if (imagePath) {
+                                certificateImage.src = imagePath;
+                                certificateImage.alt = 'Course Completion Certificate';
+                            }
+                            certificateInfo.textContent = `This course includes a ${course.certificateOrientation} certificate upon completion.`;
+                        } else {
+                            certificateSection.style.display = 'none';
+                        }
                     }
-
-                    // 7. Populate Sidebar Price and Button
+                    
+                    // --- 7. Populate Sidebar Price and Button ---
                     const priceContainer = document.getElementById('my-custom-price-display');
                     const buttonContainer = document.querySelector('.add-to-card-button');
                     if (priceContainer) {
-                        // ... your price logic ...
+                        let priceHtml = '';
+                        if (course.price && course.price > 0) {
+                            const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                            priceHtml = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
+                            if (buttonContainer) {
+                                buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient radius-round hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Add to Cart</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
+                            }
+                        } else {
+                            priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+                            if (buttonContainer) {
+                                buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Enroll Now</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
+                            }
+                        }
+                        priceContainer.innerHTML = priceHtml;
                     }
-
-                    // 8. Populate Instructor Bio Box
+                    
+                    // --- 8. Populate Instructor Bio Box ---
                     const instructor = course.instructor;
                     if (instructor) {
-                        // ... your instructor bio and social logic ...
+                        document.getElementById('instructor-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
+                        document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
+                        document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
+                        document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
+
+                        const socialContainer = document.getElementById('instructor-socials');
+                        socialContainer.innerHTML = ''; // Clear static icons
+                        if (instructor.social) {
+                            if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}"><i class="feather-facebook"></i></a></li>`;
+                            if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}"><i class="feather-twitter"></i></a></li>`;
+                            if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}"><i class="feather-linkedin"></i></a></li>`;
+                        }
                     }
                 }
             } catch (error) {
