@@ -1,8 +1,8 @@
-// Replace everything in nav.js with this code
+// Replace everything in nav.js with this final, corrected code
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // This is a safe helper function to get user data without crashing
+    // Safe helper function to get user data without crashing
     const getAuth = () => {
         const token = localStorage.getItem('lmsToken');
         const userJSON = localStorage.getItem('lmsUser');
@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const user = JSON.parse(userJSON);
                 return { token, user };
             } catch (error) {
-                // If JSON is corrupted, clear storage and treat as logged out
                 localStorage.clear();
                 return { token: null, user: null };
             }
@@ -19,45 +18,58 @@ document.addEventListener('DOMContentLoaded', () => {
         return { token: null, user: null };
     };
 
-    const { user } = getAuth();
-    const navDropdown = document.getElementById('nav-user-dropdown');
-    const navLoginButton = document.getElementById('nav-login-button');
+    const { token, user } = getAuth();
+    
+    // --- CORRECTED SELECTORS to match your HTML ---
+    const loginLink = document.getElementById('nav-login-link');
+    const userLink = document.getElementById('nav-user-link');
+    const userMenu = document.querySelector('.rbt-user-menu-list-wrapper');
 
-    if (user && navDropdown) {
+    if (!loginLink || !userLink) {
+        return; // Exit if essential nav elements aren't found
+    }
+
+    if (token && user) {
         // --- USER IS LOGGED IN ---
-        navDropdown.style.display = 'block';
-        if (navLoginButton) navLoginButton.style.display = 'none';
-
+        loginLink.classList.add('d-none');   // Hide login link
+        userLink.classList.remove('d-none'); // Show user link/dropdown trigger
+        
         // Populate user info
-        const userNameEl = document.getElementById('header-dropdown-name');
-        const userAvatarEl = document.getElementById('header-dropdown-avatar');
+        const userNameEl = document.getElementById('nav-user-name');
+        const userNameDropdownEl = document.getElementById('nav-user-name-dropdown');
+        const userAvatarEl = document.getElementById('nav-user-avatar');
+
+        if (userNameEl) userNameEl.textContent = user.firstName || '';
+        if (userNameDropdownEl) userNameDropdownEl.textContent = `${user.firstName} ${user.lastName}`;
+        if (userAvatarEl && user.avatar) userAvatarEl.src = `/${user.avatar}`;
         
-        if (userNameEl) {
-            userNameEl.textContent = `${user.firstName} ${user.lastName}`;
-        }
-        if (userAvatarEl && user.avatar) {
-            userAvatarEl.src = `/${user.avatar}`;
+        // Handle role-specific links (from your original logic)
+        if (user.role === 'instructor') {
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
+            const bookmarkLink = document.getElementById('nav-bookmark-link');
+            const reviewsLink = document.getElementById('nav-reviews-link');
+            if(bookmarkLink) bookmarkLink.style.display = 'none';
+            if(reviewsLink) reviewsLink.style.display = 'none';
+        } else { // Assumes 'student' role
+            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
         }
 
-        // Add role-specific dashboard link
-        const dashboardLink = document.getElementById('dashboard-link');
-        if (dashboardLink) {
-            dashboardLink.href = user.role === 'instructor' ? 'instructor-dashboard.html' : 'student-dashboard.html';
-        }
-        
-        // Setup Logout Button
-        const logoutButton = document.getElementById('logout-button');
+        // --- CORRECTED Logout Button ---
+        const logoutButton = document.getElementById('nav-logout-btn');
         if (logoutButton) {
             logoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('lmsToken');
                 localStorage.removeItem('lmsUser');
-                window.location.href = 'login.html';
+                window.location.href = 'login.html'; // Correct redirect
             });
         }
+
     } else {
-        // --- USER IS NOT LOGGED IN ---
-        if (navDropdown) navDropdown.style.display = 'none';
-        if (navLoginButton) navLoginButton.style.display = 'block';
+        // --- USER IS LOGGED OUT ---
+        loginLink.classList.remove('d-none'); // Show login link
+        userLink.classList.add('d-none');    // Hide user link/dropdown trigger
     }
 });
