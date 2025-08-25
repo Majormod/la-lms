@@ -1916,7 +1916,6 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
-                };
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
@@ -2166,15 +2165,10 @@ const toggleAnswerOptions = () => {
 };
 
 // Function to add a new answer option input field
-// REPLACE your existing addAnswerOption function with this one
 const addAnswerOption = () => {
     const questionType = questionTypeSelect.value;
     const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
-    
-    // Create a unique ID for the input and label to link them
-    const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    // For single choice, all radio buttons need the same 'name' to work correctly
-    const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
+    const optionName = `is-correct-option-${answerOptionsContainer.children.length}`;
 
     const optionHtml = `
         <div class="d-flex align-items-center mb-2 quiz-option-row">
@@ -2182,11 +2176,11 @@ const addAnswerOption = () => {
                 <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
             </div>
             <div class="form-check me-3">
-                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}">
-                <label class="form-check-label" for="${uniqueId}">Correct</label>
+                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}">
+                <label class="form-check-label">Correct</label>
             </div>
             <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
-                <i class="feather-x" style="pointer-events: none;"></i>
+                <i class="feather-x"></i>
             </button>
         </div>
     `;
@@ -2222,12 +2216,10 @@ if (cancelQuestionBtn) {
     });
 }
 
-// Replace your existing listener for answerOptionsContainer with this one
+// Handle removing an answer option
 answerOptionsContainer.addEventListener('click', (e) => {
-    const deleteBtn = e.target.closest('.remove-option-btn');
-    if (deleteBtn) {
-        e.stopPropagation(); // This stops the click from "bubbling up"
-        deleteBtn.closest('.quiz-option-row').remove();
+    if (e.target.closest('.remove-option-btn')) {
+        e.target.closest('.quiz-option-row').remove();
     }
 });
     let currentStep = 1;
@@ -2394,63 +2386,28 @@ if (saveQuestionBtn) {
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify(questionData)
             });
-
             const result = await response.json();
-
             if (result.success) {
-                // 3. Update the UI
                 courseData = result.course;
                 currentEditingQuestionId = null; // Clear after saving
-                renderQuizQuestionsList(); // Refresh the questions list
-                currentStep = 2; // Go back to the questions list view
+                renderQuizQuestionsList();
+                currentStep = 2;
                 updateQuizModalView();
             } else {
                 alert(`Error: ${result.message}`);
             }
-
         } catch (error) {
-            console.error('Error saving question:', error);
             alert('An error occurred while saving the question.');
         }
     });
 }
-// This single listener handles BOTH editing and deleting questions
+// Handle deleting a question
 const questionsListEl = document.getElementById('quiz-questions-list');
 if (questionsListEl) {
     questionsListEl.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.edit-question-btn');
         const deleteBtn = e.target.closest('.delete-question-btn');
+        if (!deleteBtn) return;
 
-        // --- LOGIC FOR EDIT BUTTON ---
-        if (editBtn) {
-            currentEditingQuestionId = editBtn.dataset.questionId;
-            const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
-            const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
-            const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
-
-            if (question) {
-                // Populate the form with the question's data
-                document.getElementById('quiz-question-text').value = question.questionText;
-                document.getElementById('quiz-question-type').value = question.questionType;
-                document.getElementById('quiz-question-points').value = question.points;
-                
-                // Show the options wrapper and render the saved options
-                toggleAnswerOptions(); 
-                question.options.forEach(opt => {
-                    addAnswerOption();
-                    const newRow = answerOptionsContainer.lastElementChild;
-                    newRow.querySelector('.quiz-option-text').value = opt.text;
-                    newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
-                });
-
-                // Navigate to the form
-                currentStep = steps.ADD_QUESTION_FORM;
-                updateQuizModalView();
-            }
-        }
-
-        // --- LOGIC FOR DELETE BUTTON ---
-        if (deleteBtn) {
         const questionId = deleteBtn.dataset.questionId;
         if (confirm('Are you sure you want to delete this question?')) {
             try {
@@ -2472,7 +2429,6 @@ if (questionsListEl) {
                 }
             } catch (error) {
                 alert('An error occurred while deleting the question.');
-                }
             }
         }
     });
