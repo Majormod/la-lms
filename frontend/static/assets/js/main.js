@@ -1079,9 +1079,9 @@ console.log("------------------------------");
     };
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
-   eduJs.lmsInit = function () {
-    const API_BASE_URL = 'http://54.221.189.159';
-    const token = localStorage.getItem('lmsToken');
+    eduJs.lmsInit = function () {
+        const API_BASE_URL = 'http://54.221.189.159';
+        const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
         // In main.js, add this to the top (global scope)
@@ -1147,6 +1147,43 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
+        const updateUserDataOnPage = () => {
+            if (!token) return;
+            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const profile = result.data;
+                        const fullName = `${profile.firstName} ${profile.lastName}`;
+                        const bannerName = document.querySelector('.rbt-tutor-information .title');
+                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                        const bannerCover = document.querySelector('.tutor-bg-photo');
+                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
+                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
+                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
+                        if (bannerName) bannerName.textContent = fullName;
+                        if (profile.avatar) {
+                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
+                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
+                        }
+                        if (profile.coverPhoto) {
+                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                        }
+                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
+                    } else {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                    localStorage.clear();
+                    window.location.href = '/login';
+                });
+        };
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
@@ -1158,136 +1195,7 @@ const renderCourseDetailsCurriculum = (episodes) => {
                 }
                 updateUserDataOnPage();
             }
-// =================================================================
-// FINAL SCRIPT FOR student-settings.html
-// =================================================================
-if (window.location.pathname.includes('student-settings.html')) {
-    const token = localStorage.getItem('lmsToken');
-    if (!token) {
-        window.location.href = 'login.html';
-    }
 
-    // This is the corrected and improved version of the function you found.
-    const updateUserDataOnPage = (user) => {
-        if (!user) return;
-        const fullName = `${user.firstName} ${user.lastName}`;
-
-        // Update all name instances
-        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
-        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
-
-        // Update all avatar instances
-        if (user.avatar) {
-            const avatarPath = `/${user.avatar}`;
-            document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
-                if (img) img.src = avatarPath;
-            });
-        }
-    };
-
-    // This function populates the settings form itself.
-    const populateSettingsForm = (user) => {
-        const profileForm = document.getElementById('profile-settings-form');
-        if (profileForm) {
-            profileForm.querySelector('#firstname').value = user.firstName || '';
-            profileForm.querySelector('#lastname').value = user.lastName || '';
-            profileForm.querySelector('#username').value = user.username || '';
-            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
-            profileForm.querySelector('#skill').value = user.occupation || '';
-            profileForm.querySelector('#bio').value = user.bio || '';
-        }
-    };
-    
-    // This function handles the image upload API call.
-    const uploadImage = async (file, type) => {
-        const formData = new FormData();
-        formData.append(type, file);
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, { // Correct URL
-                method: 'POST',
-                headers: { 'x-auth-token': token },
-                body: formData,
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-            
-            alert('Image updated successfully!');
-            localStorage.setItem('lmsUser', JSON.stringify(result.user));
-            updateUserDataOnPage(result.user); // Update all images on the page instantly
-
-        } catch (error) {
-            alert(`Upload failed: ${error.message}`);
-        }
-    };
-
-    // === MAIN LOGIC AND EVENT LISTENERS ===
-    
-    // 1. On page load, fetch the user's data and populate everything.
-    document.addEventListener('DOMContentLoaded', () => {
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                    // NOTE: Using result.data to match your existing API response
-                    const userProfile = result.data; 
-                    populateSettingsForm(userProfile);
-                    updateUserDataOnPage(userProfile); // This updates header/sidebar too
-                    } else {
-                    throw new Error(result.message);
-                }
-            })
-            .catch(err => {
-                console.error('Failed to load profile data:', err);
-                alert('Could not load your profile data.');
-            });
-    });
-
-    // 2. Add the missing event listener for the profile update form.
-    const profileForm = document.getElementById('profile-settings-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = {
-                firstName: profileForm.querySelector('#firstname').value,
-                lastName: profileForm.querySelector('#lastname').value,
-                username: profileForm.querySelector('#username').value,
-                phoneNumber: profileForm.querySelector('#phonenumber').value,
-                occupation: profileForm.querySelector('#skill').value,
-                bio: profileForm.querySelector('#bio').value,
-            };
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                    body: JSON.stringify(formData)
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.message);
-
-                alert('Profile updated successfully!');
-                localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                updateUserDataOnPage(result.user); // Update header/sidebar instantly
-
-            } catch (error) {
-                alert(`Update failed: ${error.message}`);
-            }
-        });
-    }
-
-    // 3. Add event listeners for avatar upload.
-    const avatarUploadButton = document.querySelector('.rbt-edit-photo');
-    const avatarUploadInput = document.getElementById('avatar-upload-input');
-    if (avatarUploadButton && avatarUploadInput) {
-        avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
-        avatarUploadInput.addEventListener('change', () => {
-            const file = avatarUploadInput.files[0];
-            if (file) {
-                uploadImage(file, 'avatar');
-            }
-        });
-    }
-}
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
                 if (loginForm) {
@@ -1317,72 +1225,53 @@ if (window.location.pathname.includes('student-settings.html')) {
                     });
                 }
                 const registerForm = document.querySelector('#register-form');
-if (registerForm) {
-    registerForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const firstName = document.querySelector('#register-firstName').value;
-        const lastName = document.querySelector('#register-lastName').value;
-        const email = document.querySelector('#register-email').value;
-        const password = document.querySelector('#register-password').value;
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ firstName, lastName, email, password }),
-            });
-
-            const result = await response.json();
-
-            // This is the fix: check for a server error status first
-            if (!response.ok) {
-                throw new Error(result.message || `An error occurred: ${response.statusText}`);
-            }
-
-            // This now only runs on a true success
-            alert('Registration successful! Please log in.');
-            window.location.href = 'login.html';
-
-        } catch (error) {
-            // All errors (like duplicate email) will be caught here
-            console.error('Registration error:', error);
-            alert(`Registration Failed: ${error.message}`);
-        }
-    });
-}
-
-const instructorRegisterForm = document.querySelector('#instructor-register-form');
-if (instructorRegisterForm) {
-    instructorRegisterForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const firstName = document.querySelector('#register-firstName').value;
-        const lastName = document.querySelector('#register-lastName').value;
-        const email = document.querySelector('#register-email').value;
-        const password = document.querySelector('#register-password').value;
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/register-instructor`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ firstName, lastName, email, password }),
-            });
-            
-            const result = await response.json();
-
-            // This is the fix: check for a server error status first
-            if (!response.ok) {
-                throw new Error(result.message || `An error occurred: ${response.statusText}`);
-            }
-
-            alert('Instructor registration successful! Please log in.');
-            window.location.href = 'instructor-login.html';
-
-        } catch (error) {
-            console.error('Registration error:', error);
-            alert(`Registration Failed: ${error.message}`);
-        }
-    });
-}
+                if (registerForm) {
+                    registerForm.addEventListener('submit', async (event) => {
+                        event.preventDefault();
+                        const firstName = document.querySelector('#register-firstName').value;
+                        const lastName = document.querySelector('#register-lastName').value;
+                        const email = document.querySelector('#register-email').value;
+                        const password = document.querySelector('#register-password').value;
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/api/register`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ firstName, lastName, email, password }),
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                alert('Registration successful! Please log in.');
+                                window.location.reload();
+                            } else {
+                                alert(`Registration Failed: ${result.message}`);
+                            }
+                        } catch (error) { console.error('Registration error:', error); }
+                    });
+                }
+                const instructorRegisterForm = document.querySelector('#instructor-register-form');
+                if (instructorRegisterForm) {
+                    instructorRegisterForm.addEventListener('submit', async (event) => {
+                        event.preventDefault();
+                        const firstName = document.querySelector('#register-firstName').value;
+                        const lastName = document.querySelector('#register-lastName').value;
+                        const email = document.querySelector('#register-email').value;
+                        const password = document.querySelector('#register-password').value;
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/api/register-instructor`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ firstName, lastName, email, password }),
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                alert('Instructor registration successful! Please log in.');
+                                window.location.reload();
+                            } else {
+                                alert(`Registration Failed: ${result.message}`);
+                            }
+                        } catch (error) { console.error('Registration error:', error); }
+                    });
+                }
             }
             if (path.includes('instructor-dashboard.html')) {
                 if (!token || user.role !== 'instructor') {
@@ -3924,133 +3813,55 @@ fetchAndDisplayCourses();
     });
 }
 // In main.js, add this new block for the results page logic
-// In main.js, replace the entire block for the results page
-// =================================================================
-// FINAL SCRIPT FOR lesson-quiz-result.html (All fixes included)
-// =================================================================
 if (window.location.pathname.includes('lesson-quiz-result.html')) {
-    
-    // This function builds the sidebar navigation. We include it here so this page can use it.
-    function renderSidebar(courseData, activeQuizId) {
-        const sidebar = document.querySelector('.rbt-lesson-leftsidebar .rbt-accordion-02');
-        if (!sidebar) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        // Retrieve the result from sessionStorage
+        const result = JSON.parse(sessionStorage.getItem('quizResult'));
+        
+        if (!result) {
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
+            return;
+        }
 
-        const activeEpisode = courseData.episodes.find(ep =>
-            ep.quizzes.some(q => q._id === activeQuizId)
-        );
-
-        sidebar.innerHTML = courseData.episodes.map((episode, index) => {
-            const isExpanded = activeEpisode && episode._id === activeEpisode._id;
-            const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
-            const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
-            const contents = [...lessons, ...quizzes];
-
-            const contentHTML = contents.map(content => {
-                const isActive = (content.type === 'quiz' && content._id === activeQuizId);
-                const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
-                return `
-                    <li>
-                        <a href="lesson.html?courseId=${courseData._id}&${content.type}Id=${content._id}" class="content-link ${isActive ? 'active' : ''}">
-                            <div class="course-content-left">
-                                <i class="feather-${icon}"></i>
-                                <span class="text">${content.title}</span>
-                            </div>
-                            <div class="course-content-right">
-                                <span class="rbt-check unread"><i class="feather-circle"></i></span>
-                            </div>
-                        </a>
-                    </li>
-                `;
-            }).join('');
-
-            return `
-                <div class="accordion-item card">
-                    <h2 class="accordion-header card-header">
-                        <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">
-                            ${episode.title}
-                        </button>
-                    </h2>
-                    <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
-                        <div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div>
-                    </div>
-                </div>`;
-        }).join('');
-    }
-    
-    // This function renders the main results content on the right.
-    function renderResults(result, quizTitle, courseData) {
-        // Set the "Back to Course" link using the full course data.
-        document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseData._id}`;
-        document.getElementById('result-page-title').textContent = quizTitle;
-
+        // --- 1. Render the Summary ---
         const summaryContainer = document.getElementById('quiz-summary-results');
         const passStatus = result.passed ? 'Pass' : 'Fail';
         const passClass = result.passed ? 'color-success' : 'color-danger';
-        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
 
         summaryContainer.innerHTML = `
             <div class="text-center">
                 <h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3>
-                <p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p>
-            </div>`;
+                <p class="b3 mt-2">You answered ${result.score / result.answers[0].points} out of ${result.answers.length} questions correctly.</p>
+            </div>
+        `;
 
+        // --- 2. Render the Detailed Table ---
         const tableBody = document.getElementById('quiz-results-tbody');
         tableBody.innerHTML = result.answers.map((answer, index) => {
+            // NOTE: This part is complex because we need to find the text of the selected answers.
+            // This is a simplified version. A full version would require fetching the quiz data again.
             const resultBadge = answer.isCorrect ? 
                 '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' :
                 '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
+
             return `
                 <tr>
                     <td><p class="b3">${index + 1}</p></td>
                     <td><p class="b3">${answer.questionText}</p></td>
+                    <td><p class="b3">Your Answer</p></td>
+                    <td><p class="b3">Correct Answer</p></td>
                     <td>${resultBadge}</td>
-                </tr>`;
+                </tr>
+            `;
         }).join('');
 
-        // Now that we have the full course data, render the sidebar
-        renderSidebar(courseData, result.quiz);
-    }
-    
-    // This is the main logic that runs when the results page loads.
-    document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const resultId = urlParams.get('resultId');
-        const resultFromSession = JSON.parse(sessionStorage.getItem('quizResult'));
-
-        if (resultId) {
-            // Scenario 1: Fetching an old result from the database
-            const token = localStorage.getItem('lmsToken');
-            fetch(`${API_BASE_URL}/api/quiz-results/${resultId}`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        renderResults(data.result, data.quizTitle, data.result.course);
-                    } else {
-                        document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`;
-                    }
-                });
-        } else if (resultFromSession) {
-            // Scenario 2: Displaying a result immediately after submission
-            // We need to fetch the course data to build the sidebar
-            const courseId = urlParams.get('courseId');
-            fetch(`${API_BASE_URL}/api/courses/${courseId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const quizTitle = data.course.episodes.flatMap(ep => ep.quizzes).find(q => q._id === resultFromSession.quiz)?.title || "Quiz Result";
-                        renderResults(resultFromSession, quizTitle, data.course);
-                        sessionStorage.removeItem('quizResult'); // Clean up
-                    }
-                });
-        } else {
-            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
-        }
+        // Clear the stored result after displaying it
+        sessionStorage.removeItem('quizResult');
     });
 }
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
 // =================================================================
-// REPLACE IT WITH THIS WORKING BLOCK
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser'));
@@ -4058,48 +3869,48 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     if (!token || !user || user.role !== 'instructor') {
         window.location.href = '/login.html'; // Redirect if not an instructor
     } else {
-    const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
-    if (attemptsTableBody) {
-        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
-
-        fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    if (result.attempts.length === 0) {
-                        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No student quiz attempts found.</td></tr>';
-                        return;
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (attemptsTableBody) {
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
+            
+            fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        if (result.attempts.length === 0) {
+                            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No student quiz attempts found.</td></tr>';
+                            return;
+                        }
+                        
+                        attemptsTableBody.innerHTML = result.attempts.map(attempt => {
+                            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+                            return `
+                                <tr>
+                                    <th>
+                                        <p class="b3 mb--5">${attempt.date}</p>
+                                        <span class="h6 mb--5">${attempt.quizTitle}</span>
+                                        <p class="b3">Student: <a href="#">${attempt.studentName}</a></p>
+                                    </th>
+                                    <td><p class="b3">${attempt.totalQuestions}</p></td>
+                                    <td><p class="b3">${attempt.totalMarks}</p></td>
+                                    <td><p class="b3">${attempt.correctAnswers}</p></td>
+                                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                                    <td>
+                                        <div class="rbt-button-group justify-content-end">
+                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    } else {
+                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
                     }
-
-                    attemptsTableBody.innerHTML = result.attempts.map(attempt => {
-                        const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
-                        return `
-                            <tr>
-                                <th>
-                                    <p class="b3 mb--5">${attempt.date}</p>
-                                    <span class="h6 mb--5">${attempt.quizTitle}</span>
-                                    <p class="b3">Student: <a href="#">${attempt.studentName}</a></p>
-                                </th>
-                                <td><p class="b3">${attempt.totalQuestions}</p></td>
-                                <td><p class="b3">${attempt.totalMarks}</p></td>
-                                <td><p class="b3">${attempt.correctAnswers}</p></td>
-                                <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                                <td>
-                                    <div class="rbt-button-group justify-content-end">
-                                        <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching quiz attempts:', error);
-                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load quiz attempts.</td></tr>';
-            });
+                })
+                .catch(error => {
+                    console.error('Error fetching quiz attempts:', error);
+                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load quiz attempts.</td></tr>';
+                });
         }
     }
 }
@@ -4110,11 +3921,12 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     if (!token) {
-        window.location.href = '/login.html';
+        window.location.href = '/login.html'; // Redirect if not logged in
     } else {
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (attemptsTableBody) {
-            // ... (fetch logic remains the same) ...
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
+            
             fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
                 .then(res => res.json())
                 .then(result => {
@@ -4138,15 +3950,19 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                                     <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
                                     <td>
                                         <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="lesson-quiz-result.html?resultId=${attempt.id}" title="View Details">
-                                                <i class="feather-eye pl--0"></i>
-                                            </a>
+                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
                                         </div>
                                     </td>
                                 </tr>
                             `;
                         }).join('');
-                    } // ... (rest of the code is the same)
+                    } else {
+                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching your quiz attempts:', error);
+                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
                 });
         }
     }
