@@ -1154,6 +1154,46 @@ app.post('/api/courses/:courseId/quizzes/:quizId/submit', auth, async (req, res)
     }
 });
 
+// In server.js, add this new route
+app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
+    try {
+        // Find all attempts by the logged-in student
+        const attempts = await QuizResult.find({ user: req.user.id })
+            .populate('course', 'title episodes') // Get course title
+            .sort({ submittedAt: -1 });
+
+        // Format the data for the dashboard
+        const formattedAttempts = attempts.map(attempt => {
+            let quizTitle = 'Unknown Quiz';
+            if (attempt.course) {
+                 for (const episode of attempt.course.episodes) {
+                    const quiz = episode.quizzes.id(attempt.quiz);
+                    if (quiz) {
+                        quizTitle = quiz.title;
+                        break;
+                    }
+                }
+            }
+            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
+
+            return {
+                date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                quizTitle: `${attempt.course.title} - ${quizTitle}`,
+                totalQuestions: attempt.answers.length,
+                totalMarks: attempt.possibleScore,
+                correctAnswers: correctAnswersCount,
+                result: attempt.passed ? 'Pass' : 'Fail',
+            };
+        });
+        
+        res.json({ success: true, attempts: formattedAttempts });
+
+    } catch (error) {
+        console.error('Error fetching student quiz attempts:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 
@@ -1185,6 +1225,7 @@ app.get('*', (req, res) => {
         }
     });
 });
+
 
 
 // --- START SERVER ---

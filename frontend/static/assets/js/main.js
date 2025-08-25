@@ -1225,53 +1225,72 @@ const renderCourseDetailsCurriculum = (episodes) => {
                     });
                 }
                 const registerForm = document.querySelector('#register-form');
-                if (registerForm) {
-                    registerForm.addEventListener('submit', async (event) => {
-                        event.preventDefault();
-                        const firstName = document.querySelector('#register-firstName').value;
-                        const lastName = document.querySelector('#register-lastName').value;
-                        const email = document.querySelector('#register-email').value;
-                        const password = document.querySelector('#register-password').value;
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/api/register`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ firstName, lastName, email, password }),
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                alert('Registration successful! Please log in.');
-                                window.location.reload();
-                            } else {
-                                alert(`Registration Failed: ${result.message}`);
-                            }
-                        } catch (error) { console.error('Registration error:', error); }
-                    });
-                }
-                const instructorRegisterForm = document.querySelector('#instructor-register-form');
-                if (instructorRegisterForm) {
-                    instructorRegisterForm.addEventListener('submit', async (event) => {
-                        event.preventDefault();
-                        const firstName = document.querySelector('#register-firstName').value;
-                        const lastName = document.querySelector('#register-lastName').value;
-                        const email = document.querySelector('#register-email').value;
-                        const password = document.querySelector('#register-password').value;
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/api/register-instructor`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ firstName, lastName, email, password }),
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                alert('Instructor registration successful! Please log in.');
-                                window.location.reload();
-                            } else {
-                                alert(`Registration Failed: ${result.message}`);
-                            }
-                        } catch (error) { console.error('Registration error:', error); }
-                    });
-                }
+if (registerForm) {
+    registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const firstName = document.querySelector('#register-firstName').value;
+        const lastName = document.querySelector('#register-lastName').value;
+        const email = document.querySelector('#register-email').value;
+        const password = document.querySelector('#register-password').value;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName, lastName, email, password }),
+            });
+
+            const result = await response.json();
+
+            // This is the fix: check for a server error status first
+            if (!response.ok) {
+                throw new Error(result.message || `An error occurred: ${response.statusText}`);
+            }
+
+            // This now only runs on a true success
+            alert('Registration successful! Please log in.');
+            window.location.href = 'login.html';
+
+        } catch (error) {
+            // All errors (like duplicate email) will be caught here
+            console.error('Registration error:', error);
+            alert(`Registration Failed: ${error.message}`);
+        }
+    });
+}
+
+const instructorRegisterForm = document.querySelector('#instructor-register-form');
+if (instructorRegisterForm) {
+    instructorRegisterForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const firstName = document.querySelector('#register-firstName').value;
+        const lastName = document.querySelector('#register-lastName').value;
+        const email = document.querySelector('#register-email').value;
+        const password = document.querySelector('#register-password').value;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/register-instructor`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName, lastName, email, password }),
+            });
+            
+            const result = await response.json();
+
+            // This is the fix: check for a server error status first
+            if (!response.ok) {
+                throw new Error(result.message || `An error occurred: ${response.statusText}`);
+            }
+
+            alert('Instructor registration successful! Please log in.');
+            window.location.href = 'instructor-login.html';
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            alert(`Registration Failed: ${error.message}`);
+        }
+    });
+}
             }
             if (path.includes('instructor-dashboard.html')) {
                 if (!token || user.role !== 'instructor') {
