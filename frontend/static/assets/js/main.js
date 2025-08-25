@@ -2375,14 +2375,36 @@ const renderQuizQuestionsList = () => {
 const saveQuestionBtn = document.getElementById('save-question-btn');
 if (saveQuestionBtn) {
     saveQuestionBtn.addEventListener('click', async () => {
-        // ... (The code to gather 'options' and 'questionData' is the same) ...
-        const options = []; // ...
-        const questionData = { /* ... */ }; // ...
+        
+        // --- THIS IS THE CRUCIAL DATA-GATHERING LOGIC ---
+        const options = [];
+        const optionRows = document.querySelectorAll('#quiz-answer-options-container .quiz-option-row');
+        optionRows.forEach(row => {
+            const textInput = row.querySelector('.quiz-option-text');
+            const isCorrectInput = row.querySelector('.quiz-option-iscorrect');
+            if (textInput && isCorrectInput) {
+                options.push({
+                    text: textInput.value,
+                    isCorrect: isCorrectInput.checked
+                });
+            }
+        });
+
+        const questionData = {
+            questionText: document.getElementById('quiz-question-text').value,
+            questionType: document.getElementById('quiz-question-type').value,
+            points: document.getElementById('quiz-question-points').value,
+            options: options
+        };
+
+        if (!questionData.questionText) {
+            return alert('Please enter the question text.');
+        }
+        // --- END OF DATA-GATHERING LOGIC ---
 
         try {
             const courseId = new URLSearchParams(window.location.search).get('courseId');
-
-            // --- NEW LOGIC FOR EDITING ---
+            
             const isEditingQuestion = !!currentEditingQuestionId;
             const method = isEditingQuestion ? 'PUT' : 'POST';
             const url = isEditingQuestion ? 
@@ -2394,17 +2416,20 @@ if (saveQuestionBtn) {
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify(questionData)
             });
+
             const result = await response.json();
+
             if (result.success) {
                 courseData = result.course;
                 currentEditingQuestionId = null; // Clear after saving
                 renderQuizQuestionsList();
-                currentStep = 2;
+                currentStep = 2; // Go back to the questions list view
                 updateQuizModalView();
             } else {
                 alert(`Error: ${result.message}`);
             }
         } catch (error) {
+            console.error('Error saving question:', error);
             alert('An error occurred while saving the question.');
         }
     });
