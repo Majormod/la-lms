@@ -3354,6 +3354,10 @@ if (instructor) {
 // =================================================================
 // FINAL SCRIPT FOR lesson.html (Corrected Selectors)
 // =================================================================
+
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (All functions included)
+// =================================================================
 if (window.location.pathname.includes('lesson.html')) {
 
     let currentCourseData = null;
@@ -3380,9 +3384,11 @@ if (window.location.pathname.includes('lesson.html')) {
                     if (lessonId) {
                         renderSidebar(lessonId, null);
                         updateLessonContent(lessonId);
+                        setupNavigation(lessonId, 'lesson');
                     } else if (quizId) {
                         renderSidebar(null, quizId);
                         renderQuizStartScreen(quizId);
+                        setupNavigation(quizId, 'quiz');
                     }
                     
                     setupSidebarClickHandler();
@@ -3395,10 +3401,10 @@ if (window.location.pathname.includes('lesson.html')) {
     });
 
     function renderSidebar(activeLessonId, activeQuizId) {
-        const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
+        const sidebar = document.querySelector('.rbt-accordion-style.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
 
-        const activeEpisode = currentCourseData.episodes.find(ep => 
+        const activeEpisode = currentCourseData.episodes.find(ep =>
             ep.lessons.some(l => l._id === activeLessonId) || ep.quizzes.some(q => q._id === activeQuizId)
         );
 
@@ -3417,7 +3423,10 @@ if (window.location.pathname.includes('lesson.html')) {
                         <a href="#" class="content-link ${isActive ? 'active' : ''}" data-type="${content.type}" data-id="${content._id}">
                             <div class="course-content-left">
                                 <i class="feather-${icon}"></i>
-                                <span class="text">${content.title}</span>
+                                <div class="title-summary-wrapper">
+                                    <span class="text">${content.title}</span>
+                                    ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
+                                </div>
                             </div>
                         </a>
                     </li>
@@ -3428,7 +3437,10 @@ if (window.location.pathname.includes('lesson.html')) {
                 <div class="accordion-item card">
                     <h2 class="accordion-header card-header">
                         <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">
-                            ${episode.title}
+                            <div class="title-summary-wrapper">
+                                <span>${episode.title}</span>
+                                ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
+                            </div>
                         </button>
                     </h2>
                     <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
@@ -3438,9 +3450,6 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
     }
 
-    /**
-     * CORRECTED: This function now uses the correct element IDs.
-     */
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
         for (const episode of currentCourseData.episodes) {
@@ -3449,23 +3458,23 @@ if (window.location.pathname.includes('lesson.html')) {
         }
         if (!selectedLesson) return;
 
-        // Show lesson container, hide quiz container
         document.getElementById('lesson-content-container').classList.remove('d-none');
         document.getElementById('quiz-content-container').classList.add('d-none');
 
-        // Use specific IDs to update the content
         document.getElementById('lesson-title').textContent = selectedLesson.title;
         document.getElementById('lesson-about-title').textContent = "About Lesson";
         document.getElementById('lesson-about-description').textContent = selectedLesson.summary || '';
         
         const videoPlayerContainer = document.getElementById('video-player-container');
         if (selectedLesson.vimeoUrl) {
-            videoPlayerContainer.innerHTML = `<iframe src="${selectedLesson.vimeoUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            const videoId = selectedLesson.vimeoUrl.split('/').pop();
+            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            videoPlayerContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
         } else {
             videoPlayerContainer.innerHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4><p class="mt-3">The main content is in the "About Lesson" section.</p></div>`;
         }
     }
-    
+
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -3538,30 +3547,65 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
-    function setupSidebarClickHandler() {
-        const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
-        sidebar.addEventListener('click', (event) => {
-            const contentLink = event.target.closest('.content-link');
-            if (contentLink) {
-                event.preventDefault();
-                const id = contentLink.dataset.id;
-                const type = contentLink.dataset.type;
-                
-                const url = new URL(window.location);
-                url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
-                if (type === 'lesson') url.searchParams.delete('quizId');
-                else url.searchParams.delete('lessonId');
-                history.pushState({}, '', url);
-                
-                if (type === 'lesson') {
-                    updateLessonContent(id);
-                } else if (type === 'quiz') {
-                    renderQuizStartScreen(id);
-                }
+    function setupNavigation(currentItemId, currentItemType) {
+        const allContents = currentCourseData.episodes.flatMap(episode => [
+            ...episode.lessons.map(item => ({ ...item, type: 'lesson' })),
+            ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))
+        ]);
 
-                sidebar.querySelector('.content-link.active')?.classList.remove('active');
-                contentLink.classList.add('active');
+        const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
+
+        const prevButton = document.getElementById('prev-content-btn');
+        const nextButton = document.getElementById('next-content-btn');
+
+        if (currentIndex > 0) {
+            const prevItem = allContents[currentIndex - 1];
+            prevButton.style.opacity = '1';
+            prevButton.style.pointerEvents = 'auto';
+            prevButton.dataset.id = prevItem._id;
+            prevButton.dataset.type = prevItem.type;
+        } else {
+            prevButton.style.opacity = '0.5';
+            prevButton.style.pointerEvents = 'none';
+        }
+
+        if (currentIndex < allContents.length - 1) {
+            const nextItem = allContents[currentIndex + 1];
+            nextButton.style.opacity = '1';
+            nextButton.style.pointerEvents = 'auto';
+            nextButton.dataset.id = nextItem._id;
+            nextButton.dataset.type = nextItem.type;
+        } else {
+            nextButton.style.opacity = '0.5';
+            nextButton.style.pointerEvents = 'none';
+        }
+    }
+
+    function setupSidebarClickHandler() {
+        document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
+            const link = event.target.closest('.content-link, .content-nav-link');
+            if (!link) return;
+
+            event.preventDefault();
+            const id = link.dataset.id;
+            const type = link.dataset.type;
+
+            const url = new URL(window.location);
+            url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
+            if (type === 'lesson') url.searchParams.delete('quizId');
+            else url.searchParams.delete('lessonId');
+            history.pushState({}, '', url);
+            
+            if (type === 'lesson') {
+                updateLessonContent(id);
+            } else if (type === 'quiz') {
+                renderQuizStartScreen(id);
             }
+
+            document.querySelector('.content-link.active')?.classList.remove('active');
+            document.querySelector(`.content-link[data-id="${id}"]`)?.classList.add('active');
+            
+            setupNavigation(id, type);
         });
     }
 
@@ -3576,7 +3620,8 @@ if (window.location.pathname.includes('lesson.html')) {
         }
     }
 }
-        };
+
+};
 
 if (window.location.pathname.includes('explore-courses.html')) {
 
