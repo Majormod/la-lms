@@ -2203,7 +2203,7 @@ window.openUpdateQuizModal = function(episodeId, quizId) {
     }
 };
 
-            const quizModalEl = document.getElementById('Quiz');
+const quizModalEl = document.getElementById('Quiz');
 // --- NEW DEBUG LOG ---
 console.log("Attempting to find Quiz Modal element:", quizModalEl);
 if (quizModalEl) {
@@ -2255,6 +2255,8 @@ if (cancelQuestionBtn) {
 }
 
 // Handle removing an answer option
+
+
 // Replace your existing listener for answerOptionsContainer with this one
 answerOptionsContainer.addEventListener('click', (e) => {
     const deleteBtn = e.target.closest('.remove-option-btn');
