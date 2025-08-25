@@ -908,7 +908,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions',
         // --- ADD THESE TWO LINES ---
         console.log("--- DATA AFTER ADDING A QUESTION ---");
         console.log(JSON.stringify(course.toObject().episodes, null, 2));
-        
+
         res.status(201).json({ 
             success: true, 
             message: 'Question added successfully!',
@@ -1020,7 +1020,45 @@ app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:q
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+// PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId
+app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, quizId, questionId } = req.params;
+        const updatedQuestionData = req.body;
 
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        if (!episode) return res.status(404).json({ success: false, message: 'Topic not found' });
+        
+        const quiz = episode.quizzes.id(quizId);
+        if (!quiz) return res.status(404).json({ success: false, message: 'Quiz not found' });
+
+        const question = quiz.questions.id(questionId);
+        if (!question) return res.status(404).json({ success: false, message: 'Question not found' });
+
+        // Update the question fields
+        question.questionText = updatedQuestionData.questionText;
+        question.questionType = updatedQuestionData.questionType;
+        question.points = updatedQuestionData.points;
+        question.options = updatedQuestionData.options || [];
+        
+        await course.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Question updated successfully!',
+            course: course.toObject() 
+        });
+
+    } catch (error) {
+        console.error('Error updating question:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 app.use(express.static(staticPath));
 
 

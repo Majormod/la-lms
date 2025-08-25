@@ -40739,12 +40739,29 @@ padding: 0 10px 0 10px;
     color: #6c757d; /* A standard, soft gray color for muted text */
     margin-top: 3px;
 }
+.quiz-modal-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.quiz-modal-btn.quiz-modal__active {
+    background-color: #524eb7;
+    color: white;
+}
+
+.quiz-option-row {
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
 .remove-option-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        width: 32px;  /* Forces a specific width */
-        height: 32px; /* Forces a specific height */
-        padding: 0;   /* Removes default horizontal padding */
-    }
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
