@@ -40753,28 +40753,29 @@ padding: 0 10px 0 10px;
     background-color: #524eb7;
     color: white;
 }
-
+/* 1. Add this to style the parent row */
 .quiz-option-row {
-    padding: 10px;
-    border: 1px solid #e5e5e5;
-    border-radius: 5px;
-    margin-bottom: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-right: 42px; /* Add space on the right for the absolute button */
 }
-/* Keep this block as it was from the last fix */
+
+/* 2. Add this as the ONLY style block for the remove button */
 .remove-option-btn {
+    /* Positioning magic to lift the button above everything */
+    position: absolute;
+    top: 50%;
+    right: 5px; /* A little space from the edge */
+    transform: translateY(-50%);
+    z-index: 2;
+
+    /* Appearance and icon centering */
     width: 32px;
     height: 32px;
     padding: 0;
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%; 
-}
-
-/* --- ADD THIS NEW BLOCK --- */
-/* This directly targets the icon to fix the dead zone */
-.remove-option-btn i.feather-x {
-    font-size: 16px; /* Controls the size of the 'X' */
-    line-height: 1;  /* CRITICAL: Collapses the icon's invisible vertical space */
+    border-radius: 50%;
 }
