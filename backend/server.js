@@ -453,6 +453,9 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
         if (course.instructor.toString() !== req.user.id) {
             return res.status(403).json({ success: false, message: 'User not authorized' });
         }
+        // --- ADD THESE TWO LINES ---
+        console.log("--- DATA FROM GET ROUTE (page load) ---");
+        console.log(JSON.stringify(course.toObject().episodes, null, 2));
         res.json({ success: true, course: course.toObject() });
     } catch (error) {
         // --- MODIFIED LOGGING FOR DEBUGGING ---
@@ -902,6 +905,10 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions',
         quiz.questions.push(questionData);
         await course.save();
 
+        // --- ADD THESE TWO LINES ---
+        console.log("--- DATA AFTER ADDING A QUESTION ---");
+        console.log(JSON.stringify(course.toObject().episodes, null, 2));
+        
         res.status(201).json({ 
             success: true, 
             message: 'Question added successfully!',
