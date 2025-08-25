@@ -2439,67 +2439,69 @@ if (saveQuestionBtn) {
         }
     });
 }
-// Handle deleting a question
+// This single listener handles BOTH editing and deleting questions
 const questionsListEl = document.getElementById('quiz-questions-list');
 if (questionsListEl) {
     questionsListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-question-btn');
         const deleteBtn = e.target.closest('.delete-question-btn');
-        if (!deleteBtn) return;
 
-        const questionId = deleteBtn.dataset.questionId;
-        if (confirm('Are you sure you want to delete this question?')) {
-            try {
-                const courseId = new URLSearchParams(window.location.search).get('courseId');
-                const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${questionId}`;
+        // --- LOGIC FOR THE EDIT BUTTON ---
+        if (editBtn) {
+            const questionId = editBtn.dataset.questionId;
+            currentEditingQuestionId = questionId; // Set the global variable for saving later
+
+            const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+            if (!episode) return;
+            const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+            if (!quiz) return;
+            const question = quiz.questions.find(ques => ques._id == questionId);
+
+            if (question) {
+                // Populate the form with this question's data
+                document.getElementById('quiz-question-text').value = question.questionText;
+                document.getElementById('quiz-question-type').value = question.questionType;
+                document.getElementById('quiz-question-points').value = question.points;
                 
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: { 'x-auth-token': token }
+                toggleAnswerOptions();
+                answerOptionsContainer.innerHTML = ''; // Clear old options
+                question.options.forEach(opt => {
+                    addAnswerOption();
+                    const newRow = answerOptionsContainer.lastElementChild;
+                    newRow.querySelector('.quiz-option-text').value = opt.text;
+                    newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
                 });
 
-                const result = await response.json();
-
-                if (result.success) {
-                    courseData = result.course;
-                    renderQuizQuestionsList(); // Refresh the list
-                } else {
-                    alert(`Error: ${result.message}`);
-                }
-            } catch (error) {
-                alert('An error occurred while deleting the question.');
+                // Navigate to the question form
+                currentStep = steps.ADD_QUESTION_FORM;
+                updateQuizModalView();
             }
         }
-    });
-}
-// Handle editing a question
-if (questionsListEl) {
-    questionsListEl.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.edit-question-btn');
-        if (!editBtn) return;
 
-        currentEditingQuestionId = editBtn.dataset.questionId;
-        const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
-        const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
-        const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
+        // --- LOGIC FOR THE DELETE BUTTON ---
+        if (deleteBtn) {
+            const questionId = deleteBtn.dataset.questionId;
+            if (confirm('Are you sure you want to delete this question?')) {
+                try {
+                    const courseId = new URLSearchParams(window.location.search).get('courseId');
+                    const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${currentEditingEpisodeId}/quizzes/${currentEditingQuizId}/questions/${questionId}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: { 'x-auth-token': token }
+                    });
+                    const result = await response.json();
 
-        if (question) {
-            // Populate the form with the question's data
-            document.getElementById('quiz-question-text').value = question.questionText;
-            document.getElementById('quiz-question-type').value = question.questionType;
-            document.getElementById('quiz-question-points').value = question.points;
-
-            // Show/hide the options wrapper and render the options
-            toggleAnswerOptions(); 
-            question.options.forEach(opt => {
-                addAnswerOption();
-                const newRow = answerOptionsContainer.lastElementChild;
-                newRow.querySelector('.quiz-option-text').value = opt.text;
-                newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
-            });
-
-            // Navigate to the form
-            currentStep = steps.ADD_QUESTION_FORM;
-            updateQuizModalView();
+                    if (result.success) {
+                        courseData = result.course;
+                        renderQuizQuestionsList(); // Refresh the list
+                    } else {
+                        alert(`Error: ${result.message}`);
+                    }
+                } catch (error) {
+                    alert('An error occurred while deleting the question.');
+                }
+            }
         }
     });
 }
