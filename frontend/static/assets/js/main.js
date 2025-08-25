@@ -4304,6 +4304,84 @@ if (window.location.pathname.includes('student-settings.html')) {
     populateSettingsForms();
 }
 
+// Add this entire block to main.js
+
+// --- LOGIN & REGISTER PAGE LOGIC ---
+if (window.location.pathname.includes('login.html')) {
+    
+    // --- Handle Login Form ---
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // <-- This is the most important line! It stops the page from reloading.
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Login failed');
+                }
+
+                // --- On Success, Save to localStorage and Redirect ---
+                localStorage.setItem('lmsToken', result.token);
+                localStorage.setItem('lmsUser', JSON.stringify(result.user));
+
+                // Redirect based on role
+                if (result.user.role === 'instructor') {
+                    window.location.href = 'instructor-dashboard.html';
+                } else {
+                    window.location.href = 'student-dashboard.html';
+                }
+
+            } catch (error) {
+                alert(`Login Error: ${error.message}`);
+            }
+        });
+    }
+
+    // --- Handle Register Form ---
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const firstName = document.getElementById('register-firstName').value;
+            const lastName = document.getElementById('register-lastName').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ firstName, lastName, email, password }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Registration failed');
+                }
+
+                alert('Registration successful! Please log in.');
+                registerForm.reset(); // Clear the form
+
+            } catch (error) {
+                alert(`Registration Error: ${error.message}`);
+            }
+        });
+    }
+}
+
         handlePageLogic();
     };
 
