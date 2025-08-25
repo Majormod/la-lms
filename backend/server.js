@@ -814,7 +814,6 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId/files',
 });
 
 // POST /api/courses/:courseId/episodes/:episodeId/quizzes
-// POST /api/courses/:courseId/episodes/:episodeId/quizzes
 app.post('/api/courses/:courseId/episodes/:episodeId/quizzes', auth, async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
@@ -921,10 +920,12 @@ app.post('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions',
     }
 });
 // PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId
+// PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId
 app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId', auth, async (req, res) => {
     try {
         const { courseId, episodeId, quizId } = req.params;
-        const { title, summary } = req.body;
+        // Destructure title, summary, AND the new settings object from the body
+        const { title, summary, settings } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -937,15 +938,31 @@ app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId', auth, asyn
         const quiz = episode.quizzes.id(quizId);
         if (!quiz) return res.status(404).json({ success: false, message: 'Quiz not found' });
 
-        // Update the quiz fields
+        // Update the basic quiz fields
         quiz.title = title || quiz.title;
         quiz.summary = summary;
 
+        // --- UPDATE ALL THE NEW SETTINGS ---
+        // If settings are provided in the request, update them
+        if (settings) {
+            quiz.timeLimit = settings.timeLimit || quiz.timeLimit;
+            quiz.hideTimeLimit = settings.hideTimeLimit;
+            quiz.feedbackMode = settings.feedbackMode || quiz.feedbackMode;
+            quiz.passingGrade = settings.passingGrade || quiz.passingGrade;
+            quiz.maxQuestionsAllowed = settings.maxQuestionsAllowed || quiz.maxQuestionsAllowed;
+            quiz.autoStart = settings.autoStart;
+            quiz.questionLayout = settings.questionLayout || quiz.questionLayout;
+            quiz.questionOrder = settings.questionOrder || quiz.questionOrder;
+            quiz.hideQuestionNumber = settings.hideQuestionNumber;
+            quiz.shortAnswerCharLimit = settings.shortAnswerCharLimit || quiz.shortAnswerCharLimit;
+            quiz.essayCharLimit = settings.essayCharLimit || quiz.essayCharLimit;
+        }
+
         await course.save();
         
-        res.json({ 
-            success: true, 
-            message: 'Quiz updated successfully!', 
+        res.json({    
+            success: true,    
+            message: 'Quiz updated successfully!',    
             course: course.toObject()
         });
 

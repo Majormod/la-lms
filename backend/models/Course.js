@@ -43,7 +43,27 @@ const QuestionSchema = new mongoose.Schema({
 const QuizSchema = new mongoose.Schema({
     title: { type: String, required: true },
     summary: { type: String },
-    questions: [QuestionSchema] // <-- This is the important addition
+    questions: [QuestionSchema],
+    
+    // --- NEW SETTINGS FIELDS ---
+    timeLimit: {
+        value: { type: Number, default: 0 },
+        unit: { type: String, enum: ['Weeks', 'Days', 'Hours'], default: 'Hours' }
+    },
+    hideTimeLimit: { type: Boolean, default: false },
+    feedbackMode: {
+        type: String,
+        enum: ['default', 'reveal', 'retry'],
+        default: 'default'
+    },
+    passingGrade: { type: Number, default: 50 },
+    maxQuestionsAllowed: { type: Number, default: 10 },
+    autoStart: { type: Boolean, default: false },
+    questionLayout: { type: String, default: 'single_question' },
+    questionOrder: { type: String, default: 'Random' },
+    hideQuestionNumber: { type: Boolean, default: false },
+    shortAnswerCharLimit: { type: Number, default: 200 },
+    essayCharLimit: { type: Number, default: 500 }
 });
 
 const AssignmentSchema = new mongoose.Schema({
