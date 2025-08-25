@@ -40762,6 +40762,12 @@ padding: 0 10px 0 10px;
 }
 
 .remove-option-btn {
+    /* Your existing styles */
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
+
+    /* --- Add these lines --- */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
