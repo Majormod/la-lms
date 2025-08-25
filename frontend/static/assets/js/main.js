@@ -3358,10 +3358,15 @@ if (instructor) {
 // =================================================================
 // FINAL SCRIPT FOR lesson.html (All functions included)
 // =================================================================
+
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (Simplified & Corrected)
+// =================================================================
 if (window.location.pathname.includes('lesson.html')) {
 
     let currentCourseData = null;
 
+    // This is the main function that runs when the page loads
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('courseId');
@@ -3400,6 +3405,9 @@ if (window.location.pathname.includes('lesson.html')) {
             .catch(error => console.error('Error loading initial course data:', error));
     });
 
+    /**
+     * CORRECTED: This version correctly displays the summary in the sidebar.
+     */
     function renderSidebar(activeLessonId, activeQuizId) {
         const sidebar = document.querySelector('.rbt-accordion-style.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
@@ -3450,50 +3458,44 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
     }
 
-/**
- * CORRECTED: This version correctly targets the separate description element.
- */
-function updateLessonContent(lessonId) {
-    let selectedLesson = null;
-    for (const episode of currentCourseData.episodes) {
-        const found = episode.lessons.find(l => l._id === lessonId);
-        if (found) { selectedLesson = found; break; }
-    }
-    if (!selectedLesson) return;
+    /**
+     * SIMPLIFIED & CORRECTED: This function now rebuilds the entire inner content for a lesson.
+     */
+    function updateLessonContent(lessonId) {
+        let selectedLesson = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.lessons.find(l => l._id === lessonId);
+            if (found) { selectedLesson = found; break; }
+        }
+        if (!selectedLesson) return;
 
-    // Show lesson container, hide quiz container
-    document.getElementById('lesson-content-container').classList.remove('d-none');
-    document.getElementById('quiz-content-container').classList.add('d-none');
+        document.getElementById('lesson-title').textContent = selectedLesson.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
 
-    // Update title
-    document.getElementById('lesson-title').textContent = selectedLesson.title;
-    
-    // --- START OF FIX ---
-    // Update the "About Lesson" section separately
-    const aboutTitle = document.getElementById('lesson-about-title');
-    const aboutDescription = document.getElementById('lesson-about-description');
-    
-    if (selectedLesson.summary) {
-        aboutTitle.style.display = 'block';
-        aboutDescription.style.display = 'block';
-        aboutDescription.textContent = selectedLesson.summary;
-    } else {
-        // Hide the "About" section if there's no summary
-        aboutTitle.style.display = 'none';
-        aboutDescription.style.display = 'none';
-    }
-    // --- END OF FIX ---
-    
-    const videoPlayerContainer = document.getElementById('video-player-container');
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        videoPlayerContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-    } else {
-        videoPlayerContainer.innerHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
-    }
-}
+        let videoHTML = '';
+        if (selectedLesson.vimeoUrl) {
+            const videoId = selectedLesson.vimeoUrl.split('/').pop();
+            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+        } else {
+            videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+        }
 
+        const descriptionHTML = `
+            <div class="content">
+                <div class="section-title">
+                    <h4>About Lesson</h4>
+                    <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+                </div>
+            </div>
+        `;
+
+        contentContainer.innerHTML = videoHTML + descriptionHTML;
+    }
+
+    /**
+     * UPDATED: This function now targets the simplified inner container.
+     */
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -3502,29 +3504,27 @@ function updateLessonContent(lessonId) {
         }
         if (!selectedQuiz) return;
         
-        document.getElementById('lesson-content-container').classList.add('d-none');
-        const quizContainer = document.getElementById('quiz-content-container');
-        quizContainer.classList.remove('d-none');
-
         document.getElementById('lesson-title').textContent = selectedQuiz.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
 
-        quizContainer.innerHTML = `
-            <div class="text-center">
-                <h5>${selectedQuiz.title}</h5>
-                <p class="mt-3">${selectedQuiz.summary}</p>
-                <ul class="rbt-list-style-1 mt-4 justify-content-center">
-                    <li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
-                    <li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li>
-                    <li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li>
-                </ul>
-                <button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn">
-                    <span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                </button>
-            </div>
-        `;
+        contentContainer.innerHTML = `
+            <div class="content p-4 p-lg-5">
+                <div class="text-center">
+                    <h5>${selectedQuiz.title}</h5>
+                    <p class="mt-3">${selectedQuiz.summary}</p>
+                    <ul class="rbt-list-style-1 mt-4 justify-content-center">
+                        <li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
+                        <li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li>
+                        <li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li>
+                    </ul>
+                    <button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn">
+                        <span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
+                    </button>
+                </div>
+            </div>`;
 
         document.getElementById('start-quiz-btn').addEventListener('click', () => {
-            renderQuizQuestions(selectedQuiz, quizContainer);
+            renderQuizQuestions(selectedQuiz, contentContainer);
         });
     }
     
@@ -3550,14 +3550,16 @@ function updateLessonContent(lessonId) {
         }).join('');
 
         container.innerHTML = `
-            <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
-            <form id="quiz-form-submission">${questionsHTML}
-                <div class="submit-btn mt-2">
-                    <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
-                        <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                    </button>
-                </div>
-            </form>
+            <div class="content p-4 p-lg-5">
+                <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
+                <form id="quiz-form-submission">${questionsHTML}
+                    <div class="submit-btn mt-2">
+                        <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
+                            <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         `;
         
         document.getElementById('quiz-form-submission').addEventListener('submit', (e) => {
@@ -3573,30 +3575,25 @@ function updateLessonContent(lessonId) {
         ]);
 
         const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
-
         const prevButton = document.getElementById('prev-content-btn');
         const nextButton = document.getElementById('next-content-btn');
 
         if (currentIndex > 0) {
             const prevItem = allContents[currentIndex - 1];
-            prevButton.style.opacity = '1';
-            prevButton.style.pointerEvents = 'auto';
+            prevButton.style.display = 'block';
             prevButton.dataset.id = prevItem._id;
             prevButton.dataset.type = prevItem.type;
         } else {
-            prevButton.style.opacity = '0.5';
-            prevButton.style.pointerEvents = 'none';
+            prevButton.style.display = 'none';
         }
 
         if (currentIndex < allContents.length - 1) {
             const nextItem = allContents[currentIndex + 1];
-            nextButton.style.opacity = '1';
-            nextButton.style.pointerEvents = 'auto';
+            nextButton.style.display = 'block';
             nextButton.dataset.id = nextItem._id;
             nextButton.dataset.type = nextItem.type;
         } else {
-            nextButton.style.opacity = '0.5';
-            nextButton.style.pointerEvents = 'none';
+            nextButton.style.display = 'none';
         }
     }
 
