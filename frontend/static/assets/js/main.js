@@ -4062,116 +4062,246 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
 // =================================================================
 // FINAL SCRIPT FOR student-settings.html (All features working)
 // =================================================================
+// In main.js - replace the old student-settings block with this
+
 if (window.location.pathname.includes('student-settings.html')) {
+    // --- Safe User Data Retrieval ---
     const token = localStorage.getItem('lmsToken');
-    if (!token) {
+    const userJSON = localStorage.getItem('lmsUser');
+
+    if (!token || !userJSON) {
         window.location.href = 'login.html';
+        return; // Stop execution if not logged in
+    }
+    const user = JSON.parse(userJSON);
+
+    // --- Role-specific Access Control ---
+    if (user.role !== 'student') {
+        alert("Access Denied.");
+        window.location.href = '/'; // Redirect to home page
+        return;
     }
 
-    const populatePageWithUserData = (user) => {
-        if (!user) return;
-        const fullName = `${user.firstName} ${user.lastName}`;
-        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
-        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
-
-       // --- Modify the "if (user.avatar)" block ---
-    if (user.avatar) {
-        // Add a timestamp to prevent browser caching of the old image
-        const avatarPath = `/${user.avatar}?t=${new Date().getTime()}`; // <-- MODIFY THIS LINE
-        document.querySelectorAll('.user-avatar-img, #header-dropdown-avatar').forEach(img => {
-            if (img) img.src = avatarPath;
-        });
-    }
+    // --- Helper function to update user info across the page (name, avatar, etc.) ---
+    const updateUserDataOnPage = () => {
+        const currentUserJSON = localStorage.getItem('lmsUser');
+        if (!currentUserJSON) return;
+        const currentUser = JSON.parse(currentUserJSON);
         
-        // --- Modify the "if (user.coverPhoto)" block ---
-    if (user.coverPhoto) {
-        // Also add the cache-busting trick for the cover photo
-        const coverPath = `/${user.coverPhoto}?t=${new Date().getTime()}`; // <-- MODIFY THIS LINE
-        document.querySelectorAll('.tutor-bg-photo').forEach(div => {
-            if (div) div.style.backgroundImage = `url(${coverPath})`;
-        });
-    }
+        const fullName = `${currentUser.firstName} ${currentUser.lastName}`;
+        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
+        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${currentUser.firstName}`;
 
-        const profileForm = document.getElementById('profile-settings-form');
-        if (profileForm) {
-            profileForm.querySelector('#firstname').value = user.firstName || '';
-            profileForm.querySelector('#lastname').value = user.lastName || '';
-            profileForm.querySelector('#username').value = user.username || '';
-            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
-            profileForm.querySelector('#skill').value = user.occupation || '';
-            profileForm.querySelector('#bio').value = user.bio || '';
-        }
-    };
-    
-    const uploadImage = async (file, type) => {
-        const formData = new FormData();
-        formData.append(type, file);
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, {
-                method: 'POST',
-                headers: { 'x-auth-token': token },
-                body: formData,
+        // Avatar with cache-busting
+        if (currentUser.avatar) {
+            const avatarPath = `/${currentUser.avatar}?t=${new Date().getTime()}`;
+            document.querySelectorAll('.user-avatar-img, #header-dropdown-avatar').forEach(img => {
+                if(img) img.src = avatarPath;
             });
-            const result = await response.json();
-            console.log('Server response after upload:', result); // <-- ADD THIS LINE
-            if (!response.ok) throw new Error(result.message);
-            
-            alert('Image updated successfully!');
-            localStorage.setItem('lmsUser', JSON.stringify(result.user));
-            populatePageWithUserData(result.user);
-
-        } catch (error) {
-            alert(`Upload failed: ${error.message}`);
+        }
+        // Cover Photo with cache-busting
+        if (currentUser.coverPhoto) {
+            const coverPath = `/${currentUser.coverPhoto}?t=${new Date().getTime()}`;
+            document.querySelectorAll('.tutor-bg-photo').forEach(div => {
+                if(div) div.style.backgroundImage = `url(${coverPath})`;
+            });
         }
     };
     
-    document.addEventListener('DOMContentLoaded', () => {
-        // Fetch initial data
+    // --- Function to fetch and populate form data ---
+    const populateSettingsForms = () => {
         fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    populatePageWithUserData(result.data); 
-                } else { throw new Error(result.message); }
+                    const profile = result.data;
+                    document.querySelector('#firstname').value = profile.firstName || '';
+                    document.querySelector('#lastname').value = profile.lastName || '';
+                    document.querySelector('#username').value = profile.username || '';
+                    document.querySelector('#phonenumber').value = profile.phone || '';
+                    document.querySelector('#skill').value = profile.occupation || '';
+                    document.querySelector('#bio').value = profile.bio || '';
+
+                    // Populate social links
+                    document.querySelector('#facebook').value = profile.social?.facebook || '';
+                    document.querySelector('#twitter').value = profile.social?.twitter || '';
+                    document.querySelector('#linkedin').value = profile.social?.linkedin || '';
+                    document.querySelector('#website').value = profile.social?.website || '';
+                    document.querySelector('#github').value = profile.social?.github || '';
+
+                    // Populate display name options
+                    const displayNameSelect = document.querySelector('#displayname');
+                    if (displayNameSelect) {
+                        displayNameSelect.innerHTML = '';
+                        const nameOptions = [`${profile.firstName} ${profile.lastName}`, profile.firstName, profile.lastName];
+                        nameOptions.forEach(name => {
+                            if(name) {
+                                const option = document.createElement('option');
+                                option.value = name;
+                                option.textContent = name;
+                                displayNameSelect.appendChild(option);
+                            }
+                        });
+                        // Set the currently saved display name if available
+                        if(profile.displayName) displayNameSelect.value = profile.displayName;
+                    }
+                }
+            });
+    };
+
+    // --- Event Listener for Profile Form ---
+    const profileForm = document.querySelector('#profile-tab-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const updatedData = {
+                firstName: document.querySelector('#firstname').value,
+                lastName: document.querySelector('#lastname').value,
+                phone: document.querySelector('#phonenumber').value,
+                occupation: document.querySelector('#skill').value,
+                displayName: document.querySelector('#displayname').value,
+                bio: document.querySelector('#bio').value,
+                username: document.querySelector('#username').value,
+            };
+            fetch(`${API_BASE_URL}/api/user/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(updatedData),
             })
-            .catch(err => alert('Could not load your profile data.'));
-
-        // --- All event listeners go here to ensure the page is loaded ---
-
-        // Profile Info Form
-        const profileForm = document.getElementById('profile-settings-form');
-        if (profileForm) {
-            profileForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                // ... (form submission logic remains the same)
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Profile updated successfully!');
+                    // Update localStorage and refresh page data
+                    localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                    updateUserDataOnPage();
+                } else {
+                    alert(`Error updating profile: ${result.message}`);
+                }
             });
-        }
+        });
+    }
 
-        // Avatar Upload Button
-        const avatarUploadButton = document.querySelector('.rbt-edit-photo');
-        const avatarUploadInput = document.getElementById('avatar-upload-input');
-        if (avatarUploadButton && avatarUploadInput) {
-            avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
-            avatarUploadInput.addEventListener('change', () => {
-                const file = avatarUploadInput.files[0];
-                if (file) uploadImage(file, 'avatar');
+    // --- Event Listener for Password Form ---
+    const passwordForm = document.querySelector('#password-tab-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const currentPassword = document.querySelector('#currentpassword').value;
+            const newPassword = document.querySelector('#newpassword').value;
+            const retypeNewPassword = document.querySelector('#retypenewpassword').value;
+            if (newPassword !== retypeNewPassword) {
+                return alert('New passwords do not match!');
+            }
+            fetch(`${API_BASE_URL}/api/user/password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Password updated successfully!');
+                    passwordForm.reset();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
             });
-        }
+        });
+    }
 
-        // NEW: Cover Photo Upload Button
-        const coverUploadButton = document.getElementById('cover-upload-button');
-        const coverUploadInput = document.getElementById('cover-upload-input');
-        if (coverUploadButton && coverUploadInput) {
-            coverUploadButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                coverUploadInput.click();
+    // --- Event Listener for Social Links Form ---
+    const socialForm = document.querySelector('#social-tab-form');
+    if (socialForm) {
+        socialForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const socialData = {
+                facebook: document.querySelector('#facebook').value,
+                twitter: document.querySelector('#twitter').value,
+                linkedin: document.querySelector('#linkedin').value,
+                website: document.querySelector('#website').value,
+                github: document.querySelector('#github').value,
+            };
+            fetch(`${API_BASE_URL}/api/user/social`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(socialData),
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Social links updated successfully!');
+                } else {
+                    alert('Error updating social links.');
+                }
             });
-            coverUploadInput.addEventListener('change', () => {
-                const file = coverUploadInput.files[0];
-                if(file) uploadImage(file, 'cover');
-            });
-        }
-    });
+        });
+    }
+
+    // --- Event Listener for Avatar Upload ---
+    const avatarUploadButton = document.querySelector('#avatar-upload-button');
+    if (avatarUploadButton) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+
+        avatarUploadButton.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            fetch(`${API_BASE_URL}/api/user/avatar`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
+                .then(res => res.json())
+                .then(result => { 
+                    if (result.success) { 
+                        alert('Avatar updated!');
+                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                        updateUserDataOnPage();
+                    } else {
+                        alert(`Error: ${result.message}`);
+                    }
+                });
+        });
+    }
+
+    // --- Event Listener for Cover Photo Upload ---
+    const coverUploadButton = document.querySelector('#cover-upload-button');
+    if (coverUploadButton) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+
+        coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            // IMPORTANT: Use 'coverPhoto' to match the working instructor code
+            formData.append('coverPhoto', file); 
+
+            fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
+                .then(res => res.json())
+                .then(result => { 
+                    if (result.success) {
+                        alert('Cover photo updated!'); 
+                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                        updateUserDataOnPage();
+                    } else {
+                        alert(`Error: ${result.message}`);
+                    }
+                });
+        });
+    }
+
+    // --- Initial Page Load ---
+    updateUserDataOnPage();
+    populateSettingsForms();
 }
 
         handlePageLogic();

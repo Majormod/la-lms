@@ -1413,8 +1413,8 @@
                                                         <div class="thumbnail rbt-avatars size-lg position-relative">
                                                             <img class="user-avatar-img" src="assets/images/team/avatar-2.jpg" alt="Student">
                                                             <div class="rbt-edit-photo-inner">
-                                                                <button class="rbt-edit-photo" title="Upload Photo">
-                                                                    <i class="feather-camera"></i>
+                                                                <button id="avatar-upload-button" class="rbt-edit-photo" title="Upload Photo">
+                                                                <i class="feather-camera"></i>
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1428,7 +1428,7 @@
                                                 <!-- End Tutor Information  -->
                                             </div>
                                             <!-- Start Profile Row  -->
-<form id="profile-settings-form" class="rbt-profile-row rbt-default-form row row--15">
+<form id="profile-tab-form" class="rbt-profile-row rbt-default-form row row--15">
     <div class="col-lg-6 col-md-6 col-sm-6 col-12">
         <div class="rbt-form-group">
             <label for="firstname">First Name</label>
@@ -1484,7 +1484,7 @@
 
                                         <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
                                             <!-- Start Profile Row  -->
-                                            <form action="#" class="rbt-profile-row rbt-default-form row row--15">
+                                            <form id="password-tab-form" action="#" class="rbt-profile-row rbt-default-form row row--15">
                                                 <div class="col-12">
                                                     <div class="rbt-form-group">
                                                         <label for="currentpassword">Current Password</label>
@@ -1514,7 +1514,7 @@
 
                                         <div class="tab-pane fade" id="social" role="tabpanel" aria-labelledby="social-tab">
                                             <!-- Start Profile Row  -->
-                                            <form action="#" class="rbt-profile-row rbt-default-form row row--15">
+                                            <form id="social-tab-form" action="#" class="rbt-profile-row rbt-default-form row row--15">
                                                 <div class="col-12">
                                                     <div class="rbt-form-group">
                                                         <label for="facebook"><i class="feather-facebook"></i> Facebook</label>
