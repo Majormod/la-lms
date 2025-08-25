@@ -2377,7 +2377,7 @@ const renderQuizQuestionsList = () => {
 
 // Event listener for the "Save Question" button
 // UPGRADED Event listener for the "Save Question" button
-const saveQuestionBtn = document.getElementById('save-question-btn');
+const saveQuestionBtn = document.getElementById('add-question-save-btn');
 if (saveQuestionBtn) {
     saveQuestionBtn.addEventListener('click', async () => {
         
