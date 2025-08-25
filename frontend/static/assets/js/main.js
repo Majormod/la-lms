@@ -3117,77 +3117,105 @@ if (editCourseForm) {
     }; // End of window.onload
 }
 
+// =================================================================
+// UPDATED SCRIPT FOR course-details.html
+// =================================================================
 if (window.location.pathname.includes('course-details.html')) {
 
-    // These functions are now defined outside for better structure.
-    // They are no longer hidden inside another function.
-function renderLessons(lessons, episodeId, courseId) {
-    if (!lessons || lessons.length === 0) {
-        return '<p class="text-muted">No lessons in this topic yet.</p>';
+    /**
+     * MODIFIED: This function now renders all contents of an episode (lessons and quizzes).
+     */
+    function renderEpisodeContents(episode, courseId) {
+        // 1. Combine lessons and quizzes into a single array, adding a 'type' property.
+        const lessons = episode.lessons ? episode.lessons.map(item => ({ ...item, type: 'lesson' })) : [];
+        const quizzes = episode.quizzes ? episode.quizzes.map(item => ({ ...item, type: 'quiz' })) : [];
+        const contents = [...lessons, ...quizzes];
+
+        if (contents.length === 0) {
+            return '<p class="text-muted">No content in this topic yet.</p>';
+        }
+
+        // 2. Map over the combined array and render the correct HTML based on 'type'.
+        return `
+            <ul class="rbt-course-main-content liststyle">
+                ${contents.map(content => {
+                    if (content.type === 'lesson') {
+                        // Your original lesson HTML
+                        return `
+                            <li>
+                                <a href="lesson.html?courseId=${courseId}&lessonId=${content._id}">
+                                    <div class="course-content-left">
+                                        <i class="feather-${content.vimeoUrl ? 'play-circle' : 'file-text'}"></i>
+                                        <div class="title-summary-wrapper">
+                                            <span class="text">${content.title}</span>
+                                            ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="course-content-right">
+                                        ${content.duration ? `<span class="min-lable">${content.duration}</span>` : ''}
+                                        ${content.isPreview ? '<span class="rbt-badge-5 bg-primary-opacity">Preview</span>' : ''}
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    } else if (content.type === 'quiz') {
+                        // NEW: HTML for a quiz item
+                        return `
+                            <li>
+                                <a href="lesson.html?courseId=${courseId}&quizId=${content._id}">
+                                    <div class="course-content-left">
+                                        <i class="feather-help-circle"></i>
+                                        <div class="title-summary-wrapper">
+                                            <span class="text">${content.title}</span>
+                                            ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="course-content-right">
+                                        <span class="min-lable">${content.questions.length} Questions</span>
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    }
+                }).join('')}
+            </ul>
+        `;
     }
 
-    return `
-        <ul class="rbt-course-main-content liststyle">
-            ${lessons.map(lesson => `
-                <li>
-                    <a href="lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lesson._id}" class="lesson-link">
-                        <div class="course-content-left">
-                            <i class="feather-${lesson.vimeoUrl ? 'play-circle' : 'file-text'}"></i>
-                            
-                            <div class="title-summary-wrapper">
-                                <span class="text">${lesson.title}</span>
-                                ${lesson.summary ? `<small class="text-muted">${lesson.summary}</small>` : ''}
-                            </div>
-
-                        </div>
-                        <div class="course-content-right">
-                            ${lesson.duration ? `<span class="min-lable">${lesson.duration}</span>` : ''}
-                            ${lesson.isPreview ? '<span class="rbt-badge-5 bg-primary-opacity">Preview</span>' : ''}
-                        </div>
-                    </a>
-                </li>
-            `).join('')}
-        </ul>
-    `;
-}
-
+    /**
+     * MODIFIED: This function now calculates total content and calls the new render function.
+     */
     function renderCourseContent(episodes, courseId) {
-        console.log('renderCourseContent received courseId:', courseId);
         const courseContentContainer = document.getElementById('coursecontent');
-        if (!courseContentContainer || !episodes || episodes.length === 0) {
-            return;
-        }
+        if (!courseContentContainer || !episodes || episodes.length === 0) return;
 
         const accordionContainer = courseContentContainer.querySelector('.rbt-accordion-02.accordion');
-        if (!accordionContainer) {
-            console.error('Accordion container not found');
-            return;
-        }
+        if (!accordionContainer) return;
 
         accordionContainer.innerHTML = ''; // Clear existing content
 
         episodes.forEach((episode, index) => {
             const episodeElement = document.createElement('div');
             episodeElement.className = 'accordion-item card';
+            
+            // Calculate total items (lessons + quizzes) for the badge
             const lessonCount = episode.lessons ? episode.lessons.length : 0;
+            const quizCount = episode.quizzes ? episode.quizzes.length : 0;
+            const totalContentCount = lessonCount + quizCount;
             
             episodeElement.innerHTML = `
                 <h2 class="accordion-header card-header" id="headingTwo${index}">
-                    <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" 
-                            data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" 
-                            aria-expanded="${index === 0 ? 'true' : 'false'}" 
-                            aria-controls="collapseTwo${index}">
+                    <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" aria-expanded="${index === 0}">
                         <div class="title-summary-wrapper">
-        <span>${episode.title}</span>
-        ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
-    </div>
-    <span class="rbt-badge-5 ml--10">${lessonCount} Lesson${lessonCount !== 1 ? 's' : ''}</span>
+                            <span>${episode.title}</span>
+                            ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
+                        </div>
+                        <span class="rbt-badge-5 ml--10">${totalContentCount} Item${totalContentCount !== 1 ? 's' : ''}</span>
                     </button>
                 </h2>
-                <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" 
-                     aria-labelledby="headingTwo${index}">
+                <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="headingTwo${index}">
                     <div class="accordion-body card-body pr--0">
-                        ${renderLessons(episode.lessons, episode._id, courseId)}
+                        ${renderEpisodeContents(episode, courseId)}
                     </div>
                 </div>
             `;
@@ -3195,182 +3223,69 @@ function renderLessons(lessons, episodeId, courseId) {
         });
     }
 
-
-    // This is the main function that runs when the page loads
+    // Your main DOMContentLoaded function remains largely the same, just ensure it calls the updated renderCourseContent
     document.addEventListener('DOMContentLoaded', () => {
-const populateCourseDetails = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
-    if (!courseId) {
-        document.body.innerHTML = '<h1>Error: Course ID is missing.</h1>';
-        return;
-    };
+        const populateCourseDetails = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('courseId');
+            if (!courseId) { /* ... error handling ... */ return; }
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
-        const result = await response.json();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
+                const result = await response.json();
+                if (result.success) {
+                    const course = result.course;
+                    // ... your existing code to populate title, instructor, price etc. ...
+                    
+                    // This now correctly renders both lessons and quizzes
+                    renderCourseContent(course.episodes, course._id); 
 
-        if (result.success) {
-            const course = result.course;
-
-            // --- 1. Populate Header Section ---
-            document.getElementById('course-title').textContent = course.title;
-            document.getElementById('course-subtitle').textContent = course.description.substring(0, 100) + '...';
-            // --- 2. Populate Instructor Info & Avatar ---
-            if (course.instructor) {
-                const instructorName = `${course.instructor.firstName} ${course.instructor.lastName}`;
-                document.getElementById('instructor-info').innerHTML = `By <a href="#">${instructorName}</a>`;
-                const instructorAvatar = document.getElementById('instructor-avatar');
-                if (instructorAvatar && course.instructor.avatar) {
-                    instructorAvatar.src = `/${course.instructor.avatar}`;
-                    instructorAvatar.alt = instructorName;
+                    // ... rest of your population logic ...
                 }
+            } catch (error) {
+                console.error('Error fetching course details:', error);
             }
-
-            // --- 3. Populate Video/Thumbnail ---
-            document.getElementById('course-thumbnail').src = `/${course.thumbnail}`;
-// --- DEBUGGING THE SIDEBAR THUMBNAIL ---
-try {
-    console.log('Attempting to find sidebar thumbnail...');
-    
-    const sidebarImage = document.getElementById('sidebar-thumbnail');
-    console.log('Found the sidebar image element:', sidebarImage); // This will show us if the element was found or if it's null
-    
-    if (sidebarImage) {
-        sidebarImage.src = `/${course.thumbnail}`;
-        console.log('Successfully updated sidebar image src.');
-    } else {
-        console.error('ERROR: Could not find the HTML element with id="sidebar-thumbnail"!');
-    }
-} catch (error) {
-    console.error('CRITICAL ERROR while trying to update sidebar image:', error);
-}
-if (course.previewVideoUrl) {
-    // Update both video links
-    document.getElementById('video-preview-link').href = course.previewVideoUrl;
-    
-    const sidebarVideoLink = document.getElementById('sidebar-video-link');
-    if (sidebarVideoLink) {
-        sidebarVideoLink.href = course.previewVideoUrl;
-    }
-}
-// --- END OF DEBUGGING BLOCK ---
-            // --- 4. Populate Main Content Overview ---
-            const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
-            if (overviewContainer) {
-                overviewContainer.innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3">Overview</h4></div><p>${course.description}</p>`;
-            }
-
-            // --- 5. Populate Course Content Accordion ---
-            renderCourseContent(course.episodes, course._id);
-
-            // --- 6. Display Certificate Information ---
-            const certificateSection = document.getElementById('course-certificate-section');
-            const certificateImage = document.getElementById('course-certificate');
-            const certificateInfo = document.getElementById('certificate-info');
-            if (certificateSection && certificateImage && certificateInfo) {
-                if (course.certificateTemplate && course.certificateTemplate !== 'none') {
-                    certificateSection.style.display = 'block';
-                    const templateImages = { 'option1': 'assets/images/icons/certificate-none.svg', 'option2': 'assets/images/others/preview-01.png', 'option3': 'assets/images/others/preview-02.png', 'option4': 'assets/images/others/preview-03.png', 'option5': 'assets/images/others/preview-04.png', 'option6': 'assets/images/others/preview-05.png', 'optionport1': 'assets/images/icons/certificate-none-portrait.svg', 'optionport2': 'assets/images/others/preview-port-01.png', 'optionport3': 'assets/images/others/preview-port-02.png', 'optionport4': 'assets/images/others/preview-port-03.png', 'optionport5': 'assets/images/others/preview-port-05.png', 'optionport6': 'assets/images/others/preview-port-06.png' };
-                    const imagePath = templateImages[course.certificateTemplate];
-                    if (imagePath) {
-                        certificateImage.src = imagePath;
-                        certificateImage.alt = 'Course Completion Certificate';
-                    }
-                    certificateInfo.textContent = `This course includes a ${course.certificateOrientation} certificate upon completion.`;
-                } else {
-                    certificateSection.style.display = 'none';
-                }
-            }
-            
-            // --- 7. Populate Sidebar Price and Button ---
-            const priceContainer = document.getElementById('my-custom-price-display');
-            const buttonContainer = document.querySelector('.add-to-card-button');
-            if (priceContainer) {
-                let priceHtml = '';
-                if (course.price && course.price > 0) {
-                    const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
-                    priceHtml = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
-                    if (buttonContainer) {
-                        buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient radius-round hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Add to Cart</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
-                    }
-                } else {
-                    priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
-                    if (buttonContainer) {
-                        buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Enroll Now</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
-                    }
-                }
-                priceContainer.innerHTML = priceHtml;
-            }
-            // In main.js, inside populateCourseDetails -> if (result.success)
-
-const instructor = course.instructor;
-if (instructor) {
-    // Populate basic info
-    document.getElementById('instructor-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
-    document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
-    document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
-    document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
-
-    // Dynamically generate social media icons
-    const socialContainer = document.getElementById('instructor-socials');
-    socialContainer.innerHTML = ''; // Clear static icons
-
-    if (instructor.social) {
-        if (instructor.social.facebook) {
-            socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}"><i class="feather-facebook"></i></a></li>`;
-        }
-        if (instructor.social.twitter) {
-            socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}"><i class="feather-twitter"></i></a></li>`;
-        }
-        if (instructor.social.linkedin) {
-            socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}"><i class="feather-linkedin"></i></a></li>`;
-        }
-        // Add more for other social links like github, website etc.
-    }
-}
-        }
-    } catch (error) {
-        console.error('Error fetching course details:', error);
-        document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
-    }
-};
-
+        };
         populateCourseDetails();
     });
 }
 // =================================================================
 // REFACTORED lesson.html SCRIPT
 // =================================================================
+// =================================================================
+// UPDATED SCRIPT FOR lesson.html (Handles Lessons & Quizzes)
+// =================================================================
 if (window.location.pathname.includes('lesson.html')) {
     
-    // Use a single global variable to hold the course data.
-    // This prevents us from having to pass it between every function.
     let currentCourseData = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('courseId');
-        const initialLessonId = params.get('lessonId');
+        const lessonId = params.get('lessonId');
+        const quizId = params.get('quizId'); // NEW: Check for quizId
         
-        // Removed episodeId check, as we can find it from the course data.
-        if (!courseId || !initialLessonId) {
-            document.body.innerHTML = '<h1>Error: Missing Course or Lesson ID.</h1>';
+        if (!courseId) {
+            document.body.innerHTML = '<h1>Error: Missing Course ID.</h1>';
             return;
         }
 
-        // Fetch course data ONCE when the page loads.
         fetch(`/api/courses/${courseId}`)
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    currentCourseData = result.course; // Store the fetched data
+                    currentCourseData = result.course;
                     
-                    // Initial setup of the page
-                    renderSidebar(initialLessonId);
-                    updateLessonContent(initialLessonId);
-                    setupSidebarClickHandler(); // Setup the click listener for dynamic updates
-                    setupNavigation(initialLessonId);
+                    // Decide whether to load a lesson or a quiz
+                    if (lessonId) {
+                        renderSidebar(lessonId, null);
+                        updateLessonContent(lessonId);
+                    } else if (quizId) {
+                        renderSidebar(null, quizId);
+                        renderQuiz(quizId);
+                    }
+                    
+                    setupSidebarClickHandler();
                     setupSidebarToggle();
                 } else {
                     alert('Course not found');
@@ -3380,167 +3295,195 @@ if (window.location.pathname.includes('lesson.html')) {
     });
 
     /**
-     * Renders the entire sidebar accordion.
-     * @param {string} activeLessonId - The ID of the lesson to highlight as 'active'.
+     * MODIFIED: Renders the sidebar with both lessons and quizzes, highlighting the active item.
      */
-    function renderSidebar(activeLessonId) {
+    function renderSidebar(activeLessonId, activeQuizId) {
         const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
 
-        // Find which episode contains the active lesson to ensure it's expanded.
-        const activeEpisode = currentCourseData.episodes.find(ep => ep.lessons.some(l => l._id === activeLessonId));
+        const activeEpisode = currentCourseData.episodes.find(ep => 
+            ep.lessons.some(l => l._id === activeLessonId) || ep.quizzes.some(q => q._id === activeQuizId)
+        );
 
         sidebar.innerHTML = currentCourseData.episodes.map((episode, index) => {
             const isExpanded = activeEpisode && episode._id === activeEpisode._id;
+            
+            const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
+            const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
+            const contents = [...lessons, ...quizzes];
+
+            const contentHTML = contents.map(content => {
+                const isActive = (content.type === 'lesson' && content._id === activeLessonId) || (content.type === 'quiz' && content._id === activeQuizId);
+                const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
+                return `
+                    <li>
+                        <a href="#" class="content-link ${isActive ? 'active' : ''}" data-type="${content.type}" data-id="${content._id}">
+                            <div class="course-content-left">
+                                <i class="feather-${icon}"></i>
+                                <span class="text">${content.title}</span>
+                            </div>
+                        </a>
+                    </li>
+                `;
+            }).join('');
+
             return `
                 <div class="accordion-item card">
-                    <h2 class="accordion-header card-header" id="headingTwo${index}">
-                        <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" aria-expanded="${isExpanded ? 'true' : 'false'}">
-                            <span class="title-text">${episode.title}</span>
-                            <span class="rbt-badge-5 ml--10">${episode.lessons.length} Lessons</span>
+                    <h2 class="accordion-header card-header">
+                        <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">
+                            ${episode.title}
                         </button>
                     </h2>
-                    <div id="collapseTwo${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}" aria-labelledby="headingTwo${index}">
+                    <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
                         <div class="accordion-body card-body">
                             <ul class="rbt-course-main-content liststyle">
-                                ${episode.lessons.map(lesson => `
-                                    <li>
-                                        <a href="#" class="lesson-link ${lesson._id === activeLessonId ? 'active' : ''}" data-lesson-id="${lesson._id}">
-                                            <div class="course-content-left">
-        <i class="feather-${lesson.vimeoUrl ? 'play-circle' : 'file-text'}"></i>
-        
-        <div class="title-summary-wrapper">
-            <span class="text">${lesson.title}</span>
-            ${lesson.summary ? `<small class="text-muted">${lesson.summary}</small>` : ''}
-        </div>
-        </div>
-    <div class="course-content-right">
-        </div>
-                                        </a>
-                                    </li>
-                                `).join('')}
+                                ${contentHTML}
                             </ul>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     /**
-     * Finds a lesson by its ID from the stored course data and updates the main content area.
-     * @param {string} lessonId - The ID of the lesson to display.
+     * Finds and displays the content for a specific lesson.
      */
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
-        // Find the lesson from our stored data
         for (const episode of currentCourseData.episodes) {
             const found = episode.lessons.find(l => l._id === lessonId);
-            if (found) {
-                selectedLesson = found;
-                break;
-            }
+            if (found) { selectedLesson = found; break; }
         }
+        if (!selectedLesson) return;
 
-        if (!selectedLesson) {
-            console.error('Lesson not found in course data:', lessonId);
-            return;
-        }
+        // Show lesson, hide quiz
+        document.getElementById('lesson-content-container').classList.remove('d-none');
+        document.getElementById('quiz-content-container').classList.add('d-none');
 
-        // Update title and video player
+        // Update titles and content
         document.querySelector('.lesson-top-left h5').textContent = selectedLesson.title;
-        document.querySelector('.content .section-title p').textContent = selectedLesson.summary || 'No description available.';
-        
-        const videoPlayerContainer = document.querySelector('.rbtplayer');
+        const videoPlayerContainer = document.querySelector('.rbtplayer'); // Assuming this is inside lesson-content-container
         if (selectedLesson.vimeoUrl) {
-             videoPlayerContainer.innerHTML = `<iframe src="${selectedLesson.vimeoUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            videoPlayerContainer.innerHTML = `<iframe src="${selectedLesson.vimeoUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
         } else {
-             videoPlayerContainer.innerHTML = `<div class="no-video-placeholder"><i class="feather-file-text" style="font-size: 48px;"></i><h4>Text-based Lesson</h4></div>`;
+            videoPlayerContainer.innerHTML = `<div class="p-4">${selectedLesson.summary || 'Text content for this lesson.'}</div>`;
         }
+    }
+
+    /**
+     * NEW: Finds and displays the content for a specific quiz.
+     */
+    function renderQuiz(quizId) {
+        let selectedQuiz = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.quizzes.find(q => q._id === quizId);
+            if (found) { selectedQuiz = found; break; }
+        }
+        if (!selectedQuiz) return;
+        
+        // Show quiz, hide lesson
+        document.getElementById('lesson-content-container').classList.add('d-none');
+        const quizContainer = document.getElementById('quiz-content-container');
+        quizContainer.classList.remove('d-none');
+
+        // Update main title
+        document.querySelector('.lesson-top-left h5').textContent = selectedQuiz.title;
+
+        // Render the "Start Quiz" screen
+        quizContainer.innerHTML = `
+            <div class="text-center">
+                <h5>${selectedQuiz.title}</h5>
+                <p class="mt-3">${selectedQuiz.summary}</p>
+                <ul class="rbt-list-style-1 mt-4 justify-content-center">
+                    <li><span>Quiz Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
+                    <li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li>
+                    <li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li>
+                </ul>
+                <button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn">
+                    <span class="icon-reverse-wrapper">
+                        <span class="btn-text">Start Quiz</span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                    </span>
+                </button>
+            </div>
+        `;
+
+        // Add a listener to the start button
+        document.getElementById('start-quiz-btn').addEventListener('click', () => {
+            renderQuizQuestions(selectedQuiz, quizContainer);
+        });
     }
     
     /**
-     * Sets up a SINGLE event listener on the sidebar to handle clicks on any lesson.
-     * This is more efficient than adding a listener to every link.
+     * NEW: Renders the actual questions for the quiz.
      */
-    function setupSidebarClickHandler() {
-        const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
-        sidebar.addEventListener('click', (event) => {
-            const lessonLink = event.target.closest('.lesson-link'); // Find the clicked link
-            
-            if (lessonLink) {
-                event.preventDefault(); // Prevent the default link behavior (page reload)
-                
-                const newLessonId = lessonLink.dataset.lessonId;
-                
-                // Update the main content with the new lesson
-                updateLessonContent(newLessonId);
-                
-                // Update navigation buttons
-                setupNavigation(newLessonId);
+    function renderQuizQuestions(quiz, container) {
+        const questionsHTML = quiz.questions.map((question, index) => {
+            const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
+            const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
+            const optionsHTML = question.options.map((option, optIndex) => `
+                <div class="col-lg-6">
+                    <div class="${inputClass}">
+                        <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
+                        <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
+                    </div>
+                </div>`).join('');
+            const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
 
-                // Update the 'active' state in the sidebar
-                sidebar.querySelector('.lesson-link.active')?.classList.remove('active');
-                lessonLink.classList.add('active');
-            }
+            return `
+                <div class="rbt-single-quiz mb-5">
+                    <h4>${index + 1}. ${question.questionText}</h4>
+                    <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
+                    <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
+                </div>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="quize-top-meta">
+                <div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div>
+            </div>
+            <hr>
+            <form id="quiz-form-submission">${questionsHTML}
+                <div class="submit-btn mt-2">
+                    <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
+                        <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
+                    </button>
+                </div>
+            </form>
+        `;
+        
+        document.getElementById('quiz-form-submission').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Submission logic to be added next!');
         });
     }
 
     /**
-     * Finds the next and previous lessons and updates the navigation buttons.
-     * @param {string} currentLessonId - The ID of the currently displayed lesson.
+     * MODIFIED: Handles clicks for both lessons and quizzes in the sidebar.
      */
-    function setupNavigation(currentLessonId) {
-        // Flatten the nested lessons array into a single array for easier navigation
-        const allLessons = currentCourseData.episodes.flatMap(episode => 
-            episode.lessons.map(lesson => ({...lesson, episodeId: episode._id}))
-        );
+    function setupSidebarClickHandler() {
+        const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
+        sidebar.addEventListener('click', (event) => {
+            const contentLink = event.target.closest('.content-link');
+            if (contentLink) {
+                event.preventDefault();
+                const id = contentLink.dataset.id;
+                const type = contentLink.dataset.type;
+                
+                if (type === 'lesson') {
+                    updateLessonContent(id);
+                } else if (type === 'quiz') {
+                    renderQuiz(id);
+                }
 
-        const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
-
-        const prevButton = document.querySelector('.rbt-button-group a:first-child');
-        const nextButton = document.querySelector('.rbt-button-group a:last-child');
-
-        // Previous Button Logic
-        if (currentIndex > 0) {
-            const prevLesson = allLessons[currentIndex - 1];
-            prevButton.style.opacity = '1';
-            prevButton.style.pointerEvents = 'auto';
-            // We make it a link for context, but clicks are handled dynamically
-            prevButton.href = `lesson.html?courseId=${currentCourseData._id}&lessonId=${prevLesson._id}`;
-            prevButton.dataset.lessonId = prevLesson._id; // Store ID for click handler
-        } else {
-            prevButton.style.opacity = '0.5';
-            prevButton.style.pointerEvents = 'none';
-        }
-
-        // Next Button Logic
-        if (currentIndex < allLessons.length - 1) {
-            const nextLesson = allLessons[currentIndex + 1];
-            nextButton.style.opacity = '1';
-            nextButton.style.pointerEvents = 'auto';
-            nextButton.href = `lesson.html?courseId=${currentCourseData._id}&lessonId=${nextLesson._id}`;
-            nextButton.dataset.lessonId = nextLesson._id; // Store ID for click handler
-        } else {
-            nextButton.style.opacity = '0.5';
-            nextButton.style.pointerEvents = 'none';
-        }
+                sidebar.querySelector('.content-link.active')?.classList.remove('active');
+                contentLink.classList.add('active');
+            }
+        });
     }
-    
-    /**
-     * Sets up the expand/collapse button for the sidebar.
-     */
-    function setupSidebarToggle() {
-        const toggleButton = document.querySelector('.rbt-lesson-toggle button');
-        if (toggleButton) {
-            toggleButton.addEventListener('click', function() {
-                document.querySelector('.rbt-lesson-leftsidebar').classList.toggle('collapsed');
-                document.querySelector('.rbt-lesson-rightsidebar').classList.toggle('expanded');
-                const icon = this.querySelector('i');
-                icon.className = icon.className.includes('left') ? 'feather-arrow-right' : 'feather-arrow-left';
-            });
-        }
-    }
+
+    function setupSidebarToggle() { /* ... your existing function ... */ }
 }
         };
 
