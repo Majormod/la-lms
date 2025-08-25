@@ -28,31 +28,11 @@ router.post('/login', async (req, res) => {
         if (!user || !(await user.comparePassword(password))) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
-        const payload = {
-    user: { id: user.id }
-};
-
-jwt.sign(
-    payload,
-    process.env.JWT_SECRET,
-    { expiresIn: '5h' },
-    (err, token) => {
-        if (err) throw err;
-
-        // This sends the COMPLETE user object to the browser
-        res.status(200).json({
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                avatar: user.avatar
-            }
+        const payload = { user: { id: user.id, role: user.role, name: `${user.firstName} ${user.lastName}` } };
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' }, (err, token) => {
+            if (err) throw err;
+            res.status(200).json({ success: true, token, user: payload.user });
         });
-    }
-);
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
