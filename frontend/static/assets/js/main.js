@@ -2115,6 +2115,74 @@ const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pat
 // --- COMPLETE QUIZ ADD/EDIT/SAVE LOGIC ---
 let currentEditingQuizId = null;
 let currentEditingQuestionId = null; // <-- ADD THIS LINE
+
+// Helper function to display the list of questions
+const renderQuizQuestionsList = () => {
+    const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+    if (!episode) return;
+
+    const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+    if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+        document.getElementById('quiz-questions-list').innerHTML = '<p>No questions have been added to this quiz yet.</p>';
+        return;
+    }
+
+    const questionsListEl = document.getElementById('quiz-questions-list');
+    questionsListEl.innerHTML = quiz.questions.map((question, index) => `
+        <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+            <div class="inner d-flex align-items-center gap-2">
+                <h6 class="rbt-title mb-0">Question #${index + 1}: ${question.questionText}</h6>
+            </div>
+            <div class="inner">
+                <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
+                    <li><i class="feather-trash delete-question-btn" data-question-id="${question._id}"></i></li>
+                    <li><i class="feather-edit edit-question-btn" data-question-id="${question._id}"></i></li>
+                </ul>
+            </div>
+        </div>
+    `).join('');
+};
+
+// Function to show/hide the answer options based on question type
+const toggleAnswerOptions = () => {
+    const selectedType = questionTypeSelect.value;
+    if (selectedType === 'single-choice' || selectedType === 'multiple-choice') {
+        answerOptionsWrapper.style.display = 'block';
+    } else {
+        answerOptionsWrapper.style.display = 'none';
+    }
+    // Also clear any existing options when the type changes
+    answerOptionsContainer.innerHTML = ''; 
+};
+
+// Function to add a new answer option input field
+// REPLACE your existing addAnswerOption function with this one
+const addAnswerOption = () => {
+    const questionType = questionTypeSelect.value;
+    const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
+    
+    // Create a unique ID for the input and label to link them
+    const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // For single choice, all radio buttons need the same 'name' to work correctly
+    const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
+
+    const optionHtml = `
+        <div class="d-flex align-items-center mb-2 quiz-option-row">
+            <div class="flex-grow-1 me-2">
+                <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
+            </div>
+            <div class="form-check me-3">
+                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}">
+                <label class="form-check-label" for="${uniqueId}">Correct</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
+                <i class="feather-x" style="pointer-events: none;"></i>
+            </button>
+        </div>
+    `;
+    answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+};
+
 window.openUpdateQuizModal = function(episodeId, quizId) {
     currentEditingEpisodeId = episodeId;
     currentEditingQuizId = quizId;
@@ -2156,46 +2224,6 @@ const addQuestionBtn = document.getElementById('add-question-btn');
 // --- ADD THIS LOG ---
 console.log("Attempting to find 'Add New Question' button:", addQuestionBtn);
 const cancelQuestionBtn = document.getElementById('cancel-question-btn');
-
-// Function to show/hide the answer options based on question type
-const toggleAnswerOptions = () => {
-    const selectedType = questionTypeSelect.value;
-    if (selectedType === 'single-choice' || selectedType === 'multiple-choice') {
-        answerOptionsWrapper.style.display = 'block';
-    } else {
-        answerOptionsWrapper.style.display = 'none';
-    }
-    // Also clear any existing options when the type changes
-    answerOptionsContainer.innerHTML = ''; 
-};
-
-// Function to add a new answer option input field
-// REPLACE your existing addAnswerOption function with this one
-const addAnswerOption = () => {
-    const questionType = questionTypeSelect.value;
-    const optionType = questionType === 'single-choice' ? 'radio' : 'checkbox';
-    
-    // Create a unique ID for the input and label to link them
-    const uniqueId = `option-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    // For single choice, all radio buttons need the same 'name' to work correctly
-    const optionName = `is-correct-option-for-${currentEditingQuestionId || 'new'}`;
-
-    const optionHtml = `
-        <div class="d-flex align-items-center mb-2 quiz-option-row">
-            <div class="flex-grow-1 me-2">
-                <input type="text" class="form-control form-control-sm quiz-option-text" placeholder="Answer option text">
-            </div>
-            <div class="form-check me-3">
-                <input class="form-check-input quiz-option-iscorrect" type="${optionType}" name="${optionName}" id="${uniqueId}">
-                <label class="form-check-label" for="${uniqueId}">Correct</label>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-option-btn">
-                <i class="feather-x" style="pointer-events: none;"></i>
-            </button>
-        </div>
-    `;
-    answerOptionsContainer.insertAdjacentHTML('beforeend', optionHtml);
-};
 
 // --- Event Listeners for the dynamic form ---
 
@@ -2346,34 +2374,6 @@ if (result.success) {
     });
 
     // --- RENDER & SAVE QUESTION LOGIC ---
-
-// Helper function to display the list of questions
-const renderQuizQuestionsList = () => {
-    const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
-    if (!episode) return;
-
-    const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
-    if (!quiz || !quiz.questions || quiz.questions.length === 0) {
-        document.getElementById('quiz-questions-list').innerHTML = '<p>No questions have been added to this quiz yet.</p>';
-        return;
-    }
-
-    const questionsListEl = document.getElementById('quiz-questions-list');
-    questionsListEl.innerHTML = quiz.questions.map((question, index) => `
-        <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-            <div class="inner d-flex align-items-center gap-2">
-                <h6 class="rbt-title mb-0">Question #${index + 1}: ${question.questionText}</h6>
-            </div>
-            <div class="inner">
-                <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                    <li><i class="feather-trash delete-question-btn" data-question-id="${question._id}"></i></li>
-                    <li><i class="feather-edit edit-question-btn" data-question-id="${question._id}"></i></li>
-                </ul>
-            </div>
-        </div>
-    `).join('');
-};
-
 
 // Event listener for the "Save Question" button
 // UPGRADED Event listener for the "Save Question" button
