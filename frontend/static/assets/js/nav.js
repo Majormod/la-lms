@@ -1,13 +1,17 @@
-// Replace everything in nav.js with this final, universal version
+// Replace everything in nav.js with this code
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // This is a safe helper function to get user data without crashing
     const getAuth = () => {
         const token = localStorage.getItem('lmsToken');
         const userJSON = localStorage.getItem('lmsUser');
         if (token && userJSON) {
-            try { return { token, user: JSON.parse(userJSON) }; } 
-            catch (error) {
+            try {
+                const user = JSON.parse(userJSON);
+                return { token, user };
+            } catch (error) {
+                // If JSON is corrupted, clear storage and treat as logged out
                 localStorage.clear();
                 return { token: null, user: null };
             }
@@ -16,46 +20,44 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const { user } = getAuth();
-    const loginLink = document.getElementById('nav-login-link');
-    const userLink = document.getElementById('nav-user-link');
+    const navDropdown = document.getElementById('nav-user-dropdown');
+    const navLoginButton = document.getElementById('nav-login-button');
 
-    if (user) {
+    if (user && navDropdown) {
         // --- USER IS LOGGED IN ---
-        if (loginLink) loginLink.classList.add('d-none');
-        if (userLink) userLink.classList.remove('d-none');
+        navDropdown.style.display = 'block';
+        if (navLoginButton) navLoginButton.style.display = 'none';
 
-        const userNameEl = document.getElementById('nav-user-name');
-        const userNameDropdownEl = document.getElementById('nav-user-name-dropdown');
-        const userAvatarEl = document.getElementById('nav-user-avatar');
-
-        if (userNameEl) userNameEl.textContent = user.firstName || '';
-        if (userNameDropdownEl) userNameDropdownEl.textContent = `${user.firstName} ${user.lastName}`;
-        if (userAvatarEl && user.avatar) userAvatarEl.src = `/${user.avatar}`;
-
-        if (user.role === 'instructor') {
-            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
-        } else {
-            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
+        // Populate user info
+        const userNameEl = document.getElementById('header-dropdown-name');
+        const userAvatarEl = document.getElementById('header-dropdown-avatar');
+        
+        if (userNameEl) {
+            userNameEl.textContent = `${user.firstName} ${user.lastName}`;
+        }
+        if (userAvatarEl && user.avatar) {
+            userAvatarEl.src = `/${user.avatar}`;
         }
 
+        // Add role-specific dashboard link
+        const dashboardLink = document.getElementById('dashboard-link');
+        if (dashboardLink) {
+            dashboardLink.href = user.role === 'instructor' ? 'instructor-dashboard.html' : 'student-dashboard.html';
+        }
+        
+        // Setup Logout Button
+        const logoutButton = document.getElementById('logout-button');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('lmsToken');
+                localStorage.removeItem('lmsUser');
+                window.location.href = 'login.html';
+            });
+        }
     } else {
-        // --- USER IS LOGGED OUT ---
-        if (loginLink) loginLink.classList.remove('d-none');
-        if (userLink) userLink.classList.add('d-none');
+        // --- USER IS NOT LOGGED IN ---
+        if (navDropdown) navDropdown.style.display = 'none';
+        if (navLoginButton) navLoginButton.style.display = 'block';
     }
-
-    // --- UNIVERSAL LOGOUT HANDLER ---
-    // This finds ALL elements with the .logout-btn class and makes them work.
-    const logoutButtons = document.querySelectorAll('.logout-btn');
-    logoutButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            localStorage.removeItem('lmsToken');
-            localStorage.removeItem('lmsUser');
-            window.location.href = 'login.html';
-        });
-    });
 });
