@@ -274,16 +274,56 @@ app.get('/api/instructor/announcements', auth, async (req, res) => {
     }
 });
 
+// REPLACE your existing static route with this dynamic version
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
+        // Ensure the user is an instructor
         if (req.user.role !== 'instructor') {
-            return res.status(403).json({ success: false, message: 'Access denied. You must be an instructor.' });
+            return res.status(403).json({ success: false, message: 'Forbidden' });
         }
-        const quizAttempts = [{ date: 'December 26, 2024', quizTitle: 'Write a short essay on yourself using the 5', studentName: 'John Due', totalQuestions: 4, totalMarks: 8, correctAnswers: 4, result: 'Pass', }, { date: 'December 26, 2024', quizTitle: 'Write a short essay on yourself using the 5', studentName: 'Jane Smith', totalQuestions: 4, totalMarks: 8, correctAnswers: 2, result: 'Fail', }, { date: 'December 26, 2024', quizTitle: 'Write a short essay on yourself using the 5', studentName: 'Mike Ross', totalQuestions: 4, totalMarks: 8, correctAnswers: 4, result: 'Pass', },];
-        res.status(200).json({ success: true, attempts: quizAttempts });
+
+        // 1. Find all courses created by this instructor
+        const instructorCourses = await Course.find({ instructor: req.user.id }).select('_id title episodes');
+        const courseIds = instructorCourses.map(c => c._id);
+
+        // 2. Find all quiz attempts for those courses from the database
+        const attempts = await QuizResult.find({ course: { $in: courseIds } })
+            .populate('user', 'firstName lastName') // Get student's name
+            .sort({ submittedAt: -1 }); // Show most recent first
+
+        // 3. Format the data for the dashboard table
+        const formattedAttempts = attempts.map(attempt => {
+            const course = instructorCourses.find(c => c._id.equals(attempt.course));
+            let quizTitle = 'Unknown Quiz';
+            if (course) {
+                for (const episode of course.episodes) {
+                    const quiz = episode.quizzes.id(attempt.quiz);
+                    if (quiz) {
+                        quizTitle = quiz.title;
+                        break;
+                    }
+                }
+            }
+            
+            // Calculate the number of correct answers
+            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
+            
+            return {
+                date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                quizTitle: quizTitle,
+                studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
+                totalQuestions: attempt.answers.length,
+                totalMarks: attempt.possibleScore,
+                correctAnswers: correctAnswersCount, // Use the calculated count
+                result: attempt.passed ? 'Pass' : 'Fail',
+            };
+        });
+
+        res.json({ success: true, attempts: formattedAttempts });
+
     } catch (error) {
-        console.error('Error fetching student quiz attempts:', error);
-        res.status(500).json({ success: false, message: 'Server error.' });
+        console.error('Error fetching instructor quiz attempts:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
