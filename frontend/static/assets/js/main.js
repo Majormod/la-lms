@@ -1080,30 +1080,10 @@ console.log("------------------------------");
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
    eduJs.lmsInit = function () {
-    // This function is now empty
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-
     const API_BASE_URL = 'http://54.221.189.159';
     const token = localStorage.getItem('lmsToken');
-// Add this right after you define API_BASE_URL
-const getAuth = () => {
-    const token = localStorage.getItem('lmsToken');
-    const userJSON = localStorage.getItem('lmsUser');
+        const user = JSON.parse(localStorage.getItem('lmsUser'));
 
-    if (token && userJSON) {
-        try {
-            const user = JSON.parse(userJSON);
-            return { token, user };
-        } catch (error) {
-            // If JSON is corrupted, clear storage and treat as logged out
-            localStorage.clear();
-            return { token: null, user: null };
-        }
-    }
-    return { token: null, user: null };
-};
         // In main.js, add this to the top (global scope)
 // Helper function to trigger the hidden file input
 window.triggerExerciseFileUpload = function() {
@@ -1167,43 +1147,6 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-        const updateUserDataOnPage = () => {
-            if (!token) return;
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        const profile = result.data;
-                        const fullName = `${profile.firstName} ${profile.lastName}`;
-                        const bannerName = document.querySelector('.rbt-tutor-information .title');
-                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                        const bannerCover = document.querySelector('.tutor-bg-photo');
-                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-                        if (bannerName) bannerName.textContent = fullName;
-                        if (profile.avatar) {
-                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                        }
-                        if (profile.coverPhoto) {
-                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                        }
-                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
-                    } else {
-                        localStorage.clear();
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-        };
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
@@ -1215,7 +1158,136 @@ const renderCourseDetailsCurriculum = (episodes) => {
                 }
                 updateUserDataOnPage();
             }
+// =================================================================
+// FINAL SCRIPT FOR student-settings.html
+// =================================================================
+if (window.location.pathname.includes('student-settings.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
 
+    // This is the corrected and improved version of the function you found.
+    const updateUserDataOnPage = (user) => {
+        if (!user) return;
+        const fullName = `${user.firstName} ${user.lastName}`;
+
+        // Update all name instances
+        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
+        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
+
+        // Update all avatar instances
+        if (user.avatar) {
+            const avatarPath = `/${user.avatar}`;
+            document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
+                if (img) img.src = avatarPath;
+            });
+        }
+    };
+
+    // This function populates the settings form itself.
+    const populateSettingsForm = (user) => {
+        const profileForm = document.getElementById('profile-settings-form');
+        if (profileForm) {
+            profileForm.querySelector('#firstname').value = user.firstName || '';
+            profileForm.querySelector('#lastname').value = user.lastName || '';
+            profileForm.querySelector('#username').value = user.username || '';
+            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+            profileForm.querySelector('#skill').value = user.occupation || '';
+            profileForm.querySelector('#bio').value = user.bio || '';
+        }
+    };
+    
+    // This function handles the image upload API call.
+    const uploadImage = async (file, type) => {
+        const formData = new FormData();
+        formData.append(type, file);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, { // Correct URL
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            alert('Image updated successfully!');
+            localStorage.setItem('lmsUser', JSON.stringify(result.user));
+            updateUserDataOnPage(result.user); // Update all images on the page instantly
+
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
+    };
+
+    // === MAIN LOGIC AND EVENT LISTENERS ===
+    
+    // 1. On page load, fetch the user's data and populate everything.
+    document.addEventListener('DOMContentLoaded', () => {
+            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                    // NOTE: Using result.data to match your existing API response
+                    const userProfile = result.data; 
+                    populateSettingsForm(userProfile);
+                    updateUserDataOnPage(userProfile); // This updates header/sidebar too
+                    } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load profile data:', err);
+                alert('Could not load your profile data.');
+            });
+    });
+
+    // 2. Add the missing event listener for the profile update form.
+    const profileForm = document.getElementById('profile-settings-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                firstName: profileForm.querySelector('#firstname').value,
+                lastName: profileForm.querySelector('#lastname').value,
+                username: profileForm.querySelector('#username').value,
+                phoneNumber: profileForm.querySelector('#phonenumber').value,
+                occupation: profileForm.querySelector('#skill').value,
+                bio: profileForm.querySelector('#bio').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert('Profile updated successfully!');
+                localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                updateUserDataOnPage(result.user); // Update header/sidebar instantly
+
+            } catch (error) {
+                alert(`Update failed: ${error.message}`);
+            }
+        });
+    }
+
+    // 3. Add event listeners for avatar upload.
+    const avatarUploadButton = document.querySelector('.rbt-edit-photo');
+    const avatarUploadInput = document.getElementById('avatar-upload-input');
+    if (avatarUploadButton && avatarUploadInput) {
+        avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
+        avatarUploadInput.addEventListener('change', () => {
+            const file = avatarUploadInput.files[0];
+            if (file) {
+                uploadImage(file, 'avatar');
+            }
+        });
+    }
+}
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
                 if (loginForm) {
@@ -3980,13 +4052,12 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 // =================================================================
 // REPLACE IT WITH THIS WORKING BLOCK
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
-    const { token, user } = getAuth(); // Safely get data using our helper
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser'));
 
     if (!token || !user || user.role !== 'instructor') {
-        window.location.href = 'login.html';
-        return;
-    }
-
+        window.location.href = '/login.html'; // Redirect if not an instructor
+    } else {
     const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
     if (attemptsTableBody) {
         attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
@@ -4029,6 +4100,7 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                 console.error('Error fetching quiz attempts:', error);
                 attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load quiz attempts.</td></tr>';
             });
+        }
     }
 }
 
@@ -4079,338 +4151,8 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
         }
     }
 }
-
-// =================================================================
-// FINAL SCRIPT FOR student-settings.html (All features working)
-// =================================================================
-// In main.js - replace the old student-settings block with this
-
-if (window.location.pathname.includes('student-settings.html')) {
-    const { token, user } = getAuth(); // Use our new helper function
-
-    if (!token || !user) {
-        window.location.href = 'login.html';
-        return; // Stop execution if not logged in
-    }
-
-    // --- Role-specific Access Control ---
-    if (user.role !== 'student') {
-        alert("Access Denied.");
-        window.location.href = '/'; // Redirect to home page
-        return;
-    }
-
-    // --- Helper function to update user info across the page (name, avatar, etc.) ---
-    const updateUserDataOnPage = () => {
-        const currentUserJSON = localStorage.getItem('lmsUser');
-        if (!currentUserJSON) return;
-        const currentUser = JSON.parse(currentUserJSON);
-        
-        const fullName = `${currentUser.firstName} ${currentUser.lastName}`;
-        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
-        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${currentUser.firstName}`;
-
-        // Avatar with cache-busting
-        if (currentUser.avatar) {
-            const avatarPath = `/${currentUser.avatar}?t=${new Date().getTime()}`;
-            document.querySelectorAll('.user-avatar-img, #header-dropdown-avatar').forEach(img => {
-                if(img) img.src = avatarPath;
-            });
-        }
-        // Cover Photo with cache-busting
-        if (currentUser.coverPhoto) {
-            const coverPath = `/${currentUser.coverPhoto}?t=${new Date().getTime()}`;
-            document.querySelectorAll('.tutor-bg-photo').forEach(div => {
-                if(div) div.style.backgroundImage = `url(${coverPath})`;
-            });
-        }
-    };
-    
-    // --- Function to fetch and populate form data ---
-    const populateSettingsForms = () => {
-        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    const profile = result.data;
-                    document.querySelector('#firstname').value = profile.firstName || '';
-                    document.querySelector('#lastname').value = profile.lastName || '';
-                    document.querySelector('#username').value = profile.username || '';
-                    document.querySelector('#phonenumber').value = profile.phone || '';
-                    document.querySelector('#skill').value = profile.occupation || '';
-                    document.querySelector('#bio').value = profile.bio || '';
-
-                    // Populate social links
-                    document.querySelector('#facebook').value = profile.social?.facebook || '';
-                    document.querySelector('#twitter').value = profile.social?.twitter || '';
-                    document.querySelector('#linkedin').value = profile.social?.linkedin || '';
-                    document.querySelector('#website').value = profile.social?.website || '';
-                    document.querySelector('#github').value = profile.social?.github || '';
-
-                    // Populate display name options
-                    const displayNameSelect = document.querySelector('#displayname');
-                    if (displayNameSelect) {
-                        displayNameSelect.innerHTML = '';
-                        const nameOptions = [`${profile.firstName} ${profile.lastName}`, profile.firstName, profile.lastName];
-                        nameOptions.forEach(name => {
-                            if(name) {
-                                const option = document.createElement('option');
-                                option.value = name;
-                                option.textContent = name;
-                                displayNameSelect.appendChild(option);
-                            }
-                        });
-                        // Set the currently saved display name if available
-                        if(profile.displayName) displayNameSelect.value = profile.displayName;
-                    }
-                }
-            });
-    };
-
-    // --- Event Listener for Profile Form ---
-    const profileForm = document.querySelector('#profile-tab-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const updatedData = {
-                firstName: document.querySelector('#firstname').value,
-                lastName: document.querySelector('#lastname').value,
-                phone: document.querySelector('#phonenumber').value,
-                occupation: document.querySelector('#skill').value,
-                displayName: document.querySelector('#displayname').value,
-                bio: document.querySelector('#bio').value,
-                username: document.querySelector('#username').value,
-            };
-            fetch(`${API_BASE_URL}/api/user/profile`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                body: JSON.stringify(updatedData),
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Profile updated successfully!');
-                    // Update localStorage and refresh page data
-                    localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                    updateUserDataOnPage();
-                } else {
-                    alert(`Error updating profile: ${result.message}`);
-                }
-            });
-        });
-    }
-
-    // --- Event Listener for Password Form ---
-    const passwordForm = document.querySelector('#password-tab-form');
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const currentPassword = document.querySelector('#currentpassword').value;
-            const newPassword = document.querySelector('#newpassword').value;
-            const retypeNewPassword = document.querySelector('#retypenewpassword').value;
-            if (newPassword !== retypeNewPassword) {
-                return alert('New passwords do not match!');
-            }
-            fetch(`${API_BASE_URL}/api/user/password`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                body: JSON.stringify({ currentPassword, newPassword }),
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Password updated successfully!');
-                    passwordForm.reset();
-                } else {
-                    alert(`Error: ${result.message}`);
-                }
-            });
-        });
-    }
-
-    // --- Event Listener for Social Links Form ---
-    const socialForm = document.querySelector('#social-tab-form');
-    if (socialForm) {
-        socialForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const socialData = {
-                facebook: document.querySelector('#facebook').value,
-                twitter: document.querySelector('#twitter').value,
-                linkedin: document.querySelector('#linkedin').value,
-                website: document.querySelector('#website').value,
-                github: document.querySelector('#github').value,
-            };
-            fetch(`${API_BASE_URL}/api/user/social`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                body: JSON.stringify(socialData),
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Social links updated successfully!');
-                } else {
-                    alert('Error updating social links.');
-                }
-            });
-        });
-    }
-
-    // --- Event Listener for Avatar Upload ---
-    const avatarUploadButton = document.querySelector('#avatar-upload-button');
-    if (avatarUploadButton) {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-
-        avatarUploadButton.addEventListener('click', () => fileInput.click());
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('avatar', file);
-
-            fetch(`${API_BASE_URL}/api/user/avatar`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                .then(res => res.json())
-                .then(result => { 
-                    if (result.success) { 
-                        alert('Avatar updated!');
-                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                        updateUserDataOnPage();
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                });
-        });
-    }
-
-    // --- Event Listener for Cover Photo Upload ---
-    const coverUploadButton = document.querySelector('#cover-upload-button');
-    if (coverUploadButton) {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-
-        coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
-        
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            // IMPORTANT: Use 'coverPhoto' to match the working instructor code
-            formData.append('coverPhoto', file); 
-
-            fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                .then(res => res.json())
-                .then(result => { 
-                    if (result.success) {
-                        alert('Cover photo updated!'); 
-                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                        updateUserDataOnPage();
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                });
-        });
-    }
-
-    // --- Initial Page Load ---
-    updateUserDataOnPage();
-    populateSettingsForms();
-}
-
-// Add this entire block to main.js
-
-// --- LOGIN & REGISTER PAGE LOGIC ---
-if (window.location.pathname.includes('login.html')) {
-    const { token, user } = getAuth(); // Check if already logged in
-    if (token && user) {
-        // If user is already logged in, send them to the correct dashboard
-        const destination = user.role === 'instructor' ? 'instructor-dashboard.html' : 'student-dashboard.html';
-        window.location.href = destination;
-        // No 'return' needed, but the rest of the code won't run after redirect.
-    }
-
-    
-    // --- Handle Login Form ---
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // <-- This is the most important line! It stops the page from reloading.
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Login failed');
-                }
-
-                // --- On Success, Save to localStorage and Redirect ---
-                localStorage.setItem('lmsToken', result.token);
-                localStorage.setItem('lmsUser', JSON.stringify(result.user));
-
-                // Redirect based on role
-                if (result.user.role === 'instructor') {
-                    window.location.href = 'instructor-dashboard.html';
-                } else {
-                    window.location.href = 'student-dashboard.html';
-                }
-
-            } catch (error) {
-                alert(`Login Error: ${error.message}`);
-            }
-        });
-    }
-
-    // --- Handle Register Form ---
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const firstName = document.getElementById('register-firstName').value;
-            const lastName = document.getElementById('register-lastName').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ firstName, lastName, email, password }),
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Registration failed');
-                }
-
-                alert('Registration successful! Please log in.');
-                registerForm.reset(); // Clear the form
-
-            } catch (error) {
-                alert(`Registration Error: ${error.message}`);
-            }
-        });
-    }
-}
-
         handlePageLogic();
-
-}); // <-- Make sure to add the closing brace and parenthesis
+    };
 
     eduJs.i();
 
