@@ -1083,7 +1083,23 @@ console.log("------------------------------");
         const API_BASE_URL = 'http://54.221.189.159';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
+// Add this right after you define API_BASE_URL
+const getAuth = () => {
+    const token = localStorage.getItem('lmsToken');
+    const userJSON = localStorage.getItem('lmsUser');
 
+    if (token && userJSON) {
+        try {
+            const user = JSON.parse(userJSON);
+            return { token, user };
+        } catch (error) {
+            // If JSON is corrupted, clear storage and treat as logged out
+            localStorage.clear();
+            return { token: null, user: null };
+        }
+    }
+    return { token: null, user: null };
+};
         // In main.js, add this to the top (global scope)
 // Helper function to trigger the hidden file input
 window.triggerExerciseFileUpload = function() {
@@ -4065,15 +4081,12 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
 // In main.js - replace the old student-settings block with this
 
 if (window.location.pathname.includes('student-settings.html')) {
-    // --- Safe User Data Retrieval ---
-    const token = localStorage.getItem('lmsToken');
-    const userJSON = localStorage.getItem('lmsUser');
+    const { token, user } = getAuth(); // Use our new helper function
 
-    if (!token || !userJSON) {
+    if (!token || !user) {
         window.location.href = 'login.html';
         return; // Stop execution if not logged in
     }
-    const user = JSON.parse(userJSON);
 
     // --- Role-specific Access Control ---
     if (user.role !== 'student') {
@@ -4308,6 +4321,14 @@ if (window.location.pathname.includes('student-settings.html')) {
 
 // --- LOGIN & REGISTER PAGE LOGIC ---
 if (window.location.pathname.includes('login.html')) {
+    const { token, user } = getAuth(); // Check if already logged in
+    if (token && user) {
+        // If user is already logged in, send them to the correct dashboard
+        const destination = user.role === 'instructor' ? 'instructor-dashboard.html' : 'student-dashboard.html';
+        window.location.href = destination;
+        // No 'return' needed, but the rest of the code won't run after redirect.
+    }
+
     
     // --- Handle Login Form ---
     const loginForm = document.getElementById('login-form');
