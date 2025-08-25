@@ -2899,25 +2899,36 @@ document.addEventListener('click', async (e) => {
 // --- CORRECTED: Generic Edit Item Event Listener ---
 document.addEventListener('click', async (e) => {
     const editBtn = e.target.closest('.edit-item'); 
-    if (editBtn) {
-        const { episodeId, itemId, itemType } = editBtn.dataset; 
+// --- LOGIC FOR EDIT BUTTON ---
+if (editBtn) {
+    currentEditingQuestionId = editBtn.dataset.questionId;
+    const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+    const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+    
+    // --- THIS IS THE CORRECTED LINE ---
+    const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
 
-        if (itemType === 'lesson') {
-            openUpdateLessonModal(episodeId, itemId); 
-            const lessonModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Lesson'));
-            lessonModalInstance.show();
-        } 
-        else if (itemType === 'quiz') {
-            openUpdateQuizModal(episodeId, itemId);
+    if (question) {
+        // Populate the form with the question's data
+        document.getElementById('quiz-question-text').value = question.questionText;
+        document.getElementById('quiz-question-type').value = question.questionType;
+        document.getElementById('quiz-question-points').value = question.points;
+        
+        toggleAnswerOptions();
+        // Clear old options before adding the ones for this question
+        answerOptionsContainer.innerHTML = ''; 
+        question.options.forEach(opt => {
+            addAnswerOption();
+            const newRow = answerOptionsContainer.lastElementChild;
+            newRow.querySelector('.quiz-option-text').value = opt.text;
+            newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
+        });
 
-            // This resets the quiz modal to step 1 when editing
-            const quizNav = document.querySelector('#Quiz .quiz-modal-btn');
-            if (quizNav) quizNav.dispatchEvent(new Event('reset'));
-
-            const quizModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Quiz'));
-            quizModalInstance.show();
-        }
+        // Navigate to the "Add/Edit Question" form
+        currentStep = steps.ADD_QUESTION_FORM;
+        updateQuizModalView();
     }
+}
 });
 // Add this event listener for lesson clicks
 document.addEventListener('click', function(e) {
