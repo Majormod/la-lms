@@ -3565,7 +3565,7 @@ function renderQuizQuestions(quiz, container) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-auth-token': localStorage.getItem('myAppToken') // Using the correct key
+                    'x-auth-token': localStorage.getItem('jwt_token'),
                 },
                 body: JSON.stringify({ answers })
             });
