@@ -453,7 +453,7 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
         if (course.instructor.toString() !== req.user.id) {
             return res.status(403).json({ success: false, message: 'User not authorized' });
         }
-        res.json({ success: true, course: course });
+        res.json({ success: true, course: course.toObject() });
     } catch (error) {
         // --- MODIFIED LOGGING FOR DEBUGGING ---
         console.error('---! ERROR: FAILED TO FETCH COURSE FOR EDIT PAGE !---');
