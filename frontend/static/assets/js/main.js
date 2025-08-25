@@ -3316,21 +3316,25 @@ if (window.location.pathname.includes('course-details.html')) {
                     }
                     
                     // --- 8. Populate Instructor Bio Box ---
-                    const instructor = course.instructor;
-                    if (instructor) {
-                        document.getElementById('instructor-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
-                        document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
-                        document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
-                        document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
+// --- 8. Populate Instructor Bio Box ---
+const instructor = course.instructor;
+if (instructor) {
+    // MODIFIED: Targets the new, unique ID for the bio box avatar.
+    document.getElementById('instructor-bio-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
+    
+    // The rest of your logic remains the same
+    document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
+    document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
+    document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
 
-                        const socialContainer = document.getElementById('instructor-socials');
-                        socialContainer.innerHTML = ''; // Clear static icons
-                        if (instructor.social) {
-                            if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}"><i class="feather-facebook"></i></a></li>`;
-                            if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}"><i class="feather-twitter"></i></a></li>`;
-                            if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}"><i class="feather-linkedin"></i></a></li>`;
-                        }
-                    }
+    const socialContainer = document.getElementById('instructor-socials');
+    socialContainer.innerHTML = ''; // Clear static icons
+    if (instructor.social) {
+        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+    }
+}
                 }
             } catch (error) {
                 console.error('Error fetching course details:', error);
