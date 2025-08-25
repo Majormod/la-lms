@@ -40760,21 +40760,21 @@ padding: 0 10px 0 10px;
     border-radius: 5px;
     margin-bottom: 10px;
 }
-
+/* Keep this block as it was from the last fix */
 .remove-option-btn {
-    /* Define a predictable, square click area */
     width: 32px;
     height: 32px;
     padding: 0;
-
-    /* CRITICAL: Stop the parent flex container from shrinking this button */
     flex-shrink: 0;
-
-    /* Perfectly center the 'X' icon inside the button */
     display: flex;
     align-items: center;
     justify-content: center;
-
-    /* Optional but recommended: make it a circle for a cleaner look */
     border-radius: 50%; 
+}
+
+/* --- ADD THIS NEW BLOCK --- */
+/* This directly targets the icon to fix the dead zone */
+.remove-option-btn i.feather-x {
+    font-size: 16px; /* Controls the size of the 'X' */
+    line-height: 1;  /* CRITICAL: Collapses the icon's invisible vertical space */
 }
