@@ -987,6 +987,39 @@ app.delete('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+// PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId
+app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId', auth, async (req, res) => {
+    try {
+        const { courseId, episodeId, quizId, questionId } = req.params;
+        const updatedQuestionData = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course || course.instructor.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, message: 'Not authorized' });
+        }
+
+        const episode = course.episodes.id(episodeId);
+        const quiz = episode.quizzes.id(quizId);
+        const question = quiz.questions.id(questionId);
+        if (!question) return res.status(404).json({ success: false, message: 'Question not found' });
+
+        // Update the question fields
+        question.set(updatedQuestionData);
+        
+        await course.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Question updated successfully!',
+            course: course.toObject() 
+        });
+
+    } catch (error) {
+        console.error('Error updating question:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 // PUT /api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId
 app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:questionId', auth, async (req, res) => {
     try {
