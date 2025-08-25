@@ -12,6 +12,7 @@ const staticPath = path.join(__dirname, '../frontend/static');
 const User = require('./models/User');
 const Course = require('./models/Course');
 const auth = require('./authMiddleware');
+const QuizResult = require('./models/QuizResult');
 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
@@ -1035,6 +1036,81 @@ app.put('/api/courses/:courseId/episodes/:episodeId/quizzes/:quizId/questions/:q
     } catch (error) {
         console.error('Error updating question:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// POST /api/quizzes/:quizId/submit
+// Handles quiz submission, grading, and saving the result.
+app.post('/api/courses/:courseId/quizzes/:quizId/submit', auth, async (req, res) => {
+    try {
+        const { courseId, quizId } = req.params;
+        const userId = req.user.id; // From the 'auth' middleware
+        const submittedAnswers = req.body.answers; // Expecting { questionId: [optionId], ... }
+
+        const course = await Course.findById(courseId);
+        if (!course) return res.status(404).json({ success: false, message: 'Course not found.' });
+
+        // Find the quiz (the "answer key")
+        let quiz;
+        course.episodes.forEach(ep => {
+            const found = ep.quizzes.id(quizId);
+            if (found) quiz = found;
+        });
+        if (!quiz) return res.status(404).json({ success: false, message: 'Quiz not found.' });
+
+        let score = 0;
+        let possibleScore = 0;
+        const resultAnswers = [];
+
+        for (const question of quiz.questions) {
+            possibleScore += question.points;
+            const submitted = submittedAnswers[question._id]; // User's answer for this question
+            const correctOptionIds = question.options.filter(o => o.isCorrect).map(o => o._id.toString());
+            
+            let isCorrect = false;
+            if (submitted) {
+                // For choice-based questions
+                if (Array.isArray(submitted)) {
+                    isCorrect = submitted.length === correctOptionIds.length && submitted.every(id => correctOptionIds.includes(id));
+                }
+            }
+
+            if (isCorrect) {
+                score += question.points;
+            }
+            
+            resultAnswers.push({
+                questionId: question._id,
+                questionText: question.questionText,
+                submittedOptionIds: submitted || [],
+                correctOptionIds: correctOptionIds,
+                isCorrect: isCorrect,
+                points: question.points,
+            });
+        }
+
+        const percentage = (score / possibleScore) * 100;
+        const passed = percentage >= quiz.passingGrade;
+
+        // Save the result to the database
+        const newResult = new QuizResult({
+            user: userId,
+            course: courseId,
+            quiz: quizId,
+            score,
+            possibleScore,
+            percentage: Math.round(percentage),
+            passed,
+            answers: resultAnswers
+        });
+        await newResult.save();
+
+        // Send the detailed results back to the client
+        res.status(201).json({ success: true, result: newResult });
+
+    } catch (error) {
+        console.error('Error submitting quiz:', error);
+        res.status(500).json({ success: false, message: 'Server error during quiz submission.' });
     }
 });
 

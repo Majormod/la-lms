@@ -3506,17 +3506,89 @@ if (window.location.pathname.includes('lesson.html')) {
         document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
     }
     
-    function renderQuizQuestions(quiz, container) {
-        const questionsHTML = quiz.questions.map((question, index) => {
-            const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
-            const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
-            const optionsHTML = question.options.map((option, optIndex) => `<div class="col-lg-6"><div class="${inputClass}"><input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}"><label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label></div></div>`).join('');
-            const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
-            return `<div class="rbt-single-quiz mb-5"><h4>${index + 1}. ${question.questionText}</h4><div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div><div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div></div>`;
-        }).join('');
-        container.innerHTML = `<div class="content p-4 p-lg-5"><div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr><form id="quiz-form-submission">${questionsHTML}<div class="submit-btn mt-2"><button type="submit" class="rbt-btn btn-gradient hover-icon-reverse"><span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></form></div>`;
-        document.getElementById('quiz-form-submission').addEventListener('submit', (e) => { e.preventDefault(); alert('Submission logic and results page are the next step!'); });
-    }
+function renderQuizQuestions(quiz, container) {
+    const questionsHTML = quiz.questions.map((question, index) => {
+        const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
+        const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
+        const optionsHTML = question.options.map((option, optIndex) => `
+            <div class="col-lg-6">
+                <div class="${inputClass}">
+                    <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
+                    <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
+                </div>
+            </div>`).join('');
+        const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
+
+        return `
+            <div class="rbt-single-quiz mb-5">
+                <h4>${index + 1}. ${question.questionText}</h4>
+                <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
+                <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="content p-4 p-lg-5">
+            <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
+            <form id="quiz-form-submission">${questionsHTML}
+                <div class="submit-btn mt-2">
+                    <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
+                        <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    // --- START OF SUBMISSION LOGIC ---
+    document.getElementById('quiz-form-submission').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.querySelector('.btn-text').textContent = 'Submitting...';
+
+        const formData = new FormData(e.target);
+        const answers = {};
+
+        // Group answers by question ID
+        for (let [name, value] of formData.entries()) {
+            const questionId = name.replace('question-', '');
+            if (!answers[questionId]) {
+                answers[questionId] = [];
+            }
+            answers[questionId].push(value);
+        }
+
+        try {
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/quizzes/${quiz._id}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': localStorage.getItem('token') // Assuming you store your token here
+                },
+                body: JSON.stringify({ answers })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Store result in sessionStorage to pass it to the results page
+                sessionStorage.setItem('quizResult', JSON.stringify(data.result));
+                // Redirect to the results page
+                window.location.href = `lesson-quiz-result.html?courseId=${courseId}&quizId=${quiz._id}`;
+            } else {
+                throw new Error(data.message);
+            }
+
+        } catch (error) {
+            alert(`Error submitting quiz: ${error.message}`);
+            submitButton.disabled = false;
+            submitButton.querySelector('.btn-text').textContent = 'Submit Quiz';
+        }
+    });
+    // --- END OF SUBMISSION LOGIC ---
+}
 
     function setupNavigation(currentItemId, currentItemType) {
         const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
@@ -3735,7 +3807,53 @@ fetchAndDisplayCourses();
         fetchAndDisplayCourses(); 
     });
 }
+// In main.js, add this new block for the results page logic
+if (window.location.pathname.includes('lesson-quiz-result.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        // Retrieve the result from sessionStorage
+        const result = JSON.parse(sessionStorage.getItem('quizResult'));
+        
+        if (!result) {
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
+            return;
+        }
 
+        // --- 1. Render the Summary ---
+        const summaryContainer = document.getElementById('quiz-summary-results');
+        const passStatus = result.passed ? 'Pass' : 'Fail';
+        const passClass = result.passed ? 'color-success' : 'color-danger';
+
+        summaryContainer.innerHTML = `
+            <div class="text-center">
+                <h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3>
+                <p class="b3 mt-2">You answered ${result.score / result.answers[0].points} out of ${result.answers.length} questions correctly.</p>
+            </div>
+        `;
+
+        // --- 2. Render the Detailed Table ---
+        const tableBody = document.getElementById('quiz-results-tbody');
+        tableBody.innerHTML = result.answers.map((answer, index) => {
+            // NOTE: This part is complex because we need to find the text of the selected answers.
+            // This is a simplified version. A full version would require fetching the quiz data again.
+            const resultBadge = answer.isCorrect ? 
+                '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' :
+                '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
+
+            return `
+                <tr>
+                    <td><p class="b3">${index + 1}</p></td>
+                    <td><p class="b3">${answer.questionText}</p></td>
+                    <td><p class="b3">Your Answer</p></td>
+                    <td><p class="b3">Correct Answer</p></td>
+                    <td>${resultBadge}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Clear the stored result after displaying it
+        sessionStorage.removeItem('quizResult');
+    });
+}
         handlePageLogic();
     };
 
