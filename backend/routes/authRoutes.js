@@ -28,11 +28,36 @@ router.post('/login', async (req, res) => {
         if (!user || !(await user.comparePassword(password))) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
-        const payload = { user: { id: user.id, role: user.role, name: `${user.firstName} ${user.lastName}` } };
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' }, (err, token) => {
-            if (err) throw err;
-            res.status(200).json({ success: true, token, user: payload.user });
+// REPLACE your existing payload and jwt.sign block with this:
+
+// The payload for the JWT should be small and contain only the user's ID.
+const payload = {
+    user: {
+        id: user.id
+    }
+};
+
+jwt.sign(
+    payload,
+    process.env.JWT_SECRET,
+    { expiresIn: '5h' },
+    (err, token) => {
+        if (err) throw err;
+
+        // The response to the browser MUST contain the full user object.
+        res.status(200).json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                avatar: user.avatar
+            }
         });
+    }
+);
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
