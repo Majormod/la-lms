@@ -1916,6 +1916,7 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
+                };
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
@@ -2393,28 +2394,63 @@ if (saveQuestionBtn) {
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify(questionData)
             });
+
             const result = await response.json();
+
             if (result.success) {
+                // 3. Update the UI
                 courseData = result.course;
                 currentEditingQuestionId = null; // Clear after saving
-                renderQuizQuestionsList();
-                currentStep = 2;
+                renderQuizQuestionsList(); // Refresh the questions list
+                currentStep = 2; // Go back to the questions list view
                 updateQuizModalView();
             } else {
                 alert(`Error: ${result.message}`);
             }
+
         } catch (error) {
+            console.error('Error saving question:', error);
             alert('An error occurred while saving the question.');
         }
     });
 }
-// Handle deleting a question
+// This single listener handles BOTH editing and deleting questions
 const questionsListEl = document.getElementById('quiz-questions-list');
 if (questionsListEl) {
     questionsListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-question-btn');
         const deleteBtn = e.target.closest('.delete-question-btn');
-        if (!deleteBtn) return;
 
+        // --- LOGIC FOR EDIT BUTTON ---
+        if (editBtn) {
+            currentEditingQuestionId = editBtn.dataset.questionId;
+            const episode = courseData.episodes.find(ep => ep._id == currentEditingEpisodeId);
+            const quiz = episode.quizzes.find(q => q._id == currentEditingQuizId);
+            const question = quiz.questions.find(ques => ques._id == currentEditingQuestionId);
+
+            if (question) {
+                // Populate the form with the question's data
+                document.getElementById('quiz-question-text').value = question.questionText;
+                document.getElementById('quiz-question-type').value = question.questionType;
+                document.getElementById('quiz-question-points').value = question.points;
+                
+                // Show the options wrapper and render the saved options
+                toggleAnswerOptions(); 
+                question.options.forEach(opt => {
+                    addAnswerOption();
+                    const newRow = answerOptionsContainer.lastElementChild;
+                    newRow.querySelector('.quiz-option-text').value = opt.text;
+                    newRow.querySelector('.quiz-option-iscorrect').checked = opt.isCorrect;
+                });
+
+                // Navigate to the form
+                currentStep = steps.ADD_QUESTION_FORM;
+                updateQuizModalView();
+            }
+        }
+
+        // --- LOGIC FOR DELETE BUTTON ---
+        if (deleteBtn) {
         const questionId = deleteBtn.dataset.questionId;
         if (confirm('Are you sure you want to delete this question?')) {
             try {
@@ -2436,6 +2472,7 @@ if (questionsListEl) {
                 }
             } catch (error) {
                 alert('An error occurred while deleting the question.');
+                }
             }
         }
     });
