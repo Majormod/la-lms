@@ -3832,51 +3832,69 @@ fetchAndDisplayCourses();
     });
 }
 // In main.js, add this new block for the results page logic
+// In main.js, replace the entire block for the results page
 if (window.location.pathname.includes('lesson-quiz-result.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-        // Retrieve the result from sessionStorage
-        const result = JSON.parse(sessionStorage.getItem('quizResult'));
-        
-        if (!result) {
-            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
-            return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultId = urlParams.get('resultId');
+        const courseId = urlParams.get('courseId'); // <-- Get courseId from URL
+        const resultFromSession = JSON.parse(sessionStorage.getItem('quizResult'));
+
+        // Set the "Back to Course" link immediately
+        if (courseId) {
+            document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
         }
 
-        // --- 1. Render the Summary ---
+        if (resultId) {
+            // Scenario 1: Fetching an old result from the database
+            const token = localStorage.getItem('lmsToken');
+            fetch(`${API_BASE_URL}/api/quiz-results/${resultId}`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderResults(data.result, data.quizTitle);
+                    } else {
+                        document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`;
+                    }
+                });
+        } else if (resultFromSession) {
+            // Scenario 2: Displaying a result immediately after submission
+            renderResults(resultFromSession, "Quiz Result");
+            sessionStorage.removeItem('quizResult'); // Clean up
+        } else {
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found.</h1>";
+        }
+    });
+
+    function renderResults(result, quizTitle) {
+        document.getElementById('result-page-title').textContent = quizTitle;
+
         const summaryContainer = document.getElementById('quiz-summary-results');
         const passStatus = result.passed ? 'Pass' : 'Fail';
         const passClass = result.passed ? 'color-success' : 'color-danger';
+        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
 
         summaryContainer.innerHTML = `
             <div class="text-center">
                 <h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3>
-                <p class="b3 mt-2">You answered ${result.score / result.answers[0].points} out of ${result.answers.length} questions correctly.</p>
+                <p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p>
             </div>
         `;
 
-        // --- 2. Render the Detailed Table ---
         const tableBody = document.getElementById('quiz-results-tbody');
         tableBody.innerHTML = result.answers.map((answer, index) => {
-            // NOTE: This part is complex because we need to find the text of the selected answers.
-            // This is a simplified version. A full version would require fetching the quiz data again.
             const resultBadge = answer.isCorrect ? 
                 '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' :
                 '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
-
             return `
                 <tr>
                     <td><p class="b3">${index + 1}</p></td>
                     <td><p class="b3">${answer.questionText}</p></td>
-                    <td><p class="b3">Your Answer</p></td>
-                    <td><p class="b3">Correct Answer</p></td>
                     <td>${resultBadge}</td>
                 </tr>
             `;
         }).join('');
-
-        // Clear the stored result after displaying it
-        sessionStorage.removeItem('quizResult');
-    });
+    }
 }
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
