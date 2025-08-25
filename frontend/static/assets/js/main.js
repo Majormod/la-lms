@@ -3450,30 +3450,49 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
     }
 
-    function updateLessonContent(lessonId) {
-        let selectedLesson = null;
-        for (const episode of currentCourseData.episodes) {
-            const found = episode.lessons.find(l => l._id === lessonId);
-            if (found) { selectedLesson = found; break; }
-        }
-        if (!selectedLesson) return;
-
-        document.getElementById('lesson-content-container').classList.remove('d-none');
-        document.getElementById('quiz-content-container').classList.add('d-none');
-
-        document.getElementById('lesson-title').textContent = selectedLesson.title;
-        document.getElementById('lesson-about-title').textContent = "About Lesson";
-        document.getElementById('lesson-about-description').textContent = selectedLesson.summary || '';
-        
-        const videoPlayerContainer = document.getElementById('video-player-container');
-        if (selectedLesson.vimeoUrl) {
-            const videoId = selectedLesson.vimeoUrl.split('/').pop();
-            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-            videoPlayerContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-        } else {
-            videoPlayerContainer.innerHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4><p class="mt-3">The main content is in the "About Lesson" section.</p></div>`;
-        }
+/**
+ * CORRECTED: This version correctly targets the separate description element.
+ */
+function updateLessonContent(lessonId) {
+    let selectedLesson = null;
+    for (const episode of currentCourseData.episodes) {
+        const found = episode.lessons.find(l => l._id === lessonId);
+        if (found) { selectedLesson = found; break; }
     }
+    if (!selectedLesson) return;
+
+    // Show lesson container, hide quiz container
+    document.getElementById('lesson-content-container').classList.remove('d-none');
+    document.getElementById('quiz-content-container').classList.add('d-none');
+
+    // Update title
+    document.getElementById('lesson-title').textContent = selectedLesson.title;
+    
+    // --- START OF FIX ---
+    // Update the "About Lesson" section separately
+    const aboutTitle = document.getElementById('lesson-about-title');
+    const aboutDescription = document.getElementById('lesson-about-description');
+    
+    if (selectedLesson.summary) {
+        aboutTitle.style.display = 'block';
+        aboutDescription.style.display = 'block';
+        aboutDescription.textContent = selectedLesson.summary;
+    } else {
+        // Hide the "About" section if there's no summary
+        aboutTitle.style.display = 'none';
+        aboutDescription.style.display = 'none';
+    }
+    // --- END OF FIX ---
+    
+    const videoPlayerContainer = document.getElementById('video-player-container');
+    if (selectedLesson.vimeoUrl) {
+        const videoId = selectedLesson.vimeoUrl.split('/').pop();
+        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+        videoPlayerContainer.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+        videoPlayerContainer.innerHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+    }
+}
 
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
