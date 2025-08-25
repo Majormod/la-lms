@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const updateNavDropdown = () => {
     const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser'));
 
     const loginLink = document.getElementById('nav-login-link');
     const userLink = document.getElementById('nav-user-link');
