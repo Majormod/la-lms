@@ -1147,6 +1147,43 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
+        const updateUserDataOnPage = () => {
+            if (!token) return;
+            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const profile = result.data;
+                        const fullName = `${profile.firstName} ${profile.lastName}`;
+                        const bannerName = document.querySelector('.rbt-tutor-information .title');
+                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                        const bannerCover = document.querySelector('.tutor-bg-photo');
+                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
+                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
+                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
+                        if (bannerName) bannerName.textContent = fullName;
+                        if (profile.avatar) {
+                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
+                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
+                        }
+                        if (profile.coverPhoto) {
+                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                        }
+                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
+                    } else {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                    localStorage.clear();
+                    window.location.href = '/login';
+                });
+        };
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
@@ -3925,127 +3962,6 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser'));
 
-// At the top of your main.js file, in the global scope
-
-const token = localStorage.getItem('lmsToken');
-const user = JSON.parse(localStorage.getItem('lmsUser'));
-
-/**
- * This function is now GLOBAL and can be used by any page.
- * It updates all instances of the user's name on a page.
- */
-function updateUserNames(user) {
-    if (!user) return;
-    const fullName = `${user.firstName} ${user.lastName}`;
-
-    // Update banner name on settings/profile pages
-    const bannerName = document.querySelector('.rbt-tutor-information .title');
-    if (bannerName) bannerName.textContent = fullName;
-
-    // Update sidebar welcome message
-    const sidebarWelcome = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-    if (sidebarWelcome) sidebarWelcome.textContent = `Welcome, ${user.firstName}`;
-    
-    // Update main header dropdown name
-    const headerName = document.querySelector('.rbt-admin-profile .name');
-    if (headerName) headerName.textContent = fullName;
-}
-
-/**
- * This function is now GLOBAL and can be used by any page.
- * It updates all instances of the user's avatar on a page.
- */
-function updateUserImages(user) {
-    if (!user || !user.avatar) return;
-    const avatarPath = `/${user.avatar}`;
-
-    // Update all potential avatar image tags
-    document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
-        if (img) img.src = avatarPath;
-    });
-}
-
-// =================================================================
-// Now, your page-specific logic begins...
-// =================================================================
-
-if (window.location.pathname.includes('student-dashboard.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!token) window.location.href = 'login.html';
-        updateUserNames(user);
-        updateUserImages(user);
-        // ... rest of your dashboard logic ...
-    });
-}
-
-if (window.location.pathname.includes('student-profile.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!token) window.location.href = 'login.html';
-        updateUserNames(user);
-        updateUserImages(user);
-        // ... rest of your profile logic ...
-    });
-}
-
-// ... and so on for your other dashboard pages ...
-
-// THEN, replace your existing student-settings.html block with this cleaner version
-// In main.js, replace your settings page block with this
-if (window.location.pathname.includes('student-settings.html')) {
-    if (!token) {
-        window.location.href = 'login.html';
-    }
-
-    // Function to populate the settings form itself.
-    const populateSettingsForm = (user) => {
-        const profileForm = document.getElementById('profile-settings-form');
-        if (profileForm) {
-            profileForm.querySelector('#firstname').value = user.firstName || '';
-            profileForm.querySelector('#lastname').value = user.lastName || '';
-            profileForm.querySelector('#username').value = user.username || '';
-            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
-            profileForm.querySelector('#skill').value = user.occupation || '';
-            profileForm.querySelector('#bio').value = user.bio || '';
-        }
-    };
-    
-    // Function to handle image uploads
-    const uploadImage = async (file, type) => {
-        // ... (this function remains the same as the last response)
-    };
-
-    // Main function to load data when page opens
-    const loadProfileData = () => {
-        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    populateSettingsForm(data.user);
-                    updateUserNames(data.user); // Calls the global function
-                    updateUserImages(data.user); // Calls the global function
-                }
-            })
-            .catch(err => alert('Could not load your profile data.'));
-    };
-
-    // === EVENT LISTENERS ===
-    document.addEventListener('DOMContentLoaded', loadProfileData);
-
-    const profileForm = document.getElementById('profile-settings-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            // ... (The form submission logic from the last response goes here)
-            // It should call the global updateUserNames function on success.
-        });
-    }
-
-    const avatarUploadButton = document.querySelector('.rbt-edit-photo');
-    const avatarUploadInput = document.getElementById('avatar-upload-input');
-    if (avatarUploadButton && avatarUploadInput) {
-        // ... (The avatar upload logic from the last response goes here)
-        // It should call the global updateUserImages function on success.
-    }
-}
     if (!token || !user || user.role !== 'instructor') {
         window.location.href = '/login.html'; // Redirect if not an instructor
     } else {
