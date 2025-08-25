@@ -1147,43 +1147,6 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-        const updateUserDataOnPage = () => {
-            if (!token) return;
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        const profile = result.data;
-                        const fullName = `${profile.firstName} ${profile.lastName}`;
-                        const bannerName = document.querySelector('.rbt-tutor-information .title');
-                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                        const bannerCover = document.querySelector('.tutor-bg-photo');
-                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-                        if (bannerName) bannerName.textContent = fullName;
-                        if (profile.avatar) {
-                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                        }
-                        if (profile.coverPhoto) {
-                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                        }
-                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
-                    } else {
-                        localStorage.clear();
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-        };
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
@@ -1195,7 +1158,136 @@ const renderCourseDetailsCurriculum = (episodes) => {
                 }
                 updateUserDataOnPage();
             }
+// =================================================================
+// FINAL SCRIPT FOR student-settings.html
+// =================================================================
+if (window.location.pathname.includes('student-settings.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
 
+    // This is the corrected and improved version of the function you found.
+    const updateUserDataOnPage = (user) => {
+        if (!user) return;
+        const fullName = `${user.firstName} ${user.lastName}`;
+
+        // Update all name instances
+        document.querySelectorAll('.rbt-tutor-information .title, .rbt-admin-profile .name').forEach(el => el.textContent = fullName);
+        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${user.firstName}`;
+
+        // Update all avatar instances
+        if (user.avatar) {
+            const avatarPath = `/${user.avatar}`;
+            document.querySelectorAll('#settings-avatar-img, .rbt-avatars img, #header-dropdown-avatar').forEach(img => {
+                if (img) img.src = avatarPath;
+            });
+        }
+    };
+
+    // This function populates the settings form itself.
+    const populateSettingsForm = (user) => {
+        const profileForm = document.getElementById('profile-settings-form');
+        if (profileForm) {
+            profileForm.querySelector('#firstname').value = user.firstName || '';
+            profileForm.querySelector('#lastname').value = user.lastName || '';
+            profileForm.querySelector('#username').value = user.username || '';
+            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+            profileForm.querySelector('#skill').value = user.occupation || '';
+            profileForm.querySelector('#bio').value = user.bio || '';
+        }
+    };
+    
+    // This function handles the image upload API call.
+    const uploadImage = async (file, type) => {
+        const formData = new FormData();
+        formData.append(type, file);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, { // Correct URL
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            alert('Image updated successfully!');
+            localStorage.setItem('lmsUser', JSON.stringify(result.user));
+            updateUserDataOnPage(result.user); // Update all images on the page instantly
+
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
+    };
+
+    // === MAIN LOGIC AND EVENT LISTENERS ===
+    
+    // 1. On page load, fetch the user's data and populate everything.
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    // NOTE: Using result.data to match your existing API response
+                    const userProfile = result.data; 
+                    populateSettingsForm(userProfile);
+                    updateUserDataOnPage(userProfile); // This updates header/sidebar too
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load profile data:', err);
+                alert('Could not load your profile data.');
+            });
+    });
+
+    // 2. Add the missing event listener for the profile update form.
+    const profileForm = document.getElementById('profile-settings-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                firstName: profileForm.querySelector('#firstname').value,
+                lastName: profileForm.querySelector('#lastname').value,
+                username: profileForm.querySelector('#username').value,
+                phoneNumber: profileForm.querySelector('#phonenumber').value,
+                occupation: profileForm.querySelector('#skill').value,
+                bio: profileForm.querySelector('#bio').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert('Profile updated successfully!');
+                localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                updateUserDataOnPage(result.user); // Update header/sidebar instantly
+
+            } catch (error) {
+                alert(`Update failed: ${error.message}`);
+            }
+        });
+    }
+
+    // 3. Add event listeners for avatar upload.
+    const avatarUploadButton = document.querySelector('.rbt-edit-photo');
+    const avatarUploadInput = document.getElementById('avatar-upload-input');
+    if (avatarUploadButton && avatarUploadInput) {
+        avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
+        avatarUploadInput.addEventListener('change', () => {
+            const file = avatarUploadInput.files[0];
+            if (file) {
+                uploadImage(file, 'avatar');
+            }
+        });
+    }
+}
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
                 if (loginForm) {
