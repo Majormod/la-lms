@@ -3351,48 +3351,49 @@ if (instructor) {
 // =================================================================
 // UPDATED SCRIPT FOR lesson.html (Handles Lessons & Quizzes)
 // =================================================================
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (Corrected Selectors)
+// =================================================================
 if (window.location.pathname.includes('lesson.html')) {
-    
+
     let currentCourseData = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('courseId');
         const lessonId = params.get('lessonId');
-        const quizId = params.get('quizId'); // NEW: Check for quizId
+        const quizId = params.get('quizId');
         
         if (!courseId) {
             document.body.innerHTML = '<h1>Error: Missing Course ID.</h1>';
             return;
         }
 
-        fetch(`/api/courses/${courseId}`)
+        document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
+
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`)
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
                     currentCourseData = result.course;
                     
-                    // Decide whether to load a lesson or a quiz
                     if (lessonId) {
                         renderSidebar(lessonId, null);
                         updateLessonContent(lessonId);
                     } else if (quizId) {
                         renderSidebar(null, quizId);
-                        renderQuiz(quizId);
+                        renderQuizStartScreen(quizId);
                     }
                     
                     setupSidebarClickHandler();
                     setupSidebarToggle();
                 } else {
-                    alert('Course not found');
+                    document.body.innerHTML = `<h1>Error: ${result.message}</h1>`;
                 }
             })
             .catch(error => console.error('Error loading initial course data:', error));
     });
 
-    /**
-     * MODIFIED: Renders the sidebar with both lessons and quizzes, highlighting the active item.
-     */
     function renderSidebar(activeLessonId, activeQuizId) {
         const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
@@ -3431,18 +3432,14 @@ if (window.location.pathname.includes('lesson.html')) {
                         </button>
                     </h2>
                     <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
-                        <div class="accordion-body card-body">
-                            <ul class="rbt-course-main-content liststyle">
-                                ${contentHTML}
-                            </ul>
-                        </div>
+                        <div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div>
                     </div>
                 </div>`;
         }).join('');
     }
 
     /**
-     * Finds and displays the content for a specific lesson.
+     * CORRECTED: This function now uses the correct element IDs.
      */
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
@@ -3452,24 +3449,24 @@ if (window.location.pathname.includes('lesson.html')) {
         }
         if (!selectedLesson) return;
 
-        // Show lesson, hide quiz
+        // Show lesson container, hide quiz container
         document.getElementById('lesson-content-container').classList.remove('d-none');
         document.getElementById('quiz-content-container').classList.add('d-none');
 
-        // Update titles and content
-        document.querySelector('.lesson-top-left h5').textContent = selectedLesson.title;
-        const videoPlayerContainer = document.querySelector('.rbtplayer'); // Assuming this is inside lesson-content-container
+        // Use specific IDs to update the content
+        document.getElementById('lesson-title').textContent = selectedLesson.title;
+        document.getElementById('lesson-about-title').textContent = "About Lesson";
+        document.getElementById('lesson-about-description').textContent = selectedLesson.summary || '';
+        
+        const videoPlayerContainer = document.getElementById('video-player-container');
         if (selectedLesson.vimeoUrl) {
             videoPlayerContainer.innerHTML = `<iframe src="${selectedLesson.vimeoUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
         } else {
-            videoPlayerContainer.innerHTML = `<div class="p-4">${selectedLesson.summary || 'Text content for this lesson.'}</div>`;
+            videoPlayerContainer.innerHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4><p class="mt-3">The main content is in the "About Lesson" section.</p></div>`;
         }
     }
-
-    /**
-     * NEW: Finds and displays the content for a specific quiz.
-     */
-    function renderQuiz(quizId) {
+    
+    function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
             const found = episode.quizzes.find(q => q._id === quizId);
@@ -3477,43 +3474,32 @@ if (window.location.pathname.includes('lesson.html')) {
         }
         if (!selectedQuiz) return;
         
-        // Show quiz, hide lesson
         document.getElementById('lesson-content-container').classList.add('d-none');
         const quizContainer = document.getElementById('quiz-content-container');
         quizContainer.classList.remove('d-none');
 
-        // Update main title
-        document.querySelector('.lesson-top-left h5').textContent = selectedQuiz.title;
+        document.getElementById('lesson-title').textContent = selectedQuiz.title;
 
-        // Render the "Start Quiz" screen
         quizContainer.innerHTML = `
             <div class="text-center">
                 <h5>${selectedQuiz.title}</h5>
                 <p class="mt-3">${selectedQuiz.summary}</p>
                 <ul class="rbt-list-style-1 mt-4 justify-content-center">
-                    <li><span>Quiz Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
+                    <li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
                     <li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li>
                     <li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li>
                 </ul>
                 <button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn">
-                    <span class="icon-reverse-wrapper">
-                        <span class="btn-text">Start Quiz</span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                    </span>
+                    <span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
                 </button>
             </div>
         `;
 
-        // Add a listener to the start button
         document.getElementById('start-quiz-btn').addEventListener('click', () => {
             renderQuizQuestions(selectedQuiz, quizContainer);
         });
     }
     
-    /**
-     * NEW: Renders the actual questions for the quiz.
-     */
     function renderQuizQuestions(quiz, container) {
         const questionsHTML = quiz.questions.map((question, index) => {
             const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
@@ -3536,10 +3522,7 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
 
         container.innerHTML = `
-            <div class="quize-top-meta">
-                <div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div>
-            </div>
-            <hr>
+            <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
             <form id="quiz-form-submission">${questionsHTML}
                 <div class="submit-btn mt-2">
                     <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
@@ -3551,13 +3534,10 @@ if (window.location.pathname.includes('lesson.html')) {
         
         document.getElementById('quiz-form-submission').addEventListener('submit', (e) => {
             e.preventDefault();
-            alert('Submission logic to be added next!');
+            alert('Submission logic and results page are the next step!');
         });
     }
 
-    /**
-     * MODIFIED: Handles clicks for both lessons and quizzes in the sidebar.
-     */
     function setupSidebarClickHandler() {
         const sidebar = document.querySelector('.rbt-accordion-02.for-right-content');
         sidebar.addEventListener('click', (event) => {
@@ -3567,10 +3547,16 @@ if (window.location.pathname.includes('lesson.html')) {
                 const id = contentLink.dataset.id;
                 const type = contentLink.dataset.type;
                 
+                const url = new URL(window.location);
+                url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
+                if (type === 'lesson') url.searchParams.delete('quizId');
+                else url.searchParams.delete('lessonId');
+                history.pushState({}, '', url);
+                
                 if (type === 'lesson') {
                     updateLessonContent(id);
                 } else if (type === 'quiz') {
-                    renderQuiz(id);
+                    renderQuizStartScreen(id);
                 }
 
                 sidebar.querySelector('.content-link.active')?.classList.remove('active');
@@ -3579,7 +3565,16 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
-    function setupSidebarToggle() { /* ... your existing function ... */ }
+    function setupSidebarToggle() {
+        const toggleButton = document.querySelector('.rbt-lesson-toggle button');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                document.querySelector('.rbt-lesson-leftsidebar').classList.toggle('collapsed');
+                const icon = this.querySelector('i');
+                icon.className = icon.className.includes('left') ? 'feather-arrow-right' : 'feather-arrow-left';
+            });
+        }
+    }
 }
         };
 
