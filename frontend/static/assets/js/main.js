@@ -3551,7 +3551,6 @@ function renderQuizQuestions(quiz, container) {
         </div>
     `;
     
-    // --- START OF SUBMISSION LOGIC ---
     document.getElementById('quiz-form-submission').addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitButton = e.target.querySelector('button[type="submit"]');
@@ -3560,8 +3559,6 @@ function renderQuizQuestions(quiz, container) {
 
         const formData = new FormData(e.target);
         const answers = {};
-
-        // Group answers by question ID
         for (let [name, value] of formData.entries()) {
             const questionId = name.replace('question-', '');
             if (!answers[questionId]) {
@@ -3576,17 +3573,15 @@ function renderQuizQuestions(quiz, container) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-auth-token': localStorage.getItem('jwt_token'),
+                    // --- THIS IS THE CORRECTED LINE ---
+                    'x-auth-token': localStorage.getItem('lmsToken') 
                 },
                 body: JSON.stringify({ answers })
-             });
+            });
 
             const data = await response.json();
-
             if (data.success) {
-                // Store result in sessionStorage to pass it to the results page
                 sessionStorage.setItem('quizResult', JSON.stringify(data.result));
-                // Redirect to the results page
                 window.location.href = `lesson-quiz-result.html?courseId=${courseId}&quizId=${quiz._id}`;
             } else {
                 throw new Error(data.message);
@@ -3598,7 +3593,6 @@ function renderQuizQuestions(quiz, container) {
             submitButton.querySelector('.btn-text').textContent = 'Submit Quiz';
         }
     });
-    // --- END OF SUBMISSION LOGIC ---
 }
 
     function setupNavigation(currentItemId, currentItemType) {
