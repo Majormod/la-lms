@@ -1197,13 +1197,19 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 });
 
 // GET /api/quiz-results/:resultId - Fetches a single quiz result
+// In server.js, replace the existing route with this one
 app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
     try {
         const result = await QuizResult.findById(req.params.resultId)
             .populate({
                 path: 'course',
-                select: 'title episodes'
+                // THIS IS THE CORRECTED LINE:
+                select: 'title episodes instructor' 
             });
+
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Result not found.' });
+        }
 
         // Security check: ensure the user is either the student who took the quiz or the instructor
         const isStudentOwner = result.user.equals(req.user.id);
@@ -1213,7 +1219,7 @@ app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
             return res.status(403).json({ success: false, message: 'Access denied.' });
         }
 
-        // We need to find the quiz title for the header
+        // Find the quiz title for the header
         let quizTitle = 'Quiz Result';
         for (const episode of result.course.episodes) {
             const quiz = episode.quizzes.id(result.quiz);
