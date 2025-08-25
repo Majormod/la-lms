@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
         enum: ['student', 'instructor'],
         default: 'student',
     },
+    coverPhoto: { type: String }, // <-- ADD THIS LINE
     registrationDate: {
         type: Date,
         default: Date.now,
