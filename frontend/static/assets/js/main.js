@@ -3362,17 +3362,20 @@ if (instructor) {
 // =================================================================
 // FINAL SCRIPT FOR lesson.html (Simplified & Corrected)
 // =================================================================
+
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (Matches UI Theme Exactly)
+// =================================================================
 if (window.location.pathname.includes('lesson.html')) {
 
     let currentCourseData = null;
 
-    // This is the main function that runs when the page loads
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('courseId');
         const lessonId = params.get('lessonId');
         const quizId = params.get('quizId');
-        
+
         if (!courseId) {
             document.body.innerHTML = '<h1>Error: Missing Course ID.</h1>';
             return;
@@ -3385,7 +3388,6 @@ if (window.location.pathname.includes('lesson.html')) {
             .then(result => {
                 if (result.success) {
                     currentCourseData = result.course;
-                    
                     if (lessonId) {
                         renderSidebar(lessonId, null);
                         updateLessonContent(lessonId);
@@ -3395,7 +3397,6 @@ if (window.location.pathname.includes('lesson.html')) {
                         renderQuizStartScreen(quizId);
                         setupNavigation(quizId, 'quiz');
                     }
-                    
                     setupSidebarClickHandler();
                     setupSidebarToggle();
                 } else {
@@ -3406,7 +3407,7 @@ if (window.location.pathname.includes('lesson.html')) {
     });
 
     /**
-     * CORRECTED: This version correctly displays the summary in the sidebar.
+     * CORRECTED: Generates the exact HTML for the sidebar, including the right-side icons.
      */
     function renderSidebar(activeLessonId, activeQuizId) {
         const sidebar = document.querySelector('.rbt-accordion-style.rbt-accordion-02.for-right-content');
@@ -3418,7 +3419,6 @@ if (window.location.pathname.includes('lesson.html')) {
 
         sidebar.innerHTML = currentCourseData.episodes.map((episode, index) => {
             const isExpanded = activeEpisode && episode._id === activeEpisode._id;
-            
             const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
             const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
             const contents = [...lessons, ...quizzes];
@@ -3426,15 +3426,16 @@ if (window.location.pathname.includes('lesson.html')) {
             const contentHTML = contents.map(content => {
                 const isActive = (content.type === 'lesson' && content._id === activeLessonId) || (content.type === 'quiz' && content._id === activeQuizId);
                 const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
+                // NOTE: We are adding back the .course-content-right div to hold the checkmark icon
                 return `
                     <li>
                         <a href="#" class="content-link ${isActive ? 'active' : ''}" data-type="${content.type}" data-id="${content._id}">
                             <div class="course-content-left">
                                 <i class="feather-${icon}"></i>
-                                <div class="title-summary-wrapper">
-                                    <span class="text">${content.title}</span>
-                                    ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
-                                </div>
+                                <span class="text">${content.title}</span>
+                            </div>
+                            <div class="course-content-right">
+                                <span class="rbt-check unread"><i class="feather-circle"></i></span>
                             </div>
                         </a>
                     </li>
@@ -3445,10 +3446,7 @@ if (window.location.pathname.includes('lesson.html')) {
                 <div class="accordion-item card">
                     <h2 class="accordion-header card-header">
                         <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">
-                            <div class="title-summary-wrapper">
-                                <span>${episode.title}</span>
-                                ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
-                            </div>
+                            ${episode.title}
                         </button>
                     </h2>
                     <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
@@ -3457,9 +3455,9 @@ if (window.location.pathname.includes('lesson.html')) {
                 </div>`;
         }).join('');
     }
-
+    
     /**
-     * SIMPLIFIED & CORRECTED: This function now rebuilds the entire inner content for a lesson.
+     * CORRECTED: Rebuilds the content to exactly match your UI theme's HTML structure.
      */
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
@@ -3487,15 +3485,12 @@ if (window.location.pathname.includes('lesson.html')) {
                     <h4>About Lesson</h4>
                     <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
                 </div>
-            </div>
-        `;
+            </div>`;
 
         contentContainer.innerHTML = videoHTML + descriptionHTML;
     }
 
-    /**
-     * UPDATED: This function now targets the simplified inner container.
-     */
+    // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -3507,73 +3502,24 @@ if (window.location.pathname.includes('lesson.html')) {
         document.getElementById('lesson-title').textContent = selectedQuiz.title;
         const contentContainer = document.getElementById('lesson-inner-content');
 
-        contentContainer.innerHTML = `
-            <div class="content p-4 p-lg-5">
-                <div class="text-center">
-                    <h5>${selectedQuiz.title}</h5>
-                    <p class="mt-3">${selectedQuiz.summary}</p>
-                    <ul class="rbt-list-style-1 mt-4 justify-content-center">
-                        <li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li>
-                        <li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li>
-                        <li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li>
-                    </ul>
-                    <button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn">
-                        <span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                    </button>
-                </div>
-            </div>`;
-
-        document.getElementById('start-quiz-btn').addEventListener('click', () => {
-            renderQuizQuestions(selectedQuiz, contentContainer);
-        });
+        contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
+        document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
     }
     
     function renderQuizQuestions(quiz, container) {
         const questionsHTML = quiz.questions.map((question, index) => {
             const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
             const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
-            const optionsHTML = question.options.map((option, optIndex) => `
-                <div class="col-lg-6">
-                    <div class="${inputClass}">
-                        <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
-                        <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
-                    </div>
-                </div>`).join('');
+            const optionsHTML = question.options.map((option, optIndex) => `<div class="col-lg-6"><div class="${inputClass}"><input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}"><label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label></div></div>`).join('');
             const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
-
-            return `
-                <div class="rbt-single-quiz mb-5">
-                    <h4>${index + 1}. ${question.questionText}</h4>
-                    <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
-                    <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
-                </div>`;
+            return `<div class="rbt-single-quiz mb-5"><h4>${index + 1}. ${question.questionText}</h4><div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div><div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div></div>`;
         }).join('');
-
-        container.innerHTML = `
-            <div class="content p-4 p-lg-5">
-                <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
-                <form id="quiz-form-submission">${questionsHTML}
-                    <div class="submit-btn mt-2">
-                        <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
-                            <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
-        
-        document.getElementById('quiz-form-submission').addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Submission logic and results page are the next step!');
-        });
+        container.innerHTML = `<div class="content p-4 p-lg-5"><div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr><form id="quiz-form-submission">${questionsHTML}<div class="submit-btn mt-2"><button type="submit" class="rbt-btn btn-gradient hover-icon-reverse"><span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></form></div>`;
+        document.getElementById('quiz-form-submission').addEventListener('submit', (e) => { e.preventDefault(); alert('Submission logic and results page are the next step!'); });
     }
 
     function setupNavigation(currentItemId, currentItemType) {
-        const allContents = currentCourseData.episodes.flatMap(episode => [
-            ...episode.lessons.map(item => ({ ...item, type: 'lesson' })),
-            ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))
-        ]);
-
+        const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
         const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
         const prevButton = document.getElementById('prev-content-btn');
         const nextButton = document.getElementById('next-content-btn');
@@ -3586,7 +3532,6 @@ if (window.location.pathname.includes('lesson.html')) {
         } else {
             prevButton.style.display = 'none';
         }
-
         if (currentIndex < allContents.length - 1) {
             const nextItem = allContents[currentIndex + 1];
             nextButton.style.display = 'block';
@@ -3601,26 +3546,17 @@ if (window.location.pathname.includes('lesson.html')) {
         document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
             const link = event.target.closest('.content-link, .content-nav-link');
             if (!link) return;
-
             event.preventDefault();
             const id = link.dataset.id;
             const type = link.dataset.type;
-
             const url = new URL(window.location);
             url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
             if (type === 'lesson') url.searchParams.delete('quizId');
             else url.searchParams.delete('lessonId');
             history.pushState({}, '', url);
-            
-            if (type === 'lesson') {
-                updateLessonContent(id);
-            } else if (type === 'quiz') {
-                renderQuizStartScreen(id);
-            }
-
+            if (type === 'lesson') { updateLessonContent(id); } else if (type === 'quiz') { renderQuizStartScreen(id); }
             document.querySelector('.content-link.active')?.classList.remove('active');
             document.querySelector(`.content-link[data-id="${id}"]`)?.classList.add('active');
-            
             setupNavigation(id, type);
         });
     }
