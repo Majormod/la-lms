@@ -1143,8 +1143,6 @@ const renderCourseDetailsCurriculum = (episodes) => {
                 .then(result => {
                     if (result.success) {
                         const profile = result.data;
-                         // ADD THIS LINE FOR DEBUGGING
-    console.log('--- Debugging Profile Data ---', profile);
                         const fullName = `${profile.firstName} ${profile.lastName}`;
                         const bannerName = document.querySelector('.rbt-tutor-information .title');
                         const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
@@ -1160,8 +1158,7 @@ const renderCourseDetailsCurriculum = (episodes) => {
                         }
 // This is the FIX
 if (profile.coverPhoto) {
-    // The final version using the correct path
-    const coverPhotoUrl = `url('/assets/images/uploads/${profile.coverPhoto.replace(/^\//, '')}')`;
+    const coverPhotoUrl = `url('/${profile.coverPhoto.replace(/^\//, '')}')`; // Create a clean URL
     if (bannerCover) bannerCover.style.backgroundImage = coverPhotoUrl;
     if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = coverPhotoUrl;
 }
