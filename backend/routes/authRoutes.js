@@ -32,30 +32,32 @@ router.post('/login', async (req, res) => {
         }
 
         // JWT payload should be minimal
-        const payload = {
-            user: { id: user.id }
-        };
+// REPLACE IT WITH THIS:
+const payload = {
+    user: { id: user.id }
+};
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5h' },
-            (err, token) => {
-                if (err) throw err;
-                // The response to the browser must contain the full user object for the UI
-                res.status(200).json({
-                    success: true,
-                    token,
-                    user: {
-                        id: user.id,
-                        role: user.role,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        avatar: user.avatar
-                    }
-                });
+jwt.sign(
+    payload,
+    process.env.JWT_SECRET,
+    { expiresIn: '5h' },
+    (err, token) => {
+        if (err) throw err;
+
+        // This sends the COMPLETE user object to the browser
+        res.status(200).json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                avatar: user.avatar
             }
-        );
+        });
+    }
+);
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
