@@ -1224,9 +1224,10 @@ const updateUserDataOnPage = () => {
             localStorage.clear();
             window.location.href = '/login.html';
         });
-};
-// ADD THIS ONE LINE RIGHT AFTER THE FUNCTION DEFINITION
-updateUserDataOnPage();
+        // THIS IS THE FIX: We call the function ONLY after the HTML page has fully loaded.
+document.addEventListener('DOMContentLoaded', () => {
+    updateUserDataOnPage();
+});
         const handlePageLogic = () => {
             const path = window.location.pathname;
 
