@@ -40779,3 +40779,14 @@ padding: 0 10px 0 10px;
     justify-content: center;
     border-radius: 50%;
 }
+/* Add this to your custom CSS file */
+
+/* Makes the "Your score: XX%" heading white on the dark theme results page */
+.dark-theme .rbt-lesson-rightsidebar h3 {
+    color: #FFFFFF;
+}
+
+/* Makes the results table header (No., Question, Result) white */
+.dark-theme .rbt-dashboard-table thead th {
+    color: #FFFFFF;
+}
