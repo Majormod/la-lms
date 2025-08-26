@@ -275,23 +275,25 @@ app.get('/api/instructor/announcements', auth, async (req, res) => {
 });
 
 // REPLACE your existing static route with this dynamic version
+// In server.js, replace the existing instructor quiz attempts route
+
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
-        // Ensure the user is an instructor
         if (req.user.role !== 'instructor') {
             return res.status(403).json({ success: false, message: 'Forbidden' });
         }
 
-        // 1. Find all courses created by this instructor
         const instructorCourses = await Course.find({ instructor: req.user.id }).select('_id title episodes');
         const courseIds = instructorCourses.map(c => c._id);
 
-        // 2. Find all quiz attempts for those courses from the database
-        const attempts = await QuizResult.find({ course: { $in: courseIds } })
-            .populate('user', 'firstName lastName') // Get student's name
-            .sort({ submittedAt: -1 }); // Show most recent first
+        let attempts = await QuizResult.find({ course: { $in: courseIds } })
+            .populate('user', 'firstName lastName')
+            .sort({ submittedAt: -1 });
 
-        // 3. Format the data for the dashboard table
+        // --- THIS IS THE FIX ---
+        // Filter out any attempts where the user has been deleted
+        attempts = attempts.filter(attempt => attempt.user);
+
         const formattedAttempts = attempts.map(attempt => {
             const course = instructorCourses.find(c => c._id.equals(attempt.course));
             let quizTitle = 'Unknown Quiz';
@@ -305,17 +307,16 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 }
             }
             
-            // Calculate the number of correct answers
             const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
             
             return {
-                id: attempt._id, // <-- ADD THIS LINE
-                date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                id: attempt._id,
+                date: new Date(attempt.submittedAt).toLocaleDateDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                 quizTitle: quizTitle,
                 studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
                 totalQuestions: attempt.answers.length,
                 totalMarks: attempt.possibleScore,
-                correctAnswers: correctAnswersCount, // Use the calculated count
+                correctAnswers: correctAnswersCount,
                 result: attempt.passed ? 'Pass' : 'Fail',
             };
         });
