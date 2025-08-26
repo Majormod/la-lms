@@ -10,6 +10,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Express
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// --- MIDDLEWARE ---
+app.use(cors());
+app.use(express.json());
 // --- 1. The Correct Multer Configuration ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -80,13 +87,6 @@ const QuizResult = require('./models/QuizResult');
 // 1. Replace your existing 'lessonUploads' multer instance with this one
 // Ensure path is imported at the top of your file
 
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// --- MIDDLEWARE ---
-app.use(cors());
-app.use(express.json());
 
 // --- DATABASE CONNECTION ---
 mongoose.connect(process.env.MONGO_URI)
