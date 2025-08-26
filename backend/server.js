@@ -1214,6 +1214,47 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     }
 });
 
+// In server.js, add this new route
+
+app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
+    try {
+        const result = await QuizResult.findById(req.params.resultId)
+            .populate({
+                path: 'course',
+                select: 'title episodes instructor'
+            });
+
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Result not found.' });
+        }
+
+        // Security check: ensure the user is either the student who took the quiz or the course instructor
+        const isStudentOwner = result.user.equals(req.user.id);
+        const isInstructorOwner = result.course.instructor.equals(req.user.id);
+
+        if (!isStudentOwner && !isInstructorOwner) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+
+        // Find the quiz title for the header
+        let quizTitle = 'Quiz Result';
+        if (result.course && result.course.episodes) {
+            for (const episode of result.course.episodes) {
+                const quiz = episode.quizzes.id(result.quiz);
+                if (quiz) {
+                    quizTitle = quiz.title;
+                    break;
+                }
+            }
+        }
+
+        res.json({ success: true, result, quizTitle });
+    } catch (error) {
+        console.error('Error fetching quiz result:', error);
+        res.status(500).json({ success: false, message: 'API endpoint not found' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 
