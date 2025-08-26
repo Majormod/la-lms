@@ -4011,50 +4011,76 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     if (!token) {
-        window.location.href = '/login.html'; // Redirect if not logged in
-    } else {
-        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
-        if (attemptsTableBody) {
-            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
-            
-            fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        if (result.attempts.length === 0) {
-                            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">You have not attempted any quizzes yet.</td></tr>';
-                            return;
-                        }
-                        
-                        attemptsTableBody.innerHTML = result.attempts.map(attempt => {
-                            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
-                            return `
-                                <tr>
-                                    <th>
-                                        <p class="b3 mb--5">${attempt.date}</p>
-                                        <span class="h6 mb--5">${attempt.quizTitle}</span>
-                                    </th>
-                                    <td><p class="b3">${attempt.totalQuestions}</p></td>
-                                    <td><p class="b3">${attempt.totalMarks}</p></td>
-                                    <td><p class="b3">${attempt.correctAnswers}</p></td>
-                                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                                    <td>
-                                        <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('');
-                    } else {
-                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+        window.location.href = '/login.html';
+        return;
+    }
+
+    // NEW: This function handles the click on the eye icon
+    const setupViewDetailsClickHandler = () => {
+        const tableBody = document.getElementById('quiz-attempts-table-body');
+        if (!tableBody) return;
+
+        tableBody.addEventListener('click', (e) => {
+            const viewButton = e.target.closest('.view-details-btn');
+            if (viewButton) {
+                e.preventDefault(); // Stop any other scripts from blocking the link
+                window.location.href = viewButton.href; // Manually navigate
+            }
+        });
+    };
+
+    // This is your existing code, with the fix integrated
+    const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+    if (attemptsTableBody) {
+        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
+        
+        fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    if (result.attempts.length === 0) {
+                        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">You have not attempted any quizzes yet.</td></tr>';
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('Error fetching your quiz attempts:', error);
-                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
-                });
-        }
+                    
+                    attemptsTableBody.innerHTML = result.attempts.map(attempt => {
+                        const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+                        
+                        // FIX #1: Create the correct link for the button
+                        const detailsLink = `lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}`;
+
+                        return `
+                            <tr>
+                                <th>
+                                    <p class="b3 mb--5">${attempt.date}</p>
+                                    <span class="h6 mb--5">${attempt.quizTitle}</span>
+                                </th>
+                                <td><p class="b3">${attempt.totalQuestions}</p></td>
+                                <td><p class="b3">${attempt.totalMarks}</p></td>
+                                <td><p class="b3">${attempt.correctAnswers}</p></td>
+                                <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                                <td>
+                                    <div class="rbt-button-group justify-content-end">
+                                        <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="${detailsLink}" title="View Details">
+                                            <i class="feather-eye pl--0"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // FIX #3: Activate the click handler now that the table is built
+                    setupViewDetailsClickHandler();
+
+                } else {
+                    attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching your quiz attempts:', error);
+                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
+            });
     }
 }
         handlePageLogic();
