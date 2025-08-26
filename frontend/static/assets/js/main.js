@@ -1160,10 +1160,22 @@ const updateUserDataOnPage = () => {
                 bannerNames.forEach(el => el.textContent = fullName);
                 
                 if (profile.avatar) {
-                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
-                    bannerAvatars.forEach(img => img.src = avatarUrl);
-                    if (headerDropdownAvatar) headerDropdownAvatar.src = avatarUrl;
-                }
+    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
+
+    // --- START OF FIX ---
+    // Select ALL avatars that need to be updated, including the new nav ones
+    const allAvatarImages = document.querySelectorAll(
+        '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile'
+    );
+    
+    allAvatarImages.forEach(img => {
+        if (img) { // Check if the element exists before trying to set its src
+            img.src = avatarUrl;
+        }
+    });
+    // --- END OF FIX ---
+
+}
 
                 if (profile.coverPhoto) {
                     const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`; // Cache-busting
