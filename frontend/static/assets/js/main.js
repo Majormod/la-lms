@@ -1136,77 +1136,54 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-// In main.js - REPLACE your old function with this one
+        const updateUserDataOnPage = () => {
+            if (!token) return;
+            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const profile = result.data;
+                        const fullName = `${profile.firstName} ${profile.lastName}`;
+                        const bannerName = document.querySelector('.rbt-tutor-information .title');
+                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                        const bannerCover = document.querySelector('.tutor-bg-photo');
+                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
+                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
+                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
+                        if (bannerName) bannerName.textContent = fullName;
+                        if (profile.avatar) {
+                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
+                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
+                        }
+                        if (profile.coverPhoto) {
+                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                        }
+                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
+                    } else {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                    localStorage.clear();
+                    window.location.href = '/login';
+                });
+        };
 
-const updateUserDataOnPage = () => {
-    const token = localStorage.getItem('lmsToken'); // Assuming you have token in localStorage
-    if (!token) {
-        console.error('No token found, redirecting to login.');
-        // window.location.href = '/login'; // Uncomment if you use /login
-        return;
-    }
+        const handlePageLogic = () => {
+            const path = window.location.pathname;
 
-    fetch(`${API_BASE_URL}/api/user/profile`, { 
-        headers: { 'x-auth-token': token } 
-    })
-    .then(res => {
-        if (!res.ok) {
-            // If response is not 2xx, throw an error to be caught by .catch()
-            throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-    })
-    .then(result => {
-        if (result.success) {
-            const profile = result.data;
-            
-            // Helpful for debugging: Check the console to see the user profile data
-            console.log('User profile loaded:', profile);
-
-            const fullName = `${profile.firstName} ${profile.lastName}`;
-
-            // --- Select all potential elements on the page ---
-            const bannerName = document.querySelector('.rbt-tutor-information .title');
-            const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-            const bannerCover = document.querySelector('.tutor-bg-photo'); // This is the main banner
-            const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-            
-            // --- Update the elements if they exist ---
-            if (bannerName) bannerName.textContent = fullName;
-            if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-
-            if (profile.avatar) {
-                const avatarUrl = `/${profile.avatar}`; // Your code prepends a '/'
-                if (bannerAvatar) bannerAvatar.src = avatarUrl;
+            if (path.includes('student-')) {
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+                updateUserDataOnPage();
             }
-
-            if (profile.coverPhoto) {
-                const coverPhotoUrl = `url('/${profile.coverPhoto}')`; // Your code prepends a '/'
-                if (bannerCover) bannerCover.style.backgroundImage = coverPhotoUrl;
-            }
-
-        } else {
-            // API returned success: false
-            throw new Error(result.message || 'API returned a failure response.');
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching user data:', error);
-        localStorage.clear();
-        // window.location.href = '/login'; // Uncomment if you use /login
-    });
-};
-
-// In main.js - ADD this code block
-
-document.addEventListener('DOMContentLoaded', () => {
-    const pathname = window.location.pathname;
-
-    // Check if we are on any instructor or student dashboard page
-    if (pathname.includes('/instructor-') || pathname.includes('/student-')) {
-        updateUserDataOnPage();
-    }
-});
 
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
