@@ -1179,7 +1179,12 @@ const updateUserDataOnPage = () => {
                     if (bannerAvatar) bannerAvatar.src = avatarPath;
                     if (navDropdownAvatar) navDropdownAvatar.src = avatarPath;
                 }
-
+                // --- START OF FIX ---
+                // This now uses .setProperty() to override the theme's !important CSS rule
+                if (bannerCover && coverPath) {
+                    bannerCover.style.setProperty('background-image', `url(${coverPath})`, 'important');
+                }
+                // --- END OF FIX ---
                 // --- 2. NEW: ROLE-BASED MENU LOGIC ---
 
                 // Define which links belong to which role
