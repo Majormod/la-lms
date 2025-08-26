@@ -3813,51 +3813,77 @@ fetchAndDisplayCourses();
     });
 }
 // In main.js, add this new block for the results page logic
+// In main.js
+
 if (window.location.pathname.includes('lesson-quiz-result.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-        // Retrieve the result from sessionStorage
-        const result = JSON.parse(sessionStorage.getItem('quizResult'));
-        
-        if (!result) {
-            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
-            return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultId = urlParams.get('resultId');
+        const courseId = urlParams.get('courseId');
+        const resultFromSession = JSON.parse(sessionStorage.getItem('quizResult'));
+
+        if (courseId) {
+            document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
         }
 
-        // --- 1. Render the Summary ---
+        if (resultId) {
+            // This logic handles loading old results via the "View Details" button
+            const token = localStorage.getItem('lmsToken');
+            fetch(`${API_BASE_URL}/api/quiz-results/${resultId}`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderResults(data.result, data.quizTitle, data.result.course);
+                    } else {
+                        document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`;
+                    }
+                });
+        } else if (resultFromSession) {
+            // This logic handles showing results immediately after a quiz
+            fetch(`${API_BASE_URL}/api/courses/${courseId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const quizTitle = data.course.episodes.flatMap(ep => ep.quizzes).find(q => q._id === resultFromSession.quiz)?.title || "Quiz Result";
+                        renderResults(resultFromSession, quizTitle, data.course);
+                        sessionStorage.removeItem('quizResult');
+                    }
+                });
+        } else {
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found.</h1>";
+        }
+    });
+
+    function renderResults(result, quizTitle, courseData) {
+        if (!document.getElementById('back-to-course-link').hasAttribute('href')) {
+            document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseData._id}`;
+        }
+        document.getElementById('result-page-title').textContent = quizTitle;
+
         const summaryContainer = document.getElementById('quiz-summary-results');
         const passStatus = result.passed ? 'Pass' : 'Fail';
         const passClass = result.passed ? 'color-success' : 'color-danger';
+        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
 
         summaryContainer.innerHTML = `
             <div class="text-center">
                 <h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3>
-                <p class="b3 mt-2">You answered ${result.score / result.answers[0].points} out of ${result.answers.length} questions correctly.</p>
-            </div>
-        `;
+                <p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p>
+            </div>`;
 
-        // --- 2. Render the Detailed Table ---
         const tableBody = document.getElementById('quiz-results-tbody');
         tableBody.innerHTML = result.answers.map((answer, index) => {
-            // NOTE: This part is complex because we need to find the text of the selected answers.
-            // This is a simplified version. A full version would require fetching the quiz data again.
-            const resultBadge = answer.isCorrect ? 
+            const resultBadge = answer.isCorrect ?
                 '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' :
                 '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
-
             return `
                 <tr>
                     <td><p class="b3">${index + 1}</p></td>
                     <td><p class="b3">${answer.questionText}</p></td>
-                    <td><p class="b3">Your Answer</p></td>
-                    <td><p class="b3">Correct Answer</p></td>
                     <td>${resultBadge}</td>
-                </tr>
-            `;
+                </tr>`;
         }).join('');
-
-        // Clear the stored result after displaying it
-        sessionStorage.removeItem('quizResult');
-    });
+    }
 }
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
@@ -3918,10 +3944,12 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 // =================================================================
 // SCRIPT FOR student-my-quiz-attempts.html
 // =================================================================
+// In main.js
+
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     if (!token) {
-        window.location.href = '/login.html'; // Redirect if not logged in
+        window.location.href = '/login.html';
     } else {
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (attemptsTableBody) {
@@ -3950,7 +3978,9 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                                     <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
                                     <td>
                                         <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
+                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="lesson-quiz-result.html?resultId=${attempt.id}" title="View Details">
+                                                <i class="feather-eye pl--0"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
