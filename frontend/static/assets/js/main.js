@@ -3920,25 +3920,26 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 // =================================================================
 // FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters)
 // =================================================================
+// =================================================================
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with working filters & buttons)
+// =================================================================
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser'));
-    let allAttempts = []; // This will store all attempts for client-side filtering
+    let allAttempts = []; // Store all attempts for client-side filtering
 
     if (!token || !user || user.role !== 'instructor') {
         window.location.href = '/login.html';
     }
 
-    // This function renders the table rows from a given array of attempts
+    // This function renders the table rows
     const renderTable = (attempts) => {
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (!attemptsTableBody) return;
-        
         if (attempts.length === 0) {
-            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results found.</td></tr>';
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results match your filter.</td></tr>';
             return;
         }
-
         attemptsTableBody.innerHTML = attempts.map(attempt => {
             const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
             return `
@@ -3948,36 +3949,29 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                     <td><p class="b3">${attempt.totalMarks}</p></td>
                     <td><p class="b3">${attempt.correctAnswers}</p></td>
                     <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="lesson-quiz-result.html?resultId=${attempt.id}" title="View Details"><i class="feather-eye pl--0"></i></a></div></td>
+                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details"><i class="feather-eye pl--0"></i></a></div></td>
                 </tr>`;
         }).join('');
     };
 
-    // This function populates the "Courses" dropdown and sets up the filter logic
+    // This function populates the "Courses" dropdown
     const setupCourseFilter = (courses) => {
         const courseSelect = document.querySelector('.filter-select select[data-live-search="true"]');
         if (!courseSelect) return;
 
-        // 1. Populate the <select> with dynamic options
         courseSelect.innerHTML = courses.map(course => `<option value="${course._id}">${course.title}</option>`).join('');
         
-        // 2. Refresh the bootstrap-select plugin to show the new options
-        // This requires jQuery ($) to be loaded on your page
+        // This is a special command to refresh the 'bootstrap-select' plugin
         if (typeof $ !== 'undefined') {
             $(courseSelect).selectpicker('refresh');
         }
 
-        // 3. Add an event listener to filter the table when the selection changes
         courseSelect.addEventListener('change', () => {
-            // Get the array of selected course IDs from the plugin
             const selectedCourseIds = $(courseSelect).val();
-
             if (selectedCourseIds && selectedCourseIds.length > 0) {
-                // Filter the master list of attempts
                 const filteredAttempts = allAttempts.filter(attempt => selectedCourseIds.includes(attempt.courseId));
                 renderTable(filteredAttempts);
             } else {
-                // If nothing is selected, show all attempts
                 renderTable(allAttempts);
             }
         });
@@ -3992,9 +3986,9 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    allAttempts = result.attempts; // Save the full list of attempts
-                    renderTable(allAttempts); // Render the initial full table
-                    setupCourseFilter(result.courses); // Populate and set up the course filter
+                    allAttempts = result.attempts;
+                    renderTable(allAttempts);
+                    setupCourseFilter(result.courses);
                 } else {
                     attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
                 }
@@ -4005,6 +3999,7 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
             });
     };
     
+    // Run the main function when the page is ready
     document.addEventListener('DOMContentLoaded', initializePage);
 }
 // =================================================================
