@@ -1148,7 +1148,9 @@ const renderCourseDetailsCurriculum = (episodes) => {
 };
 
 const updateUserDataOnPage = () => {
+    const token = localStorage.getItem('lmsToken'); // Ensure token is defined here
     if (!token) return;
+
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
         .then(result => {
@@ -1156,50 +1158,75 @@ const updateUserDataOnPage = () => {
                 const profile = result.data;
                 const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // Existing selectors from your code
+                // --- 1. UPDATE ALL VISUAL ELEMENTS (Your existing code, made more robust) ---
+                
+                // Selectors
                 const bannerName = document.querySelector('.rbt-tutor-information .title');
                 const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                const bannerCover = document.querySelector('.tutor-bg-photo');
                 const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-
-                // --- START OF FIX ---
-                // 1. Add a new, reliable selector for the dropdown avatar
                 const navDropdownAvatar = document.querySelector('.rbt-admin-profile .admin-thumbnail img');
-                // --- END OF FIX ---
-
+                
+                // Update Names
                 if (bannerName) bannerName.textContent = fullName;
-
-                if (profile.avatar) {
-                    if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                    if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                    
-                    // --- START OF FIX ---
-                    // 2. Add the line to update the dropdown avatar's source
-                    if (navDropdownAvatar) navDropdownAvatar.src = `/${profile.avatar}`;
-                    // --- END OF FIX ---
-                }
-                
-                if (profile.coverPhoto) {
-                    if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                    if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                }
-                
                 if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                
+                // Update Avatars
+                if (profile.avatar) {
+                    const avatarPath = `/${profile.avatar}`;
+                    if (bannerAvatar) bannerAvatar.src = avatarPath;
+                    if (navDropdownAvatar) navDropdownAvatar.src = avatarPath;
+                }
+
+                // --- 2. NEW: ROLE-BASED MENU LOGIC ---
+
+                // Define which links belong to which role
+                const instructorLinks = ['instructor-dashboard.html', 'instructor-profile.html', 'instructor-my-courses.html', 'instructor-announcements.html', 'instructor-quiz-attempts.html', 'instructor-assignments.html', 'instructor-settings.html'];
+                const studentLinks = ['student-dashboard.html', 'student-profile.html', 'student-enrolled-courses.html', 'student-wishlist.html', 'student-reviews.html', 'student-my-quiz-attempts.html', 'student-order-history.html', 'student-settings.html'];
+
+                // Get all links in the user dropdown
+                const allLinks = document.querySelectorAll('.rbt-user-menu-list-wrapper ul.user-list-wrapper li a');
+
+                if (profile.role === 'instructor') {
+                    // Show/hide links for Instructors
+                    allLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (instructorLinks.includes(href)) {
+                            link.parentElement.style.display = 'list-item';
+                        } else {
+                            link.parentElement.style.display = 'none';
+                        }
+                    });
+                } else {
+                    // Show/hide links for Students
+                    allLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (studentLinks.includes(href)) {
+                            link.parentElement.style.display = 'list-item';
+                        } else {
+                            link.parentElement.style.display = 'none';
+                        }
+                    });
+                }
+                
+                // Always show the logout button
+                document.querySelectorAll('.logout-btn').forEach(btn => {
+                    if (btn.parentElement) btn.parentElement.style.display = 'list-item';
+                });
+
 
             } else {
                 localStorage.clear();
-                window.location.href = '/login';
+                window.location.href = '/login.html';
             }
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.href = '/login.html';
         });
 };
-
+// ADD THIS ONE LINE RIGHT AFTER THE FUNCTION DEFINITION
+updateUserDataOnPage();
         const handlePageLogic = () => {
             const path = window.location.pathname;
 
