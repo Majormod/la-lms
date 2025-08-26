@@ -32,12 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name').forEach(el => {
             if (el) el.textContent = fullName;
         });
-        if (user.avatar) {
-            const avatarPath = `/${user.avatar.replace(/\\/g, '/')}`;
-            document.querySelectorAll('#nav-user-avatar, .rbt-user-wrapper .admin-thumbnail img').forEach(img => {
-                if (img) img.src = avatarPath;
-            });
-        }
         
         // Define the menu links for each role
         const instructorLinks = [
