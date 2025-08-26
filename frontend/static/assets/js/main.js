@@ -1658,7 +1658,7 @@ if (window.location.pathname.includes('/instructor-')) {
 // REPLACE your existing 'instructor-settings.html' block in main.js with this one.
 
 if (window.location.pathname.includes('instructor-settings.html')) {
-    const { token, user } = getAuth(); // Uses the safe helper function
+    const { token, user } = getAuth();
 
     // Security check
     if (!token || !user || user.role !== 'instructor') {
@@ -1666,13 +1666,14 @@ if (window.location.pathname.includes('instructor-settings.html')) {
         window.location.href = 'login.html';
         return;
     }
-    
-    // This is a self-contained function to update data ONLY on this page.
-    const populateInstructorSettingsPage = () => {
+
+    // --- Helper function to populate all user data on the page ---
+    const populateInstructorPage = () => {
         const currentUser = getAuth().user;
         if (!currentUser) return;
 
         const fullName = `${currentUser.firstName} ${currentUser.lastName}`;
+        
         document.querySelectorAll('.rbt-tutor-information .title').forEach(el => el.textContent = fullName);
         document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${currentUser.firstName}`;
 
@@ -1683,8 +1684,6 @@ if (window.location.pathname.includes('instructor-settings.html')) {
             });
         }
         
-        // --- THIS IS THE FIX ---
-        // It now selects ALL elements with the .tutor-bg-photo class
         if (currentUser.coverPhoto) {
             const coverPath = `/${currentUser.coverPhoto}?t=${new Date().getTime()}`;
             document.querySelectorAll('.tutor-bg-photo').forEach(div => {
@@ -1693,9 +1692,67 @@ if (window.location.pathname.includes('instructor-settings.html')) {
         }
     };
 
-    // --- Event Handlers for Image Uploads ---
+    // --- Function to fetch and populate the settings form fields ---
+    const populateSettingsForms = () => {
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    const profile = result.data;
+                    document.querySelector('#firstname').value = profile.firstName || '';
+                    document.querySelector('#lastname').value = profile.lastName || '';
+                    document.querySelector('#username').value = profile.username || '';
+                    document.querySelector('#phonenumber').value = profile.phone || '';
+                    document.querySelector('#skill').value = profile.occupation || '';
+                    document.querySelector('#bio').value = profile.bio || '';
+                    // Populate other forms (social, etc.) if they exist
+                }
+            });
+    };
+
+    // --- Event Handlers for FORM SUBMISSIONS ---
+
+    // Profile Info Form
+    const profileForm = document.querySelector('#profile-tab-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const updatedData = {
+                firstName: document.querySelector('#firstname').value,
+                lastName: document.querySelector('#lastname').value,
+                phone: document.querySelector('#phonenumber').value,
+                occupation: document.querySelector('#skill').value,
+                bio: document.querySelector('#bio').value,
+            };
+            fetch(`${API_BASE_URL}/api/user/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(updatedData),
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Profile updated successfully!');
+                    localStorage.setItem('lmsUser', JSON.stringify(result.user)); // Update local data
+                    populateInstructorPage(); // Refresh banner
+                } else { alert('Error updating profile.'); }
+            });
+        });
+    }
+
+    // Password Form
+    const passwordForm = document.querySelector('#password-tab-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // ... (Your password submission logic) ...
+        });
+    }
+
+
+    // --- Event Handlers for IMAGE UPLOADS ---
     
-    // Avatar Upload (already working but included for completeness)
+    // Avatar Upload
     const avatarUploadButton = document.querySelector('#avatar-upload-button');
     if (avatarUploadButton) {
         const fileInput = document.createElement('input');
@@ -1714,8 +1771,7 @@ if (window.location.pathname.includes('instructor-settings.html')) {
                     if (result.success) { 
                         alert('Avatar updated!');
                         localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                        populateInstructorSettingsPage();
-                        // Also update the main nav immediately
+                        populateInstructorPage();
                         const navAvatar = document.getElementById('nav-user-avatar');
                         if(navAvatar) navAvatar.src = `/${result.user.avatar}?t=${new Date().getTime()}`;
                     } else { alert(`Error: ${result.message}`); }
@@ -1723,7 +1779,7 @@ if (window.location.pathname.includes('instructor-settings.html')) {
         });
     }
 
-    // Cover Photo Upload (Corrected Logic)
+    // Cover Photo Upload
     const coverUploadButton = document.querySelector('#cover-upload-button');
     if (coverUploadButton) {
         const fileInput = document.createElement('input');
@@ -1735,7 +1791,6 @@ if (window.location.pathname.includes('instructor-settings.html')) {
             const file = e.target.files[0];
             if (!file) return;
             const formData = new FormData();
-            // --- FIX for the 404 error ---
             formData.append('coverPhoto', file); 
             fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
                 .then(res => res.json())
@@ -1743,17 +1798,16 @@ if (window.location.pathname.includes('instructor-settings.html')) {
                     if (result.success) {
                         alert('Cover photo updated!'); 
                         localStorage.setItem('lmsUser', JSON.stringify(result.user));
-                        populateInstructorSettingsPage();
+                        populateInstructorPage();
                     } else { alert(`Error: ${result.message}`); }
                 });
         });
     }
     
     // --- Initial Page Load ---
-    populateInstructorSettingsPage();
-    // (Your code to populate the form fields like firstname, lastname etc. will also run here)
+    populateInstructorPage();
+    populateSettingsForms();
 }
-
 if (window.location.pathname.includes('create-course.html')) {
     document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('lmsToken');
