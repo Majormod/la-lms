@@ -279,6 +279,8 @@ app.get('/api/instructor/announcements', auth, async (req, res) => {
 
 // In server.js, replace the existing instructor quiz attempts route
 
+// In server.js, replace the existing instructor quiz attempts route
+
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
         if (req.user.role !== 'instructor') {
@@ -292,19 +294,15 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
             .populate('user', 'firstName lastName')
             .sort({ submittedAt: -1 });
 
-        // Filter out any attempts where the user has been deleted
         attempts = attempts.filter(attempt => attempt.user);
 
         const formattedAttempts = attempts.map(attempt => {
-            // --- START OF FIX ---
-            // We wrap the processing of each attempt in a try...catch block.
-            // This prevents one bad record from crashing the entire request.
             try {
                 const course = instructorCourses.find(c => c._id.equals(attempt.course));
                 let quizTitle = 'Unknown Quiz';
                 if (course) {
                     for (const episode of course.episodes) {
-                        if (episode.quizzes) { // Add a safety check here
+                        if (episode.quizzes) {
                            const quiz = episode.quizzes.id(attempt.quiz);
                            if (quiz) {
                                quizTitle = quiz.title;
@@ -318,7 +316,8 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 
                 return {
                     id: attempt._id,
-                    courseId: attempt.course.toString(), // <-- ADD THIS LINE
+                    courseId: attempt.course.toString(),
+                    // --- THIS IS THE CORRECTED LINE ---
                     date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     quizTitle: quizTitle,
                     studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
@@ -329,18 +328,14 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 };
             } catch (e) {
                 console.error(`Could not process quiz attempt with ID: ${attempt._id}. Error:`, e);
-                return null; // Return null for the failed attempt
+                return null;
             }
-            // --- END OF FIX ---
-        }).filter(Boolean); // This final step removes any null entries from the array.
+        }).filter(Boolean);
 
-        res.json({ success: true, attempts: formattedAttempts });
-
-        // MODIFIED: Send back both attempts AND the list of courses
         res.json({ 
             success: true, 
             attempts: formattedAttempts,
-            courses: instructorCourses // <-- ADD THIS
+            courses: instructorCourses
         });
 
     } catch (error) {
