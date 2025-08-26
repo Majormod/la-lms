@@ -318,6 +318,7 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 
                 return {
                     id: attempt._id,
+                    courseId: attempt.course.toString(), // <-- ADD THIS LINE
                     date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     quizTitle: quizTitle,
                     studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
@@ -341,7 +342,7 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
             attempts: formattedAttempts,
             courses: instructorCourses // <-- ADD THIS
         });
-        
+
     } catch (error) {
         console.error('Error fetching instructor quiz attempts:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
