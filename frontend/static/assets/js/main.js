@@ -3814,32 +3814,88 @@ fetchAndDisplayCourses();
 }
 // In main.js, add this new block for the results page logic
 // In main.js
-
+// In main.js, replace the entire block for the results page
 if (window.location.pathname.includes('lesson-quiz-result.html')) {
+
+    // This function builds the sidebar navigation.
+    function renderSidebar(courseData, activeQuizId) {
+        const sidebar = document.querySelector('.rbt-lesson-leftsidebar .rbt-accordion-02');
+        if (!sidebar) return;
+
+        const activeEpisode = courseData.episodes.find(ep =>
+            ep.quizzes.some(q => q._id === activeQuizId)
+        );
+
+        sidebar.innerHTML = courseData.episodes.map((episode, index) => {
+            const isExpanded = activeEpisode && episode._id === activeEpisode._id;
+            const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
+            const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
+            const contents = [...lessons, ...quizzes];
+
+            const contentHTML = contents.map(content => {
+                const isActive = (content.type === 'quiz' && content._id === activeQuizId);
+                const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
+                // Correctly link back to lesson.html
+                const link = `lesson.html?courseId=${courseData._id}&${content.type}Id=${content._id}`;
+                return `
+                    <li>
+                        <a href="${link}" class="content-link ${isActive ? 'active' : ''}">
+                            <div class="course-content-left">
+                                <i class="feather-${icon}"></i><span class="text">${content.title}</span>
+                            </div>
+                        </a>
+                    </li>`;
+            }).join('');
+
+            return `
+                <div class="accordion-item card">
+                    <h2 class="accordion-header card-header"><button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">${episode.title}</button></h2>
+                    <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}"><div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div></div>
+                </div>`;
+        }).join('');
+    }
+
+    // This function renders the main results content on the right.
+    function renderResults(result, quizTitle, courseData) {
+        document.getElementById('result-page-title').textContent = quizTitle;
+        
+        // This makes the close button go back to the previous page (student dashboard)
+        document.getElementById('back-button').href = document.referrer || `course-details.html?courseId=${courseData._id}`;
+
+        const summaryContainer = document.getElementById('quiz-summary-results');
+        const passStatus = result.passed ? 'Pass' : 'Fail';
+        const passClass = result.passed ? 'color-success' : 'color-danger';
+        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
+
+        summaryContainer.innerHTML = `<div class="text-center"><h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3><p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p></div>`;
+
+        const tableBody = document.getElementById('quiz-results-tbody');
+        tableBody.innerHTML = result.answers.map((answer, index) => {
+            const resultBadge = answer.isCorrect ? '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' : '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
+            return `<tr><td><p class="b3">${index + 1}</p></td><td><p class="b3">${answer.questionText}</p></td><td>${resultBadge}</td></tr>`;
+        }).join('');
+
+        // Render the sidebar now that we have all the data
+        renderSidebar(courseData, result.quiz);
+    }
+
+    // This is the main logic that runs when the results page loads.
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const resultId = urlParams.get('resultId');
-        const courseId = urlParams.get('courseId');
         const resultFromSession = JSON.parse(sessionStorage.getItem('quizResult'));
 
-        if (courseId) {
-            document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
-        }
-
         if (resultId) {
-            // This logic handles loading old results via the "View Details" button
             const token = localStorage.getItem('lmsToken');
             fetch(`${API_BASE_URL}/api/quiz-results/${resultId}`, { headers: { 'x-auth-token': token } })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         renderResults(data.result, data.quizTitle, data.result.course);
-                    } else {
-                        document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`;
-                    }
+                    } else { document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`; }
                 });
         } else if (resultFromSession) {
-            // This logic handles showing results immediately after a quiz
+            const courseId = urlParams.get('courseId');
             fetch(`${API_BASE_URL}/api/courses/${courseId}`)
                 .then(res => res.json())
                 .then(data => {
@@ -3850,40 +3906,9 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
                     }
                 });
         } else {
-            document.querySelector('.inner').innerHTML = "<h1>No quiz result found.</h1>";
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
         }
     });
-
-    function renderResults(result, quizTitle, courseData) {
-        if (!document.getElementById('back-to-course-link').hasAttribute('href')) {
-            document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseData._id}`;
-        }
-        document.getElementById('result-page-title').textContent = quizTitle;
-
-        const summaryContainer = document.getElementById('quiz-summary-results');
-        const passStatus = result.passed ? 'Pass' : 'Fail';
-        const passClass = result.passed ? 'color-success' : 'color-danger';
-        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
-
-        summaryContainer.innerHTML = `
-            <div class="text-center">
-                <h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3>
-                <p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p>
-            </div>`;
-
-        const tableBody = document.getElementById('quiz-results-tbody');
-        tableBody.innerHTML = result.answers.map((answer, index) => {
-            const resultBadge = answer.isCorrect ?
-                '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' :
-                '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
-            return `
-                <tr>
-                    <td><p class="b3">${index + 1}</p></td>
-                    <td><p class="b3">${answer.questionText}</p></td>
-                    <td>${resultBadge}</td>
-                </tr>`;
-        }).join('');
-    }
 }
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
