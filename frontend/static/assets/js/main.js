@@ -3913,15 +3913,8 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
 // =================================================================
-// In main.js
 // =================================================================
-// FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters)
-// =================================================================
-// =================================================================
-// FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters)
-// =================================================================
-// =================================================================
-// FINAL SCRIPT FOR instructor-quiz-attempts.html (with working filters & buttons)
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with working buttons)
 // =================================================================
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
@@ -3936,10 +3929,12 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const renderTable = (attempts) => {
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (!attemptsTableBody) return;
+        
         if (attempts.length === 0) {
             attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results match your filter.</td></tr>';
             return;
         }
+
         attemptsTableBody.innerHTML = attempts.map(attempt => {
             const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
             return `
@@ -3949,7 +3944,13 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                     <td><p class="b3">${attempt.totalMarks}</p></td>
                     <td><p class="b3">${attempt.correctAnswers}</p></td>
                     <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details"><i class="feather-eye pl--0"></i></a></div></td>
+                    <td>
+                        <div class="rbt-button-group justify-content-end">
+                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details">
+                                <i class="feather-eye pl--0"></i>
+                            </a>
+                        </div>
+                    </td>
                 </tr>`;
         }).join('');
     };
@@ -3961,7 +3962,6 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 
         courseSelect.innerHTML = courses.map(course => `<option value="${course._id}">${course.title}</option>`).join('');
         
-        // This is a special command to refresh the 'bootstrap-select' plugin
         if (typeof $ !== 'undefined') {
             $(courseSelect).selectpicker('refresh');
         }
@@ -3973,6 +3973,21 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                 renderTable(filteredAttempts);
             } else {
                 renderTable(allAttempts);
+            }
+        });
+    };
+
+    // NEW: This function forces the "View Details" button to work
+    const setupViewDetailsClickHandler = () => {
+        const tableBody = document.getElementById('quiz-attempts-table-body');
+        if (!tableBody) return;
+
+        tableBody.addEventListener('click', (e) => {
+            // Find if an 'eye icon' link was clicked
+            const viewButton = e.target.closest('.view-details-btn');
+            if (viewButton) {
+                e.preventDefault(); // Stop any other scripts from blocking the navigation
+                window.location.href = viewButton.href; // Manually go to the link's href
             }
         });
     };
@@ -3989,6 +4004,7 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                     allAttempts = result.attempts;
                     renderTable(allAttempts);
                     setupCourseFilter(result.courses);
+                    setupViewDetailsClickHandler(); // <-- ADDED THIS CALL
                 } else {
                     attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
                 }
@@ -3999,7 +4015,6 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
             });
     };
     
-    // Run the main function when the page is ready
     document.addEventListener('DOMContentLoaded', initializePage);
 }
 // =================================================================
