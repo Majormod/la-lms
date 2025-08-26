@@ -4,68 +4,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-// In server.js - Replace your old multer config and routes with this entire block
-
-const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-
-// --- 1. The Correct Multer Configuration ---
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // This is the physical folder where files will be saved.
-        // It MUST match the folder being served by express.static.
-        const uploadPath = path.join(__dirname, 'public/assets/images/uploads');
-
-        // Ensure this directory exists
-        fs.mkdirSync(uploadPath, { recursive: true });
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        // Create a unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage: storage });
-
-
-// --- 2. Your Correct Routes Using the Above Configuration ---
-
-// UPLOAD a new avatar
-app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
-        const user = await User.findById(req.user.id);
-        
-        // This path now correctly matches where the file was saved
-        user.avatar = `assets/images/uploads/${req.file.filename}`;
-        
-        await user.save();
-        res.json({ success: true, msg: 'Avatar updated successfully', filePath: user.avatar });
-    } catch (err) { 
-        console.error("Avatar Upload Error:", err);
-        res.status(500).send('Server Error'); 
-    }
-});
-
-// UPLOAD a new cover photo
-app.post('/api/user/cover', auth, upload.single('coverPhoto'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
-        const user = await User.findById(req.user.id);
-        
-        // This path also correctly matches where the file was saved
-        user.coverPhoto = `assets/images/uploads/${req.file.filename}`;
-        
-        await user.save();
-        res.json({ success: true, msg: 'Cover photo updated successfully', filePath: user.coverPhoto });
-    } catch (err) { 
-        console.error("Cover Photo Upload Error:", err);
-        res.status(500).send('Server Error'); 
-    }
-});
+const multer = require('multer');
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
@@ -79,7 +19,20 @@ const QuizResult = require('./models/QuizResult');
 
 // 1. Replace your existing 'lessonUploads' multer instance with this one
 // Ensure path is imported at the top of your file
+const fs = require('fs');     // Ensure fs is imported for file deletion
 
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            const uploadPath = path.join(__dirname, '../frontend/uploads/courses');
+            fs.mkdirSync(uploadPath, { recursive: true }); // Ensure directory exists
+            cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+        }
+    }),
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -1335,6 +1288,24 @@ app.get('*', (req, res) => {
 });
 
 // In server.js, near your other user routes
+
+// UPLOAD a new cover photo
+app.post('/api/user/cover', auth, upload.single('cover'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded.' });
+        }
+        const user = await User.findByIdAndUpdate(req.user.id, 
+            { coverPhoto: req.file.path }, 
+            { new: true }
+        ).select('-password');
+        
+        res.json({ success: true, message: 'Cover photo updated!', user });
+    } catch (error) {
+        console.error('Error uploading cover photo:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
 
 // --- START SERVER ---
 app.listen(PORT, () => {
