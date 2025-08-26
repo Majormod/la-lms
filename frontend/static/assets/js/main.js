@@ -1,14 +1,3 @@
-// ================= DEBUG CODE =================
-// This will print all items from localStorage to the console when any page loads.
-console.log("--- Local Storage Contents ---");
-for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    const value = localStorage.getItem(key);
-    console.log(`Key: ${key}`, `Value: ${value}`);
-}
-console.log("------------------------------");
-// ============================================
-
 (function (window, document, $, undefined) {
     "use strict";
 
