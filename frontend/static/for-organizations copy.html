@@ -516,54 +516,25 @@
                                 </a>
                             </li>
 
-<li class="account-access rbt-user-wrapper d-none d-xl-block">
-    
-    <a id="nav-login-link" class="d-none" href="login.html"><i class="feather-user"></i> Login</a>
-
-    <a id="nav-user-link" class="d-none" href="#"><i class="feather-user"></i> <span id="nav-user-name">User</span></a>
-
-    <div class="rbt-user-menu-list-wrapper">
-        <div class="inner">
-            <div class="rbt-admin-profile">
-                <div class="admin-thumbnail">
-                    <img id="nav-user-avatar" src="assets/images/team/avatar.jpg" alt="User Avatar">
-                </div>
-                <div class="admin-info">
-                    <span id="nav-user-name-dropdown" class="name">User Name</span>
-                    <a class="rbt-btn-link color-primary" href="profile.html">View Profile</a>
-                </div>
-            </div>
-            <ul class="user-list-wrapper">
-                <li id="nav-bookmark-link"><a href="#"><i class="feather-bookmark"></i><span>Bookmark</span></a></li>
-<li id="nav-reviews-link"><a href="#"><i class="feather-star"></i><span>Reviews</span></a></li>
-                <li><a href="instructor-settings.html"><i class="feather-settings"></i><span>Settings</span></a></li>
-                
-                <li class="instructor-only-link"><a href="instructor-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
-                
-                <li class="student-only-link"><a href="student-dashboard.html"><i class="feather-home"></i><span>My Dashboard</span></a></li>
-                <li class="student-only-link"><a href="student-enrolled-courses.html"><i class="feather-shopping-bag"></i><span>Enrolled Courses</span></a></li>
-            </ul>
-            <hr class="mt--10 mb--10">
-            <ul class="user-list-wrapper">
-                <li><a class="logout-btn" href="#"><i class="feather-log-out"></i><span>Logout</span></a></li>
-            </ul>
-        </div>
-    </div>
+<li class="access-icon" id="guest-nav-item">
+    <a class="btn-transparent" href="login.html">
+        <i class="feather-user"></i><span>Login</span>
+    </a>
 </li>
 
-<li class="access-icon rbt-user-wrapper">
+<li class="access-icon rbt-user-wrapper" id="user-nav-item" style="display: none;">
     <a href="#" class="rbt-round-btn">
-        <img class="header-user-avatar" src="assets/images/team/avatar-placeholder.png" alt="User Avatar">
+        <img id="nav-user-avatar-icon" src="assets/images/team/avatar-placeholder.png" alt="User Avatar">
     </a>
     <div class="rbt-user-menu-list-wrapper">
         <div class="inner">
             <div class="rbt-admin-profile">
                 <div class="admin-thumbnail">
-                    <img class="header-user-avatar" src="assets/images/team/avatar-placeholder.png" alt="User Avatar">
+                    <img id="nav-user-avatar-dropdown" src="assets/images/team/avatar-placeholder.png" alt="User Avatar">
                 </div>
                 <div class="admin-info">
-                    <span class="name" id="header-dropdown-name">Guest</span>
-                    <a class="rbt-btn-link color-primary" href="instructor-profile.html">View Profile</a>
+                    <span class="name" id="nav-user-name-dropdown">User Name</span>
+                    <a class="rbt-btn-link color-primary" id="nav-profile-link" href="#">View Profile</a>
                 </div>
             </div>
 
@@ -576,9 +547,8 @@
                 <li class="instructor-only-link"><a href="instructor-assignments.html"><i class="feather-file-text"></i><span>Assignments</span></a></li>
                 
                 <li class="student-only-link"><a href="student-dashboard.html"><i class="feather-home"></i><span>Dashboard</span></a></li>
+                <li class="student-only-link"><a href="student-profile.html"><i class="feather-user"></i><span>My Profile</span></a></li>
                 <li class="student-only-link"><a href="student-enrolled-courses.html"><i class="feather-book-open"></i><span>Enrolled Courses</span></a></li>
-                <li class="student-only-link"><a href="student-wishlist.html"><i class="feather-bookmark"></i><span>Wishlist</span></a></li>
-                <li class="student-only-link"><a href="student-reviews.html"><i class="feather-star"></i><span>Reviews</span></a></li>
                 <li class="student-only-link"><a href="student-my-quiz-attempts.html"><i class="feather-help-circle"></i><span>My Quiz Attempts</span></a></li>
                 <li class="student-only-link"><a href="student-order-history.html"><i class="feather-shopping-bag"></i><span>Order History</span></a></li>
             </ul>
@@ -586,20 +556,11 @@
             <hr class="mt--10 mb--10">
 
             <ul class="user-list-wrapper">
-                <li><a href="instructor-settings.html" class="instructor-only-link"><i class="feather-settings"></i><span>Settings</span></a></li>
-                <li><a href="student-settings.html" class="student-only-link"><i class="feather-settings"></i><span>Settings</span></a></li>
-                <li><a href="#" id="logout-button"><i class="feather-log-out"></i><span>Logout</span></a></li>
+                <li><a id="nav-settings-link" href="#"><i class="feather-settings"></i><span>Settings</span></a></li>
+                <li><a href="#" id="nav-logout-btn"><i class="feather-log-out"></i><span>Logout</span></a></li>
             </ul>
         </div>
     </div>
-</li>
-<li class="access-icon rbt-user-wrapper" style="display: none;">
-    </li>
-
-<li class="access-icon guest-link">
-    <a class="rbt-round-btn" href="login.html" title="Login">
-        <i class="feather-user"></i>
-    </a>
 </li>
 
                         </ul>

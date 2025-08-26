@@ -17,43 +17,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { token, user } = getAuth();
 
-    const guestLinks = document.querySelectorAll('.guest-link');
-    const userDropdowns = document.querySelectorAll('.rbt-user-wrapper');
+    const guestNavItem = document.getElementById('guest-nav-item');
+    const userNavItem = document.getElementById('user-nav-item');
 
     if (token && user) {
-        // --- USER IS LOGGED IN ---
-        guestLinks.forEach(el => el.style.display = 'none');
-        userDropdowns.forEach(el => el.style.display = 'block');
+        // --- 1. USER IS LOGGED IN ---
 
-        // Populate user name
+        // Hide guest link, show user dropdown
+        if (guestNavItem) guestNavItem.style.display = 'none';
+        if (userNavItem) userNavItem.style.display = 'list-item';
+
+        // Populate user name and avatar
         const fullName = user.name || `${user.firstName} ${user.lastName}`;
-        document.querySelectorAll('#header-dropdown-name').forEach(el => { 
-            if(el) el.textContent = fullName;
-        });
+        document.getElementById('nav-user-name-dropdown').textContent = fullName;
 
-        // Populate user avatar using the new shared class
         if (user.avatar) {
             const avatarPath = `/${user.avatar}`;
-            document.querySelectorAll('.header-user-avatar').forEach(img => img.src = avatarPath);
+            document.getElementById('nav-user-avatar-icon').src = avatarPath;
+            document.getElementById('nav-user-avatar-dropdown').src = avatarPath;
         }
 
-        // Show/hide menu items based on user role
+        // Configure links and show/hide menu items based on user role
         if (user.role === 'instructor') {
+            document.getElementById('nav-profile-link').href = 'instructor-profile.html';
+            document.getElementById('nav-settings-link').href = 'instructor-settings.html';
             document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
-        } else {
+        } else { // Assumes 'student' role
+            document.getElementById('nav-profile-link').href = 'student-profile.html';
+            document.getElementById('nav-settings-link').href = 'student-settings.html';
             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
         }
 
     } else {
-        // --- USER IS LOGGED OUT ---
-        guestLinks.forEach(el => el.style.display = 'block');
-        userDropdowns.forEach(el => el.style.display = 'none');
+        // --- 2. USER IS LOGGED OUT ---
+        if (guestNavItem) guestNavItem.style.display = 'list-item';
+        if (userNavItem) userNavItem.style.display = 'none';
     }
 
-    // --- UNIVERSAL LOGOUT HANDLER ---
-    const logoutButton = document.getElementById('logout-button');
+    // --- 3. UNIVERSAL LOGOUT HANDLER ---
+    const logoutButton = document.getElementById('nav-logout-btn');
     if (logoutButton) {
         logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
