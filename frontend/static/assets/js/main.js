@@ -1158,7 +1158,8 @@ const renderCourseDetailsCurriculum = (episodes) => {
                         }
 // This is the FIX
 if (profile.coverPhoto) {
-    const coverPhotoUrl = `url('/${profile.coverPhoto.replace(/^\//, '')}')`; // Create a clean URL
+    // The final version using the correct path
+    const coverPhotoUrl = `url('/assets/images/uploads/${profile.coverPhoto.replace(/^\//, '')}')`;
     if (bannerCover) bannerCover.style.backgroundImage = coverPhotoUrl;
     if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = coverPhotoUrl;
 }
