@@ -1147,52 +1147,79 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-// =============================================================
-// FINAL GLOBAL USER UPDATE SCRIPT
-// =============================================================
+// In main.js, replace your existing updateUserDataOnPage function with this one.
 
 const updateUserDataOnPage = () => {
-    // Get the token and user data inside the function for safety
     const token = localStorage.getItem('lmsToken');
-    const userJSON = localStorage.getItem('lmsUser');
+    if (!token) return;
 
-    if (!token || !userJSON) {
-        // Hide user-specific elements if not logged in
-        document.querySelectorAll('.rbt-user-wrapper').forEach(el => el.style.display = 'none');
-        return;
-    }
+    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        .then(res => {
+            if (!res.ok) { // If server sends an error (like 401), handle it
+                localStorage.clear();
+                window.location.href = '/login.html';
+                throw new Error('Session expired or invalid.');
+            }
+            return res.json();
+        })
+        .then(result => {
+            if (result.success) {
+                const profile = result.data;
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+                const avatarPath = profile.avatar ? `/${profile.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-placeholder.png';
 
-    try {
-        const user = JSON.parse(userJSON);
-        const fullName = `${user.firstName} ${user.lastName}`;
-        const avatarPath = user.avatar ? `/${user.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-placeholder.png';
+                // --- 1. UPDATE ALL NAME ELEMENTS ---
+                // For dashboard banners & nav dropdowns
+                document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name').forEach(el => {
+                    if (el) el.textContent = fullName;
+                });
+                
+                // For the simple text link in the desktop header
+                const navUserName = document.getElementById('nav-user-name');
+                if (navUserName) navUserName.textContent = profile.firstName;
+                
+                // For sidebar welcome message
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
 
-        // --- Update Name Elements ---
-        const bannerName = document.querySelector('.rbt-tutor-information .title');
-        if (bannerName) bannerName.textContent = fullName;
-        
-        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${user.firstName}`;
-        
-        const navDropdownName = document.querySelector('#nav-user-name-dropdown');
-        if(navDropdownName) navDropdownName.textContent = fullName;
+                // --- 2. UPDATE ALL AVATAR ELEMENTS ---
+                // This combines all possible selectors for avatars
+                document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #nav-user-avatar, .rbt-admin-profile .admin-thumbnail img').forEach(img => {
+                    if (img) img.src = avatarPath;
+                });
 
-        // --- Update Avatar Elements ---
-        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-        if (bannerAvatar) bannerAvatar.src = avatarPath;
+                // --- 3. ROLE-BASED MENU LOGIC ---
+                const settingsLink = document.querySelector('a[href*="settings.html"]');
+                const profileLink = document.querySelector('.rbt-admin-profile .rbt-btn-link');
 
-        const navDropdownAvatar = document.querySelector('.rbt-admin-profile .admin-thumbnail img');
-        if (navDropdownAvatar) navDropdownAvatar.src = avatarPath;
+                if (profile.role === 'instructor') {
+                    if (settingsLink) settingsLink.href = 'instructor-settings.html';
+                    if (profileLink) profileLink.href = 'instructor-profile.html';
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                } else {
+                    if (settingsLink) settingsLink.href = 'student-settings.html';
+                    if (profileLink) profileLink.href = 'student-profile.html';
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                }
 
-        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-        if(settingsAvatarImg) settingsAvatarImg.src = avatarPath;
-        
-    } catch (error) {
-        console.error("Error updating user data on page:", error);
-    }
+                // --- 4. LOGOUT BUTTON ---
+                document.querySelectorAll('.logout-btn').forEach(btn => {
+                    if(btn.parentElement) btn.parentElement.style.display = 'list-item';
+                });
+
+            } else {
+                localStorage.clear();
+                window.location.href = '/login.html';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+        });
 };
 
-// THIS IS THE FIX: We call the function ONLY after the HTML page has fully loaded.
+// REMINDER: Make sure this line is at the end of your script to run the function
 document.addEventListener('DOMContentLoaded', () => {
     updateUserDataOnPage();
 });
