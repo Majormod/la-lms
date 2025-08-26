@@ -1139,58 +1139,60 @@ const renderCourseDetailsCurriculum = (episodes) => {
 // REPLACE your old updateUserDataOnPage function with this one
 
 const updateUserDataOnPage = () => {
-    const token = localStorage.getItem('lmsToken'); // Assuming token is defined in a higher scope
+    const token = localStorage.getItem('lmsToken');
     if (!token) return;
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                // If response is not 2xx, it's an error (e.g., token expired)
+                throw new Error('Authentication failed');
+            }
+            return res.json();
+        })
         .then(result => {
             if (result.success) {
                 const profile = result.data;
                 const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // --- Select ALL relevant elements ---
+                // --- Update Text Elements ---
                 const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
-                const bannerAvatars = document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #settings-avatar-img');
-                const bannerCovers = document.querySelectorAll('.tutor-bg-photo'); // <-- FIX 1: Selects ALL cover photos
-                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-
-                // --- Update elements using forEach loops ---
                 bannerNames.forEach(el => el.textContent = fullName);
-                
-                if (profile.avatar) {
-    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
 
-    // --- START OF FIX ---
-    // Select ALL avatars that need to be updated, including the new nav ones
-    const allAvatarImages = document.querySelectorAll(
-        '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile'
-    );
-    
-    allAvatarImages.forEach(img => {
-        if (img) { // Check if the element exists before trying to set its src
-            img.src = avatarUrl;
-        }
-    });
-    // --- END OF FIX ---
-
-}
-
-                if (profile.coverPhoto) {
-                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`; // Cache-busting
-                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl); // <-- FIX 2: Updates ALL cover photos
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                if (sidebarWelcomeName) {
+                    sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
                 }
 
-                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                // --- Update Profile Avatar (All Locations) ---
+                if (profile.avatar) {
+                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
+                    
+                    // This single selector finds ALL avatar images on the page
+                    const allAvatarImages = document.querySelectorAll(
+                        '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile'
+                    );
+
+                    allAvatarImages.forEach(img => {
+                        if (img) img.src = avatarUrl;
+                    });
+                }
+
+                // --- Update Cover Photo ---
+                if (profile.coverPhoto) {
+                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`; // Cache-busting
+                    const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
+                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
+                }
 
             } else {
-                localStorage.clear();
-                window.location.href = 'login.html';
+                // Handle cases where the API call was successful but operation failed
+                throw new Error(result.message || 'Failed to get profile');
             }
         })
         .catch(error => {
-            console.error('Error fetching user data:', error);
+            console.error('Error fetching user data or token invalid:', error);
+            // Log the user out since their token is likely bad or data is corrupt
             localStorage.clear();
             window.location.href = 'login.html';
         });
