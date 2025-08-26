@@ -1216,38 +1216,29 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 
 // GET /api/quiz-results/:resultId - Fetches a single quiz result
 // In server.js, replace the existing route with this one
-app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
+app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     try {
-        const result = await QuizResult.findById(req.params.resultId)
-            .populate({
-                path: 'course',
-                // THIS IS THE CORRECTED LINE:
-                select: 'title episodes instructor' 
-            });
+        const attempts = await QuizResult.find({ user: req.user.id })
+            .populate('course', 'title episodes')
+            .sort({ submittedAt: -1 });
 
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Result not found.' });
-        }
+        const formattedAttempts = attempts.map(attempt => {
+            // ... (your existing logic to get quizTitle)
+            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
 
-        // Security check: ensure the user is either the student who took the quiz or the instructor
-        const isStudentOwner = result.user.equals(req.user.id);
-        const isInstructorOwner = result.course.instructor.equals(req.user.id);
-
-        if (!isStudentOwner && !isInstructorOwner) {
-            return res.status(403).json({ success: false, message: 'Access denied.' });
-        }
-
-        // Find the quiz title for the header
-        let quizTitle = 'Quiz Result';
-        for (const episode of result.course.episodes) {
-            const quiz = episode.quizzes.id(result.quiz);
-            if (quiz) {
-                quizTitle = quiz.title;
-                break;
-            }
-        }
-
-        res.json({ success: true, result, quizTitle });
+            return {
+                id: attempt._id, // <-- ENSURE THIS LINE EXISTS
+                courseId: attempt.course._id, // <-- ALSO ADD THIS LINE
+                date: new Date(attempt.submittedAt).toLocaleDateString(/* ... */),
+                quizTitle: `${attempt.course.title} - ${quizTitle}`,
+                totalQuestions: attempt.answers.length,
+                totalMarks: attempt.possibleScore,
+                correctAnswers: correctAnswersCount,
+                result: attempt.passed ? 'Pass' : 'Fail',
+            };
+        });
+        
+        res.json({ success: true, attempts: formattedAttempts });
     } catch (error) {
         console.error('Error fetching quiz result:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
