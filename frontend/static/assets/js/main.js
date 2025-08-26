@@ -4111,11 +4111,46 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
 }
         handlePageLogic();
     };
-
+/*
     eduJs.i();
 
     $(document).ready(function () {
         eduJs.lmsInit();
     });
+*/
+// Add this new block
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("--- RUNNING IN SAFE MODE ---");
+
+    const token = localStorage.getItem('lmsToken');
+    if (token) {
+        console.log("Safe Mode: Token found. Fetching profile.");
+        const API_BASE_URL = 'http://54.221.189.159'; // Ensure this is correct
+
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && result.data.avatar) {
+                    console.log("Safe Mode: Profile fetched. Avatar is", result.data.avatar);
+                    const avatarUrl = `/${result.data.avatar}?t=${new Date().getTime()}`;
+                    const navAvatars = document.querySelectorAll('.nav-user-avatar-img');
+                    
+                    console.log("Safe Mode: Found", navAvatars.length, "navbar avatars to update.");
+                    
+                    navAvatars.forEach(img => {
+                        if (img) {
+                            img.src = avatarUrl;
+                            console.log("Safe Mode: Updated one avatar.");
+                        }
+                    });
+                } else {
+                    console.log("Safe Mode: Profile fetch failed or no avatar found.");
+                }
+            })
+            .catch(err => console.error("Safe Mode: Fetch failed.", err));
+    } else {
+        console.log("Safe Mode: No token found.");
+    }
+});
 
 })(window, document, jQuery);
