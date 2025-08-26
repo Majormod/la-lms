@@ -1084,6 +1084,34 @@ console.log("------------------------------");
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
+// Add this helper function to the top of your main.js file
+
+function updateHeaderAndBanner() {
+    try {
+        const userJSON = localStorage.getItem('lmsUser');
+        if (!userJSON) return;
+
+        const user = JSON.parse(userJSON);
+        const fullName = `${user.firstName} ${user.lastName}`;
+        const avatarPath = user.avatar ? `/${user.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-placeholder.png';
+
+        // Update name in all possible locations
+        document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name').forEach(el => {
+            if (el) el.textContent = fullName;
+        });
+        
+        // Update welcome message in sidebars
+        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${user.firstName}`;
+
+        // Update avatar in all possible locations
+        document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #nav-user-avatar, .rbt-admin-profile .admin-thumbnail img').forEach(img => {
+            if (img) img.src = avatarPath;
+        });
+    } catch (error) {
+        console.error("Error updating header/banner:", error);
+    }
+}
         // In main.js, add this to the top (global scope)
 // Helper function to trigger the hidden file input
 window.triggerExerciseFileUpload = function() {
@@ -4050,11 +4078,20 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 // =================================================================
 // In main.js
 
+// In main.js, find and replace the block for the student quiz attempts page
+
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
-    const token = localStorage.getItem('lmsToken');
-    if (!token) {
-        window.location.href = '/login.html';
-    } else {
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('lmsToken');
+        if (!token) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        // 1. Call the helper function to instantly update the banner and header
+        updateHeaderAndBanner();
+
+        // 2. Proceed with fetching the specific data for this page
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (attemptsTableBody) {
             attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
@@ -4068,6 +4105,7 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                             return;
                         }
                         
+                        // This is the full table rendering logic that was missing
                         attemptsTableBody.innerHTML = result.attempts.map(attempt => {
                             const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
                             return `
@@ -4099,7 +4137,7 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                     attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
                 });
         }
-    }
+    });
 }
 
 // =================================================================
