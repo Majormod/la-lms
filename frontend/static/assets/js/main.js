@@ -4008,57 +4008,55 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 // =================================================================
 // SCRIPT FOR student-my-quiz-attempts.html
 // =================================================================
-// In main.js, find and replace the block for the student quiz attempts page
-
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        updateHeaderAndBanner(); // This updates the banner/header
-        
-        const token = localStorage.getItem('lmsToken');
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = '/login.html'; // Redirect if not logged in
+    } else {
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
-        if (!token || !attemptsTableBody) return;
-
-        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
-
-        fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success && result.attempts.length > 0) {
-                    attemptsTableBody.innerHTML = result.attempts.map(attempt => {
-                        const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
-                        return `
-                            <tr>
-                                <th><p class="b3 mb--5">${attempt.date}</p><span class="h6 mb--5">${attempt.quizTitle}</span></th>
-                                <td><p class="b3">${attempt.totalQuestions}</p></td>
-                                <td><p class="b3">${attempt.totalMarks}</p></td>
-                                <td><p class="b3">${attempt.correctAnswers}</p></td>
-                                <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                                <td><div class="rbt-button-group justify-content-end">
-                                    <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details"><i class="feather-eye pl--0"></i></a>
-                                </div></td>
-                            </tr>`;
-                    }).join('');
-                } else {
-                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">You have not attempted any quizzes yet.</td></tr>';
-                }
-            })
-            .catch(error => {
-                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load attempts.</td></tr>';
-            });
-
-        // Add a specific click handler for the eye icon
-        attemptsTableBody.addEventListener('click', (e) => {
-            const viewButton = e.target.closest('.view-details-btn');
-            if (viewButton) {
-                e.preventDefault();
-                window.location.href = viewButton.href;
-            }
-        });
-    });
+        if (attemptsTableBody) {
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
+            
+            fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        if (result.attempts.length === 0) {
+                            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">You have not attempted any quizzes yet.</td></tr>';
+                            return;
+                        }
+                        
+                        attemptsTableBody.innerHTML = result.attempts.map(attempt => {
+                            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+                            return `
+                                <tr>
+                                    <th>
+                                        <p class="b3 mb--5">${attempt.date}</p>
+                                        <span class="h6 mb--5">${attempt.quizTitle}</span>
+                                    </th>
+                                    <td><p class="b3">${attempt.totalQuestions}</p></td>
+                                    <td><p class="b3">${attempt.totalMarks}</p></td>
+                                    <td><p class="b3">${attempt.correctAnswers}</p></td>
+                                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                                    <td>
+                                        <div class="rbt-button-group justify-content-end">
+                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    } else {
+                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching your quiz attempts:', error);
+                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
+                });
+        }
+    }
 }
-
-
-
         handlePageLogic();
     };
 
