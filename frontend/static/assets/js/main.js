@@ -3804,6 +3804,12 @@ fetchAndDisplayCourses();
 // In main.js, add this new block for the results page logic
 if (window.location.pathname.includes('lesson-quiz-result.html')) {
     document.addEventListener('DOMContentLoaded', () => {
+        // --- ADD THESE 3 LINES FOR DEBUGGING ---
+        console.log("Results Page Loaded. Full URL:", window.location.href);
+        const urlParams = new URLSearchParams(window.location.search);
+        console.log("Found resultId in URL:", urlParams.get('resultId'));
+        // --- END OF DEBUGGING LINES ---
+
         // Retrieve the result from sessionStorage
         const result = JSON.parse(sessionStorage.getItem('quizResult'));
         
