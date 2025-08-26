@@ -1173,8 +1173,7 @@ app.post('/api/courses/:courseId/quizzes/:quizId/submit', auth, async (req, res)
     }
 });
 
-// In server.js, add this new route
-// In server.js
+// Keep only this version of the route in server.js
 
 app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     try {
@@ -1184,7 +1183,7 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 
         const formattedAttempts = attempts.map(attempt => {
             let quizTitle = 'Unknown Quiz';
-            if (attempt.course) {
+            if (attempt.course && attempt.course.episodes) {
                  for (const episode of attempt.course.episodes) {
                     const quiz = episode.quizzes.id(attempt.quiz);
                     if (quiz) {
@@ -1196,7 +1195,8 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
             const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
 
             return {
-                id: attempt._id, // <-- ADD THIS LINE
+                id: attempt._id,
+                courseId: attempt.course._id,
                 date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                 quizTitle: `${attempt.course.title} - ${quizTitle}`,
                 totalQuestions: attempt.answers.length,
@@ -1210,37 +1210,6 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching student quiz attempts:', error);
-        res.status(500).json({ success: false, message: 'Server Error' });
-    }
-});
-
-// GET /api/quiz-results/:resultId - Fetches a single quiz result
-// In server.js, replace the existing route with this one
-app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
-    try {
-        const attempts = await QuizResult.find({ user: req.user.id })
-            .populate('course', 'title episodes')
-            .sort({ submittedAt: -1 });
-
-        const formattedAttempts = attempts.map(attempt => {
-            // ... (your existing logic to get quizTitle)
-            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
-
-            return {
-                id: attempt._id, // <-- ENSURE THIS LINE EXISTS
-                courseId: attempt.course._id, // <-- ALSO ADD THIS LINE
-                date: new Date(attempt.submittedAt).toLocaleDateString(/* ... */),
-                quizTitle: `${attempt.course.title} - ${quizTitle}`,
-                totalQuestions: attempt.answers.length,
-                totalMarks: attempt.possibleScore,
-                correctAnswers: correctAnswersCount,
-                result: attempt.passed ? 'Pass' : 'Fail',
-            };
-        });
-        
-        res.json({ success: true, attempts: formattedAttempts });
-    } catch (error) {
-        console.error('Error fetching quiz result:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
