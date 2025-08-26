@@ -1289,24 +1289,6 @@ app.get('*', (req, res) => {
 
 // In server.js, near your other user routes
 
-// UPLOAD a new cover photo
-app.post('/api/user/cover', auth, upload.single('cover'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No file uploaded.' });
-        }
-        const user = await User.findByIdAndUpdate(req.user.id, 
-            { coverPhoto: req.file.path }, 
-            { new: true }
-        ).select('-password');
-        
-        res.json({ success: true, message: 'Cover photo updated!', user });
-    } catch (error) {
-        console.error('Error uploading cover photo:', error);
-        res.status(500).json({ success: false, message: 'Server Error' });
-    }
-});
-
 // --- START SERVER ---
 app.listen(PORT, () => {
     console.log(`✅ Backend server is running on http://localhost:${PORT}`);
