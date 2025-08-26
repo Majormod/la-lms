@@ -1143,6 +1143,8 @@ const renderCourseDetailsCurriculum = (episodes) => {
                 .then(result => {
                     if (result.success) {
                         const profile = result.data;
+                         // ADD THIS LINE FOR DEBUGGING
+    console.log('--- Debugging Profile Data ---', profile);
                         const fullName = `${profile.firstName} ${profile.lastName}`;
                         const bannerName = document.querySelector('.rbt-tutor-information .title');
                         const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
