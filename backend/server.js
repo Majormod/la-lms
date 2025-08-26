@@ -1,4 +1,5 @@
-require('dotenv').config();
+// This new line explicitly tells the server where to find the .env file
+require('dotenv').config({ path: './.env' });
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
