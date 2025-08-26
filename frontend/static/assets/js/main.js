@@ -1148,96 +1148,90 @@ const renderCourseDetailsCurriculum = (episodes) => {
 };
 
 const updateUserDataOnPage = () => {
-    const token = localStorage.getItem('lmsToken'); // Ensure token is defined here
-    if (!token) return;
+    const token = localStorage.getItem('lmsToken');
+    const userJSON = localStorage.getItem('lmsUser');
 
+    if (!token || !userJSON) return;
+
+    // Use the basic user info from localStorage for an instant update
+    try {
+        const user = JSON.parse(userJSON);
+        const fullName = user.name || `${user.firstName} ${user.lastName}`;
+        
+        // Update names immediately
+        document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name, .rbt-tutor-information .title').forEach(el => {
+            if (el) el.textContent = fullName;
+        });
+        document.querySelectorAll('.rbt-default-sidebar-wrapper .rbt-title-style-2').forEach(el => {
+            if(el) el.textContent = `Welcome, ${user.firstName}`;
+        });
+    } catch (e) { console.error('Could not parse lmsUser from localStorage', e); }
+
+
+    // Then, fetch the full, latest profile from the server
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-                const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // --- 1. UPDATE ALL VISUAL ELEMENTS (Your existing code, made more robust) ---
-                
-                // Selectors
-                const bannerName = document.querySelector('.rbt-tutor-information .title');
-                const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                const navDropdownAvatar = document.querySelector('.rbt-admin-profile .admin-thumbnail img');
-                
-                // Update Names
-                if (bannerName) bannerName.textContent = fullName;
-                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                
-                // Update Avatars
+                // --- 1. Update All Avatars with fresh data ---
                 if (profile.avatar) {
-                    const avatarPath = `/${profile.avatar}`;
-                    if (bannerAvatar) bannerAvatar.src = avatarPath;
-                    if (navDropdownAvatar) navDropdownAvatar.src = avatarPath;
-                }
-
-                // --- 2. NEW: ROLE-BASED MENU LOGIC ---
-
-                // Define which links belong to which role
-                const instructorLinks = ['instructor-dashboard.html', 'instructor-profile.html', 'instructor-my-courses.html', 'instructor-announcements.html', 'instructor-quiz-attempts.html', 'instructor-assignments.html', 'instructor-settings.html'];
-                const studentLinks = ['student-dashboard.html', 'student-profile.html', 'student-enrolled-courses.html', 'student-wishlist.html', 'student-reviews.html', 'student-my-quiz-attempts.html', 'student-order-history.html', 'student-settings.html'];
-
-                // Get all links in the user dropdown
-                const allLinks = document.querySelectorAll('.rbt-user-menu-list-wrapper ul.user-list-wrapper li a');
-
-                if (profile.role === 'instructor') {
-                    // Show/hide links for Instructors
-                    allLinks.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (instructorLinks.includes(href)) {
-                            link.parentElement.style.display = 'list-item';
-                        } else {
-                            link.parentElement.style.display = 'none';
-                        }
-                    });
-                } else {
-                    // Show/hide links for Students
-                    allLinks.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (studentLinks.includes(href)) {
-                            link.parentElement.style.display = 'list-item';
-                        } else {
-                            link.parentElement.style.display = 'none';
-                        }
+                    const avatarPath = `/${profile.avatar.replace(/\\/g, '/')}`;
+                    document.querySelectorAll('#nav-user-avatar, .rbt-user-wrapper .admin-thumbnail img, .rbt-tutor-information .rbt-avatars img, #settings-avatar-img').forEach(img => {
+                        if (img) img.src = avatarPath;
                     });
                 }
                 
-                // Always show the logout button
-                document.querySelectorAll('.logout-btn').forEach(btn => {
-                    if (btn.parentElement) btn.parentElement.style.display = 'list-item';
-                });
+                // --- 2. Update All Cover Photos ---
+                if (profile.coverPhoto) {
+                    const coverPath = `/${profile.coverPhoto.replace(/\\/g, '/')}`;
+                    document.querySelectorAll('.tutor-bg-photo').forEach(div => {
+                         if(div) div.style.backgroundImage = `url(${coverPath})`;
+                    });
+                }
 
+                // --- 3. Build the Correct Navigation Menu based on Role ---
+                const instructorLinks = [
+                    { href: 'instructor-dashboard.html', icon: 'home', text: 'My Dashboard' },
+                    { href: 'instructor-profile.html', icon: 'user', text: 'My Profile' },
+                    { href: 'instructor-my-courses.html', icon: 'book-open', text: 'My Courses' },
+                    { href: 'instructor-quiz-attempts.html', icon: 'help-circle', text: 'Quiz Attempts' },
+                ];
+                const studentLinks = [
+                    { href: 'student-dashboard.html', icon: 'home', text: 'Dashboard' },
+                    { href: 'student-profile.html', icon: 'user', text: 'My Profile' },
+                    { href: 'student-enrolled-courses.html', icon: 'book-open', text: 'Enrolled Courses' },
+                    { href: 'student-wishlist.html', icon: 'bookmark', text: 'Wishlist' },
+                    { href: 'student-reviews.html', icon: 'star', text: 'Reviews' },
+                    { href: 'student-my-quiz-attempts.html', icon: 'help-circle', text: 'My Quiz Attempts' },
+                    { href: 'student-order-history.html', icon: 'shopping-bag', text: 'Order History' },
+                ];
+                
+                const linksToShow = profile.role === 'instructor' ? instructorLinks : studentLinks;
+                const menuHtml = linksToShow.map(link => `<li><a href="${link.href}"><i class="feather-${link.icon}"></i><span>${link.text}</span></a></li>`).join('');
+                
+                // Find and replace the content of the main menu lists
+                document.querySelectorAll('.rbt-admin-profile + .user-list-wrapper').forEach(ul => {
+                    ul.innerHTML = menuHtml;
+                });
+                
+                // Update shared links like "View Profile" and "Settings"
+                const profileUrl = profile.role === 'instructor' ? 'instructor-profile.html' : 'student-profile.html';
+                const settingsUrl = profile.role === 'instructor' ? 'instructor-settings.html' : 'student-settings.html';
+                document.querySelectorAll('.rbt-admin-profile .rbt-btn-link').forEach(a => a.href = profileUrl);
+                document.querySelectorAll('a[href*="settings.html"]').forEach(a => a.href = settingsUrl);
 
             } else {
+                // If the token is invalid, log the user out
                 localStorage.clear();
                 window.location.href = '/login.html';
             }
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            localStorage.clear();
-            window.location.href = '/login.html';
         });
-        // THIS IS THE FIX: We call the function ONLY after the HTML page has fully loaded.
-document.addEventListener('DOMContentLoaded', () => {
-    updateUserDataOnPage();
-});
-        const handlePageLogic = () => {
-            const path = window.location.pathname;
-
-            if (path.includes('student-')) {
-                if (!token) {
-                    window.location.href = '/login';
-                    return;
-                }
-                updateUserDataOnPage();
-            }
+};
 
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
