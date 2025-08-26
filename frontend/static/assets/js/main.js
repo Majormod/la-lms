@@ -1156,6 +1156,9 @@ const updateUserDataOnPage = () => {
         .then(result => {
             if (result.success) {
                 const profile = result.data;
+                // ADD THIS LINE to see exactly what the server is sending
+                console.log("User profile data from server:", profile); 
+
                 const fullName = `${profile.firstName} ${profile.lastName}`;
 
                 // --- 1. UPDATE ALL VISUAL ELEMENTS (Your existing code, made more robust) ---
