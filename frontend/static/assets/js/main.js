@@ -1139,60 +1139,62 @@ const renderCourseDetailsCurriculum = (episodes) => {
 // REPLACE your old updateUserDataOnPage function with this one
 
 const updateUserDataOnPage = () => {
+    // CHECKPOINT 1: Is the function running?
+    console.log("1. updateUserDataOnPage function has started.");
+
     const token = localStorage.getItem('lmsToken');
-    if (!token) return;
+    if (!token) {
+        console.log("No token found. Aborting.");
+        return;
+    }
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-        .then(res => {
-            if (!res.ok) {
-                // If response is not 2xx, it's an error (e.g., token expired)
-                throw new Error('Authentication failed');
-            }
-            return res.json();
-        })
+        .then(res => res.json())
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-                const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // --- Update Text Elements ---
+                // CHECKPOINT 2: Did we get the correct data from the server?
+                console.log("2. Profile data fetched successfully. Current avatar path is:", profile.avatar);
+
+                if (profile.avatar) {
+                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
+                    
+                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
+                    
+                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
+                    const allAvatarImages = document.querySelectorAll(selectorString);
+                    console.log("3. Searching for avatar images with selector:", selectorString);
+                    console.log("4. Found these elements:", allAvatarImages);
+
+                    if (allAvatarImages.length > 0) {
+                        console.log("5. Updating images now...");
+                        allAvatarImages.forEach(img => {
+                            if (img) img.src = avatarUrl;
+                        });
+                        console.log("6. Image update complete.");
+                    } else {
+                        console.error("7. ERROR: Could not find any avatar elements to update. Check your HTML IDs and classes.");
+                    }
+                }
+                // ... (the rest of your function for cover photos, names, etc.) ...
+                const fullName = `${profile.firstName} ${profile.lastName}`;
                 const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
                 bannerNames.forEach(el => el.textContent = fullName);
-
                 const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                if (sidebarWelcomeName) {
-                    sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                }
-
-                // --- Update Profile Avatar (All Locations) ---
-                if (profile.avatar) {
-                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
-                    
-                    // This single selector finds ALL avatar images on the page
-                    const allAvatarImages = document.querySelectorAll(
-                        '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile'
-                    );
-
-                    allAvatarImages.forEach(img => {
-                        if (img) img.src = avatarUrl;
-                    });
-                }
-
-                // --- Update Cover Photo ---
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
                 if (profile.coverPhoto) {
-                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`; // Cache-busting
+                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
                     const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
                     bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
                 }
 
             } else {
-                // Handle cases where the API call was successful but operation failed
                 throw new Error(result.message || 'Failed to get profile');
             }
         })
         .catch(error => {
-            console.error('Error fetching user data or token invalid:', error);
-            // Log the user out since their token is likely bad or data is corrupt
+            console.error('Error in updateUserDataOnPage:', error);
             localStorage.clear();
             window.location.href = 'login.html';
         });
