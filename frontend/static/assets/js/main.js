@@ -4116,6 +4116,154 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
         }
     }
 }
+
+// =================================================================
+// SCRIPT FOR student-settings.html
+// =================================================================
+if (window.location.pathname.includes('student-settings.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+    // A helper function to update ALL user data on THIS page specifically
+    const populatePage = (user) => {
+        if (!user) return;
+        
+        const fullName = `${user.firstName} ${user.lastName}`;
+        const avatarPath = user.avatar ? `/${user.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-2.jpg';
+        const coverPath = user.coverPhoto ? `/${user.coverPhoto.replace(/\\/g, '/')}` : '';
+        const profileForm = document.getElementById('profile-tab-form');
+    if (profileForm) {
+        profileForm.querySelector('#firstname').value = user.firstName || '';
+        profileForm.querySelector('#lastname').value = user.lastName || '';
+        
+        // --- THIS IS THE CORRECTED PART ---
+        profileForm.querySelector('#email-address').value = user.email || ''; // Changed from #username to #email-address and uses user.email
+        // --- END OF CORRECTION ---
+
+        profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+        profileForm.querySelector('#skill').value = user.occupation || '';
+        profileForm.querySelector('#bio').value = user.bio || '';
+    }
+        // Update the main banner at the top of the page
+        document.querySelector('.rbt-dashboard-content-wrapper .tutor-content .title').textContent = fullName;
+        document.querySelector('.rbt-dashboard-content-wrapper .rbt-avatars img').src = avatarPath;
+        if (coverPath) {
+            document.querySelector('.rbt-dashboard-content-wrapper .tutor-bg-photo').style.backgroundImage = `url(${coverPath})`;
+        }
+
+        // Update the settings section images
+        document.querySelector('#profile .rbt-tutor-information .thumbnail img').src = avatarPath;
+        if (coverPath) {
+            document.querySelector('#profile .tutor-bg-photo').style.backgroundImage = `url(${coverPath})`;
+        }
+        
+        // Populate the profile form fields
+        const profileForm = document.getElementById('profile-tab-form');
+        if (profileForm) {
+            profileForm.querySelector('#firstname').value = user.firstName || '';
+            profileForm.querySelector('#lastname').value = user.lastName || '';
+            profileForm.querySelector('#username').value = user.username || '';
+            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+            profileForm.querySelector('#skill').value = user.occupation || '';
+            profileForm.querySelector('#bio').value = user.bio || '';
+        }
+    };
+    
+    // A helper function to handle the image upload API call
+    const uploadImage = async (file, type) => {
+        const formData = new FormData();
+        formData.append(type, file); // 'type' will be 'avatar' or 'cover'
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            alert('Image updated successfully!');
+            localStorage.setItem('lmsUser', JSON.stringify(result.user));
+            populatePage(result.user); // Instantly update all UI elements
+            updateUserDataOnPage(); // Also update the global header/nav
+
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
+    };
+
+    // This is the main logic that runs when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Fetch the user's data and populate the page
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    populatePage(result.data);
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(err => alert('Could not load your profile data.'));
+
+        // 2. Set up the event listener for the "Update Info" form
+        const profileForm = document.getElementById('profile-tab-form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = {
+                    firstName: profileForm.querySelector('#firstname').value,
+                    lastName: profileForm.querySelector('#lastname').value,
+                    username: profileForm.querySelector('#username').value,
+                    phoneNumber: profileForm.querySelector('#phonenumber').value,
+                    occupation: profileForm.querySelector('#skill').value,
+                    bio: profileForm.querySelector('#bio').value,
+                };
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        body: JSON.stringify(formData)
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message);
+                    alert('Profile updated successfully!');
+                    localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                    populatePage(result.user);
+                    updateUserDataOnPage(); // Also update the global header/nav
+                } catch (error) {
+                    alert(`Update failed: ${error.message}`);
+                }
+            });
+        }
+        
+        // 3. Set up listeners for image upload buttons
+        const avatarUploadButton = document.getElementById('avatar-upload-button');
+        const avatarUploadInput = document.getElementById('avatar-upload-input');
+        if (avatarUploadButton && avatarUploadInput) {
+            avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
+            avatarUploadInput.addEventListener('change', () => {
+                const file = avatarUploadInput.files[0];
+                if (file) uploadImage(file, 'avatar');
+            });
+        }
+
+        const coverUploadButton = document.getElementById('cover-upload-button');
+        const coverUploadInput = document.getElementById('cover-upload-input');
+        if (coverUploadButton && coverUploadInput) {
+            coverUploadButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                coverUploadInput.click();
+            });
+            coverUploadInput.addEventListener('change', () => {
+                const file = coverUploadInput.files[0];
+                if (file) uploadImage(file, 'cover');
+});
+        }
+    });
+}
         handlePageLogic();
     };
 
