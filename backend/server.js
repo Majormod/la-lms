@@ -12,6 +12,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const staticPath = path.join(__dirname, '../frontend/static');
 
 // --- 2. ALL LOCAL MODELS AND MIDDLEWARE ARE REQUIRED NEXT ---
 const User = require('./models/User');
