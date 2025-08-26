@@ -1136,43 +1136,38 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-        const updateUserDataOnPage = () => {
-            if (!token) return;
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        const profile = result.data;
-                        const fullName = `${profile.firstName} ${profile.lastName}`;
-                        const bannerName = document.querySelector('.rbt-tutor-information .title');
-                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                        const bannerCover = document.querySelector('.tutor-bg-photo');
-                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-                        if (bannerName) bannerName.textContent = fullName;
-                        if (profile.avatar) {
-                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                        }
-                        if (profile.coverPhoto) {
-                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                        }
-                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
-                    } else {
-                        localStorage.clear();
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-        };
+const updateUserDataOnPage = () => {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) return;
+
+    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const profile = result.data;
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+                const avatarPath = profile.avatar ? `/${profile.avatar}` : 'assets/images/team/avatar-placeholder.png';
+                const coverPath = profile.coverPhoto ? `/${profile.coverPhoto}` : '';
+
+                // Selectors for banner and sidebar elements
+                const bannerName = document.querySelector('.rbt-tutor-information .title');
+                const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                const bannerCover = document.querySelector('.tutor-bg-photo');
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+
+                // Update banner and sidebar
+                if (bannerName) bannerName.textContent = fullName;
+                if (bannerAvatar) bannerAvatar.src = avatarPath;
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                if (bannerCover && coverPath) {
+                    bannerCover.style.setProperty('background-image', `url(${coverPath})`, 'important');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user data for page:', error);
+        });
+};
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
@@ -1183,6 +1178,10 @@ const renderCourseDetailsCurriculum = (episodes) => {
                     return;
                 }
                 updateUserDataOnPage();
+                // This correctly calls the function for all instructor pages
+    if (path.includes('instructor-')) {
+        updateUserDataOnPage();
+    }
             }
 
             if (path.includes('/login') || path.includes('/login-instructor')) {
