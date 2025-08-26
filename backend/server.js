@@ -281,6 +281,8 @@ app.get('/api/instructor/announcements', auth, async (req, res) => {
 
 // In server.js, replace the existing instructor quiz attempts route
 
+// In server.js, replace your existing route with this one.
+
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
         if (req.user.role !== 'instructor') {
@@ -294,6 +296,7 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
             .populate('user', 'firstName lastName')
             .sort({ submittedAt: -1 });
 
+        // Filter out attempts from deleted users for safety
         attempts = attempts.filter(attempt => attempt.user);
 
         const formattedAttempts = attempts.map(attempt => {
@@ -317,7 +320,6 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 return {
                     id: attempt._id,
                     courseId: attempt.course.toString(),
-                    // --- THIS IS THE CORRECTED LINE ---
                     date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     quizTitle: quizTitle,
                     studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
@@ -330,12 +332,12 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
                 console.error(`Could not process quiz attempt with ID: ${attempt._id}. Error:`, e);
                 return null;
             }
-        }).filter(Boolean);
+        }).filter(Boolean); // Removes any null entries from failed processing
 
         res.json({ 
             success: true, 
             attempts: formattedAttempts,
-            courses: instructorCourses
+            courses: instructorCourses // This sends the course list for the filter
         });
 
     } catch (error) {

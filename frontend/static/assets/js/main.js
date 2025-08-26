@@ -3851,57 +3851,106 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
 // =================================================================
+// =================================================================
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters & working buttons)
+// =================================================================
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser'));
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+    let allAttempts = []; // Store all attempts for client-side filtering
 
     if (!token || !user || user.role !== 'instructor') {
-        window.location.href = '/login.html'; // Redirect if not an instructor
-    } else {
-        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
-        if (attemptsTableBody) {
-            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
-            
-            fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        if (result.attempts.length === 0) {
-                            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No student quiz attempts found.</td></tr>';
-                            return;
-                        }
-                        
-                        attemptsTableBody.innerHTML = result.attempts.map(attempt => {
-                            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
-                            return `
-                                <tr>
-                                    <th>
-                                        <p class="b3 mb--5">${attempt.date}</p>
-                                        <span class="h6 mb--5">${attempt.quizTitle}</span>
-                                        <p class="b3">Student: <a href="#">${attempt.studentName}</a></p>
-                                    </th>
-                                    <td><p class="b3">${attempt.totalQuestions}</p></td>
-                                    <td><p class="b3">${attempt.totalMarks}</p></td>
-                                    <td><p class="b3">${attempt.correctAnswers}</p></td>
-                                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                                    <td>
-                                        <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('');
-                    } else {
-                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching quiz attempts:', error);
-                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load quiz attempts.</td></tr>';
-                });
-        }
+        window.location.href = '/login.html';
     }
+
+    const renderTable = (attempts) => {
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (!attemptsTableBody) return;
+        
+        if (attempts.length === 0) {
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results match your filter.</td></tr>';
+            return;
+        }
+
+        attemptsTableBody.innerHTML = attempts.map(attempt => {
+            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+            return `
+                <tr>
+                    <th><p class="b3 mb--5">${attempt.date}</p><span class="h6 mb--5">${attempt.quizTitle}</span><p class="b3">Student: <a href="#">${attempt.studentName}</a></p></th>
+                    <td><p class="b3">${attempt.totalQuestions}</p></td>
+                    <td><p class="b3">${attempt.totalMarks}</p></td>
+                    <td><p class="b3">${attempt.correctAnswers}</p></td>
+                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                    <td>
+                        <div class="rbt-button-group justify-content-end">
+                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details">
+                                <i class="feather-eye pl--0"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    };
+
+    const setupCourseFilter = (courses) => {
+        const courseSelect = document.querySelector('.filter-select select[data-live-search="true"]');
+        if (!courseSelect) return;
+
+        courseSelect.innerHTML = courses.map(course => `<option value="${course._id}">${course.title}</option>`).join('');
+        
+        if (typeof $ !== 'undefined' && $.fn.selectpicker) {
+            $(courseSelect).selectpicker('refresh');
+        }
+
+        courseSelect.addEventListener('change', () => {
+            const selectedCourseIds = $(courseSelect).val();
+            if (selectedCourseIds && selectedCourseIds.length > 0) {
+                const filteredAttempts = allAttempts.filter(attempt => selectedCourseIds.includes(attempt.courseId));
+                renderTable(filteredAttempts);
+            } else {
+                renderTable(allAttempts);
+            }
+        });
+    };
+
+    const setupViewDetailsClickHandler = () => {
+        const tableBody = document.getElementById('quiz-attempts-table-body');
+        if (!tableBody) return;
+
+        tableBody.addEventListener('click', (e) => {
+            const viewButton = e.target.closest('.view-details-btn');
+            if (viewButton) {
+                e.preventDefault();
+                window.location.href = viewButton.href;
+            }
+        });
+    };
+
+    const initializePage = () => {
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (!attemptsTableBody) return;
+        
+        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
+        
+        fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    allAttempts = result.attempts;
+                    renderTable(allAttempts);
+                    setupCourseFilter(result.courses);
+                    setupViewDetailsClickHandler();
+                } else {
+                    attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching instructor data:', error);
+                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load data.</td></tr>';
+            });
+    };
+    
+    document.addEventListener('DOMContentLoaded', initializePage);
 }
 
 // =================================================================
