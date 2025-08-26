@@ -3913,59 +3913,80 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 // =================================================================
 // SCRIPT FOR instructor-quiz-attempts.html
 // =================================================================
+// In main.js
+// =================================================================
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters)
+// =================================================================
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser'));
+    let allAttempts = []; // Store all attempts globally for filtering
 
     if (!token || !user || user.role !== 'instructor') {
-        window.location.href = '/login.html'; // Redirect if not an instructor
-    } else {
-        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
-        if (attemptsTableBody) {
-            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
-            
-            fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        if (result.attempts.length === 0) {
-                            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No student quiz attempts found.</td></tr>';
-                            return;
-                        }
-                        
-                        attemptsTableBody.innerHTML = result.attempts.map(attempt => {
-                            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
-                            return `
-                                <tr>
-                                    <th>
-                                        <p class="b3 mb--5">${attempt.date}</p>
-                                        <span class="h6 mb--5">${attempt.quizTitle}</span>
-                                        <p class="b3">Student: <a href="#">${attempt.studentName}</a></p>
-                                    </th>
-                                    <td><p class="b3">${attempt.totalQuestions}</p></td>
-                                    <td><p class="b3">${attempt.totalMarks}</p></td>
-                                    <td><p class="b3">${attempt.correctAnswers}</p></td>
-                                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
-                                    <td>
-                                        <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="#" title="View Details"><i class="feather-eye pl--0"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('');
-                    } else {
-                        attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching quiz attempts:', error);
-                    attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load quiz attempts.</td></tr>';
-                });
-        }
+        window.location.href = '/login.html';
     }
-}
 
+    // This function renders the table rows from an array of attempts
+    const renderTable = (attempts) => {
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (!attemptsTableBody) return;
+        
+        if (attempts.length === 0) {
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results match your filter.</td></tr>';
+            return;
+        }
+
+        attemptsTableBody.innerHTML = attempts.map(attempt => {
+            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+            return `
+                <tr>
+                    <th><p class="b3 mb--5">${attempt.date}</p><span class="h6 mb--5">${attempt.quizTitle}</span><p class="b3">Student: <a href="#">${attempt.studentName}</a></p></th>
+                    <td><p class="b3">${attempt.totalQuestions}</p></td>
+                    <td><p class="b3">${attempt.totalMarks}</p></td>
+                    <td><p class="b3">${attempt.correctAnswers}</p></td>
+                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn btn-xs bg-primary-opacity radius-round" href="lesson-quiz-result.html?resultId=${attempt.id}" title="View Details"><i class="feather-eye pl--0"></i></a></div></td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    // This function populates the "Courses" dropdown
+    const populateCourseFilter = (courses) => {
+        const courseSelect = document.querySelector('.filter-select select[data-live-search="true"]');
+        if (!courseSelect) return;
+
+        courseSelect.innerHTML = courses.map(course => `<option value="${course._id}">${course.title}</option>`).join('');
+        
+        // Initialize the bootstrap-select plugin after populating
+        $(courseSelect).selectpicker('refresh');
+
+        // Add an event listener for when the filter changes
+        $(courseSelect).on('change', () => {
+            const selectedCourseIds = $(courseSelect).val();
+            if (selectedCourseIds && selectedCourseIds.length > 0) {
+                const filteredAttempts = allAttempts.filter(attempt => selectedCourseIds.includes(attempt.courseId));
+                renderTable(filteredAttempts);
+            } else {
+                renderTable(allAttempts); // If nothing is selected, show all
+            }
+        });
+    };
+
+    // Initial fetch when the page loads
+    fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                allAttempts = result.attempts; // Save all attempts
+                renderTable(allAttempts); // Initial render of the table
+                populateCourseFilter(result.courses); // Populate the dropdown
+            } else {
+                document.getElementById('quiz-attempts-table-body').innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+            }
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
 // =================================================================
 // SCRIPT FOR student-my-quiz-attempts.html
 // =================================================================

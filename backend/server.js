@@ -335,6 +335,13 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
 
         res.json({ success: true, attempts: formattedAttempts });
 
+        // MODIFIED: Send back both attempts AND the list of courses
+        res.json({ 
+            success: true, 
+            attempts: formattedAttempts,
+            courses: instructorCourses // <-- ADD THIS
+        });
+        
     } catch (error) {
         console.error('Error fetching instructor quiz attempts:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
