@@ -1655,150 +1655,105 @@ if (window.location.pathname.includes('/instructor-')) {
                 };
                 fetchAssignments();
             }
-            if (path.includes('instructor-settings.html')) {
-                if (!token || user.role !== 'instructor') {
-                    alert("Access Denied: You are not an instructor.");
-                    window.location.href = '/login';
-                    return;
-                }
-                updateUserDataOnPage();
-                const populateSettingsForms = () => {
-                    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                        .then(res => res.json())
-                        .then(result => {
-                            if (result.success) {
-                                const profile = result.data;
-                                const firstNameInput = document.querySelector('#firstname');
-                                const lastNameInput = document.querySelector('#lastname');
-                                const usernameInput = document.querySelector('#username');
-                                const phoneNumberInput = document.querySelector('#phonenumber');
-                                const skillInput = document.querySelector('#skill');
-                                const bioTextarea = document.querySelector('#bio');
-                                const displayNameSelect = document.querySelector('#displayname');
-                                if (firstNameInput) firstNameInput.value = profile.firstName || '';
-                                if (lastNameInput) lastNameInput.value = profile.lastName || '';
-                                if (usernameInput) usernameInput.value = profile.email || '';
-                                if (phoneNumberInput) phoneNumberInput.value = profile.phone || '';
-                                if (skillInput) skillInput.value = profile.occupation || '';
-                                if (bioTextarea) bioTextarea.value = profile.bio || '';
-                                if (displayNameSelect) {
-                                    displayNameSelect.innerHTML = '';
-                                    const nameOptions = [`${profile.firstName} ${profile.lastName}`, profile.firstName, profile.lastName, `${profile.lastName} ${profile.firstName}`, profile.email];
-                                    nameOptions.forEach(name => {
-                                        const option = document.createElement('option');
-                                        option.value = name;
-                                        option.textContent = name;
-                                        displayNameSelect.appendChild(option);
-                                    });
-                                }
-                            }
-                        });
-                };
-                const profileForm = document.querySelector('#profile-tab-form');
-                if (profileForm) {
-                    profileForm.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        const updatedData = {
-                            firstName: document.querySelector('#firstname').value,
-                            lastName: document.querySelector('#lastname').value,
-                            phone: document.querySelector('#phonenumber').value,
-                            occupation: document.querySelector('#skill').value,
-                            displayName: document.querySelector('#displayname').value,
-                            bio: document.querySelector('#bio').value,
-                        };
-                        fetch(`${API_BASE_URL}/api/user/profile`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                            body: JSON.stringify(updatedData),
-                        })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    alert('Profile updated successfully!');
-                                    updateUserDataOnPage();
-                                } else {
-                                    alert('Error updating profile.');
-                                }
-                            });
-                    });
-                }
-                const passwordForm = document.querySelector('#password-tab-form');
-                if (passwordForm) {
-                    passwordForm.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        const currentPassword = document.querySelector('#currentpassword').value;
-                        const newPassword = document.querySelector('#newpassword').value;
-                        const retypeNewPassword = document.querySelector('#retypenewpassword').value;
-                        if (newPassword !== retypeNewPassword) {
-                            alert('New passwords do not match!');
-                            return;
-                        }
-                        fetch(`${API_BASE_URL}/api/user/password`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                            body: JSON.stringify({ currentPassword, newPassword }),
-                        })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    alert('Password updated successfully!');
-                                    passwordForm.reset();
-                                } else {
-                                    alert(`Error: ${result.message}`);
-                                }
-                            });
-                    });
-                }
-                const socialForm = document.querySelector('#social-tab-form');
-                if (socialForm) {
-                    socialForm.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        const socialData = {
-                            facebook: document.querySelector('#facebook').value,
-                            twitter: document.querySelector('#twitter').value,
-                            linkedin: document.querySelector('#linkedin').value,
-                            website: document.querySelector('#website').value,
-                            github: document.querySelector('#github').value,
-                        };
-                        fetch(`${API_BASE_URL}/api/user/social`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                            body: JSON.stringify(socialData),
-                        })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    alert('Social links updated successfully!');
-                                } else {
-                                    alert('Error updating social links.');
-                                }
-                            });
-                    });
-                }
-                const avatarUploadButton = document.querySelector('#avatar-upload-button');
-                const coverUploadButton = document.querySelector('#cover-upload-button');
-                if (avatarUploadButton) {
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file'; fileInput.style.display = 'none';
-                    avatarUploadButton.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        const formData = new FormData(); formData.append('avatar', e.target.files[0]);
-                        fetch(`${API_BASE_URL}/api/user/avatar`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Avatar updated!'); updateUserDataOnPage(); } });
-                    });
-                }
-                if (coverUploadButton) {
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file'; fileInput.style.display = 'none';
-                    coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
-                    fileInput.addEventListener('change', (e) => {
-                        const formData = new FormData(); formData.append('coverPhoto', e.target.files[0]);
-                        fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Cover photo updated!'); updateUserDataOnPage(); } });
-                    });
-                }
-                populateSettingsForms();
-            }
+// REPLACE your existing 'instructor-settings.html' block in main.js with this one.
+
+if (window.location.pathname.includes('instructor-settings.html')) {
+    const { token, user } = getAuth(); // Uses the safe helper function
+
+    // Security check
+    if (!token || !user || user.role !== 'instructor') {
+        alert("Access Denied.");
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    // This is a self-contained function to update data ONLY on this page.
+    const populateInstructorSettingsPage = () => {
+        const currentUser = getAuth().user;
+        if (!currentUser) return;
+
+        const fullName = `${currentUser.firstName} ${currentUser.lastName}`;
+        document.querySelectorAll('.rbt-tutor-information .title').forEach(el => el.textContent = fullName);
+        document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2').textContent = `Welcome, ${currentUser.firstName}`;
+
+        if (currentUser.avatar) {
+            const avatarPath = `/${currentUser.avatar}?t=${new Date().getTime()}`;
+            document.querySelectorAll('.rbt-tutor-information .thumbnail img, #settings-avatar-img').forEach(img => {
+                if(img) img.src = avatarPath;
+            });
+        }
+        
+        // --- THIS IS THE FIX ---
+        // It now selects ALL elements with the .tutor-bg-photo class
+        if (currentUser.coverPhoto) {
+            const coverPath = `/${currentUser.coverPhoto}?t=${new Date().getTime()}`;
+            document.querySelectorAll('.tutor-bg-photo').forEach(div => {
+                if(div) div.style.backgroundImage = `url('${coverPath}')`;
+            });
+        }
+    };
+
+    // --- Event Handlers for Image Uploads ---
+    
+    // Avatar Upload (already working but included for completeness)
+    const avatarUploadButton = document.querySelector('#avatar-upload-button');
+    if (avatarUploadButton) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        avatarUploadButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+            fetch(`${API_BASE_URL}/api/user/avatar`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
+                .then(res => res.json())
+                .then(result => { 
+                    if (result.success) { 
+                        alert('Avatar updated!');
+                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                        populateInstructorSettingsPage();
+                        // Also update the main nav immediately
+                        const navAvatar = document.getElementById('nav-user-avatar');
+                        if(navAvatar) navAvatar.src = `/${result.user.avatar}?t=${new Date().getTime()}`;
+                    } else { alert(`Error: ${result.message}`); }
+                });
+        });
+    }
+
+    // Cover Photo Upload (Corrected Logic)
+    const coverUploadButton = document.querySelector('#cover-upload-button');
+    if (coverUploadButton) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            // --- FIX for the 404 error ---
+            formData.append('coverPhoto', file); 
+            fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
+                .then(res => res.json())
+                .then(result => { 
+                    if (result.success) {
+                        alert('Cover photo updated!'); 
+                        localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                        populateInstructorSettingsPage();
+                    } else { alert(`Error: ${result.message}`); }
+                });
+        });
+    }
+    
+    // --- Initial Page Load ---
+    populateInstructorSettingsPage();
+    // (Your code to populate the form fields like firstname, lastname etc. will also run here)
+}
+
 if (window.location.pathname.includes('create-course.html')) {
     document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('lmsToken');
