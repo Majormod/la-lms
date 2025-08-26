@@ -1,40 +1,50 @@
+// =================================================================
+// START OF server.js
+// =================================================================
+
+// --- 1. ALL MODULES AND LIBRARIES ARE REQUIRED AT THE TOP ---
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-// In server.js - Replace your old multer config and routes with this entire block
-
-const multer = require('multer');
 const path = require('path');
+const multer = require('multer');
 const fs = require('fs');
 
-// Express
+// --- 2. ALL LOCAL MODELS AND MIDDLEWARE ARE REQUIRED NEXT ---
+const User = require('./models/User');
+const Course = require('./models/Course');
+const QuizResult = require('./models/QuizResult');
+const auth = require('./authMiddleware');
+
+// --- 3. INITIALIZE EXPRESS APP ---
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// --- MIDDLEWARE ---
+// --- 4. CONNECT TO DATABASE ---
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected successfully.'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// --- 5. SETUP GLOBAL MIDDLEWARE ---
 app.use(cors());
 app.use(express.json());
-// --- 1. The Correct Multer Configuration ---
+app.use(express.static('public')); // This serves files from the 'public' folder
+
+// --- 6. MULTER FILE UPLOAD CONFIGURATION ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // This is the physical folder where files will be saved.
-        // It MUST match the folder being served by express.static.
         const uploadPath = path.join(__dirname, 'public/assets/images/uploads');
-
-        // Ensure this directory exists
         fs.mkdirSync(uploadPath, { recursive: true });
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-        // Create a unique filename
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
-
 const upload = multer({ storage: storage });
 
 
@@ -73,26 +83,6 @@ app.post('/api/user/cover', auth, upload.single('coverPhoto'), async (req, res) 
         res.status(500).send('Server Error'); 
     }
 });
-
-// --- GLOBAL VARIABLES & IMPORTS ---
-const staticPath = path.join(__dirname, '../frontend/static');
-const User = require('./models/User');
-const Course = require('./models/Course');
-const auth = require('./authMiddleware');
-const QuizResult = require('./models/QuizResult');
-
-// Using multer's .fields() method to accept up to two different files
-// In server.js
-
-// 1. Replace your existing 'lessonUploads' multer instance with this one
-// Ensure path is imported at the top of your file
-
-
-// --- DATABASE CONNECTION ---
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected successfully.'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
 
 // =================================================================
 // --- API ROUTES ---
