@@ -1173,7 +1173,8 @@ app.post('/api/courses/:courseId/quizzes/:quizId/submit', auth, async (req, res)
     }
 });
 
-// Keep only this version of the route in server.js
+// In server.js, add this new route
+// In server.js
 
 app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     try {
@@ -1183,7 +1184,7 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 
         const formattedAttempts = attempts.map(attempt => {
             let quizTitle = 'Unknown Quiz';
-            if (attempt.course && attempt.course.episodes) {
+            if (attempt.course) {
                  for (const episode of attempt.course.episodes) {
                     const quiz = episode.quizzes.id(attempt.quiz);
                     if (quiz) {
@@ -1195,8 +1196,7 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
             const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
 
             return {
-                id: attempt._id,
-                courseId: attempt.course._id,
+                id: attempt._id, // <-- ADD THIS LINE
                 date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                 quizTitle: `${attempt.course.title} - ${quizTitle}`,
                 totalQuestions: attempt.answers.length,
@@ -1214,44 +1214,34 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     }
 });
 
-// In server.js, add this new route
-
-app.get('/api/quiz-results/:resultId', auth, async (req, res) => {
+// GET /api/quiz-results/:resultId - Fetches a single quiz result
+// In server.js, replace the existing route with this one
+app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     try {
-        const result = await QuizResult.findById(req.params.resultId)
-            .populate({
-                path: 'course',
-                select: 'title episodes instructor'
-            });
+        const attempts = await QuizResult.find({ user: req.user.id })
+            .populate('course', 'title episodes')
+            .sort({ submittedAt: -1 });
 
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Result not found.' });
-        }
+        const formattedAttempts = attempts.map(attempt => {
+            // ... (your existing logic to get quizTitle)
+            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
 
-        // Security check: ensure the user is either the student who took the quiz or the course instructor
-        const isStudentOwner = result.user.equals(req.user.id);
-        const isInstructorOwner = result.course.instructor.equals(req.user.id);
-
-        if (!isStudentOwner && !isInstructorOwner) {
-            return res.status(403).json({ success: false, message: 'Access denied.' });
-        }
-
-        // Find the quiz title for the header
-        let quizTitle = 'Quiz Result';
-        if (result.course && result.course.episodes) {
-            for (const episode of result.course.episodes) {
-                const quiz = episode.quizzes.id(result.quiz);
-                if (quiz) {
-                    quizTitle = quiz.title;
-                    break;
-                }
-            }
-        }
-
-        res.json({ success: true, result, quizTitle });
+            return {
+                id: attempt._id, // <-- ENSURE THIS LINE EXISTS
+                courseId: attempt.course._id, // <-- ALSO ADD THIS LINE
+                date: new Date(attempt.submittedAt).toLocaleDateString(/* ... */),
+                quizTitle: `${attempt.course.title} - ${quizTitle}`,
+                totalQuestions: attempt.answers.length,
+                totalMarks: attempt.possibleScore,
+                correctAnswers: correctAnswersCount,
+                result: attempt.passed ? 'Pass' : 'Fail',
+            };
+        });
+        
+        res.json({ success: true, attempts: formattedAttempts });
     } catch (error) {
         console.error('Error fetching quiz result:', error);
-        res.status(500).json({ success: false, message: 'API endpoint not found' });
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
