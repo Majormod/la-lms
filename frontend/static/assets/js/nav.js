@@ -1,69 +1,61 @@
-// Replace everything in nav.js with this final, corrected code
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    const getAuth = () => {
-        const token = localStorage.getItem('lmsToken');
-        const userJSON = localStorage.getItem('lmsUser');
-        if (token && userJSON) {
-            try { return { token, user: JSON.parse(userJSON) }; } 
-            catch (error) {
-                localStorage.clear();
-                return { token: null, user: null };
-            }
-        }
-        return { token: null, user: null };
-    };
+const updateNavDropdown = () => {
+    const token = localStorage.getItem('lmsToken');
 
-    const { token, user } = getAuth();
+    const loginLink = document.getElementById('nav-login-link');
+    const userLink = document.getElementById('nav-user-link');
+    const userMenu = document.querySelector('.rbt-user-menu-list-wrapper');
 
-    const guestNavItem = document.getElementById('guest-nav-item');
-    const userNavItem = document.getElementById('user-nav-item');
+    if (!loginLink || !userLink || !userMenu) {
+        console.error('Navigation elements not found. Cannot update dropdown.');
+        return;
+    }
 
     if (token && user) {
-        // --- 1. USER IS LOGGED IN ---
+        // --- USER IS LOGGED IN ---
+        loginLink.classList.add('d-none');
+        userLink.classList.remove('d-none');
+        userMenu.style.display = '';
 
-        // Hide guest link, show user dropdown
-        if (guestNavItem) guestNavItem.style.display = 'none';
-        if (userNavItem) userNavItem.style.display = 'list-item';
+        document.getElementById('nav-user-name').textContent = user.name.split(' ')[0];
+        document.getElementById('nav-user-name-dropdown').textContent = user.name;
+        
+        fetch('/api/user/profile', { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success && result.data.avatar) {
+                document.getElementById('nav-user-avatar').src = `/${result.data.avatar}`;
+            }
+        });
 
-        // Populate user name and avatar
-        const fullName = user.name || `${user.firstName} ${user.lastName}`;
-        document.getElementById('nav-user-name-dropdown').textContent = fullName;
-
-        if (user.avatar) {
-            const avatarPath = `/${user.avatar}`;
-            document.getElementById('nav-user-avatar-icon').src = avatarPath;
-            document.getElementById('nav-user-avatar-dropdown').src = avatarPath;
-        }
-
-        // Configure links and show/hide menu items based on user role
         if (user.role === 'instructor') {
-            document.getElementById('nav-profile-link').href = 'instructor-profile.html';
-            document.getElementById('nav-settings-link').href = 'instructor-settings.html';
             document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
+            
+            // --- NEW: Hide Bookmark and Reviews for Instructors ---
+            document.getElementById('nav-bookmark-link').style.display = 'none';
+            document.getElementById('nav-reviews-link').style.display = 'none';
+
         } else { // Assumes 'student' role
-            document.getElementById('nav-profile-link').href = 'student-profile.html';
-            document.getElementById('nav-settings-link').href = 'student-settings.html';
             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
         }
 
-    } else {
-        // --- 2. USER IS LOGGED OUT ---
-        if (guestNavItem) guestNavItem.style.display = 'list-item';
-        if (userNavItem) userNavItem.style.display = 'none';
-    }
-
-    // --- 3. UNIVERSAL LOGOUT HANDLER ---
-    const logoutButton = document.getElementById('nav-logout-btn');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', (e) => {
+        document.getElementById('nav-logout-btn')?.addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('lmsToken');
             localStorage.removeItem('lmsUser');
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         });
+
+    } else {
+        // --- USER IS LOGGED OUT ---
+        loginLink.classList.remove('d-none');
+        userLink.classList.add('d-none');
+        userMenu.style.display = 'none';
     }
+};
+
+    updateNavDropdown();
 });
