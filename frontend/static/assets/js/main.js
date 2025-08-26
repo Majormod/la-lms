@@ -3866,7 +3866,7 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
 if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-    let allAttempts = [];
+    let allAttempts = []; // Store all attempts for client-side filtering
 
     if (!token || !user || user.role !== 'instructor') {
         window.location.href = '/login.html';
@@ -3922,7 +3922,6 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
         });
     };
 
-    // THIS IS THE FUNCTION THAT FIXES THE EYE ICON
     const setupViewDetailsClickHandler = () => {
         const tableBody = document.getElementById('quiz-attempts-table-body');
         if (!tableBody) return;
@@ -3930,8 +3929,8 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
         tableBody.addEventListener('click', (e) => {
             const viewButton = e.target.closest('.view-details-btn');
             if (viewButton) {
-                e.preventDefault(); // Stop any other scripts from blocking the link
-                window.location.href = viewButton.href; // Manually navigate
+                e.preventDefault();
+                window.location.href = viewButton.href;
             }
         });
     };
@@ -3949,7 +3948,7 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
                     allAttempts = result.attempts;
                     renderTable(allAttempts);
                     setupCourseFilter(result.courses);
-                    setupViewDetailsClickHandler(); // This line makes the click handler active
+                    setupViewDetailsClickHandler();
                 } else {
                     attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
                 }
@@ -3962,7 +3961,6 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
     
     document.addEventListener('DOMContentLoaded', initializePage);
 }
-
 // =================================================================
 // SCRIPT FOR student-my-quiz-attempts.html
 // =================================================================
