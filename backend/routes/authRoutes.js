@@ -1,3 +1,5 @@
+// Replace the entire contents of your authRoutes.js with this
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -23,33 +25,37 @@ router.post('/register', async (req, res) => {
 // @route   POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password } = req.body; // Frontend sends 'email' as 'username'
         const user = await User.findOne({ email: username });
         if (!user || !(await user.comparePassword(password))) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
-        const payload = { user: { id: user.id, role: user.role, name: `${user.firstName} ${user.lastName}` } };
-        jwt.sign(
-    payload,
-    process.env.JWT_SECRET,
-    { expiresIn: '5h' },
-    (err, token) => {
-        if (err) throw err;
 
-        // The response to the browser MUST contain the full user object for the UI
-        res.status(200).json({
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                avatar: user.avatar
+        // JWT payload should be minimal
+        const payload = {
+            user: { id: user.id }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '5h' },
+            (err, token) => {
+                if (err) throw err;
+                // The response to the browser must contain the full user object for the UI
+                res.status(200).json({
+                    success: true,
+                    token,
+                    user: {
+                        id: user.id,
+                        role: user.role,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        avatar: user.avatar
+                    }
+                });
             }
-        });
-    }
-);
+        );
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
