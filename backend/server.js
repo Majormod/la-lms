@@ -166,11 +166,13 @@ app.put('/api/user/social', auth, async (req, res) => {
     }
 });
 
+
 app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
         const user = await User.findById(req.user.id);
-        user.avatar = `assets/images/uploads/${req.file.filename}`;
+        // FIX: The path should point to the actual upload location
+        user.avatar = `uploads/courses/${req.file.filename}`; 
         await user.save();
         res.json({ success: true, msg: 'Avatar updated successfully', filePath: user.avatar });
     } catch (err) { res.status(500).send('Server Error'); }
@@ -180,7 +182,8 @@ app.post('/api/user/cover', auth, upload.single('coverPhoto'), async (req, res) 
     try {
         if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
         const user = await User.findById(req.user.id);
-        user.coverPhoto = `assets/images/uploads/${req.file.filename}`;
+        // FIX: The path should point to the actual upload location
+        user.coverPhoto = `uploads/courses/${req.file.filename}`;
         await user.save();
         res.json({ success: true, msg: 'Cover photo updated successfully', filePath: user.coverPhoto });
     } catch (err) { res.status(500).send('Server Error'); }
@@ -1239,12 +1242,11 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
     }
 });
 
+
 app.use(express.static(staticPath));
 
-
-// in server.js
-
-// ... your existing API routes like app.use('/api/courses', ...) go here ...
+// ADD THIS LINE:
+app.use('/uploads', express.static(path.join(__dirname, '../frontend/uploads')));
 
 
 // =================================================================
