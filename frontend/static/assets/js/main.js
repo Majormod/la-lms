@@ -1147,43 +1147,58 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-        const updateUserDataOnPage = () => {
-            if (!token) return;
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        const profile = result.data;
-                        const fullName = `${profile.firstName} ${profile.lastName}`;
-                        const bannerName = document.querySelector('.rbt-tutor-information .title');
-                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                        const bannerCover = document.querySelector('.tutor-bg-photo');
-                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-                        if (bannerName) bannerName.textContent = fullName;
-                        if (profile.avatar) {
-                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                        }
-                        if (profile.coverPhoto) {
-                            if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                            if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
-                        }
-                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
-                    } else {
-                        localStorage.clear();
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-        };
+const updateUserDataOnPage = () => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const profile = result.data;
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+
+                // Existing selectors from your code
+                const bannerName = document.querySelector('.rbt-tutor-information .title');
+                const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                const bannerCover = document.querySelector('.tutor-bg-photo');
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                const settingsAvatarImg = document.querySelector('#settings-avatar-img');
+                const settingsCoverBanner = document.querySelector('#cover-photo-banner');
+
+                // --- START OF FIX ---
+                // 1. Add a new, reliable selector for the dropdown avatar
+                const navDropdownAvatar = document.querySelector('.rbt-admin-profile .admin-thumbnail img');
+                // --- END OF FIX ---
+
+                if (bannerName) bannerName.textContent = fullName;
+
+                if (profile.avatar) {
+                    if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
+                    if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
+                    
+                    // --- START OF FIX ---
+                    // 2. Add the line to update the dropdown avatar's source
+                    if (navDropdownAvatar) navDropdownAvatar.src = `/${profile.avatar}`;
+                    // --- END OF FIX ---
+                }
+                
+                if (profile.coverPhoto) {
+                    if (bannerCover) bannerCover.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                    if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = `url(/${profile.coverPhoto})`;
+                }
+                
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+
+            } else {
+                localStorage.clear();
+                window.location.href = '/login';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            localStorage.clear();
+            window.location.href = '/login';
+        });
+};
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
