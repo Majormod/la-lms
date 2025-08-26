@@ -1147,80 +1147,67 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
+// In main.js, replace your existing updateUserDataOnPage function with this one.
+
 const updateUserDataOnPage = () => {
-    const token = localStorage.getItem('lmsToken'); // Ensure token is defined here
+    const token = localStorage.getItem('lmsToken');
     if (!token) return;
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) { // If server sends an error (like 401), handle it
+                localStorage.clear();
+                window.location.href = '/login.html';
+                throw new Error('Session expired or invalid.');
+            }
+            return res.json();
+        })
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-                // ADD THIS LINE to see exactly what the server is sending
-                console.log("User profile data from server:", profile); 
-
                 const fullName = `${profile.firstName} ${profile.lastName}`;
+                const avatarPath = profile.avatar ? `/${profile.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-placeholder.png';
 
-                // --- 1. UPDATE ALL VISUAL ELEMENTS (Your existing code, made more robust) ---
+                // --- 1. UPDATE ALL NAME ELEMENTS ---
+                // For dashboard banners & nav dropdowns
+                document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name').forEach(el => {
+                    if (el) el.textContent = fullName;
+                });
                 
-                // Selectors
-                const bannerName = document.querySelector('.rbt-tutor-information .title');
-                const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
+                // For the simple text link in the desktop header
+                const navUserName = document.getElementById('nav-user-name');
+                if (navUserName) navUserName.textContent = profile.firstName;
+                
+                // For sidebar welcome message
                 const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                const navDropdownAvatar = document.querySelector('.rbt-admin-profile .admin-thumbnail img');
-                
-                // Update Names
-                if (bannerName) bannerName.textContent = fullName;
                 if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
 
-                // Update Avatars
-                if (profile.avatar) {
-                    const avatarPath = `/${profile.avatar}`;
-                    if (bannerAvatar) bannerAvatar.src = avatarPath;
-                    if (navDropdownAvatar) navDropdownAvatar.src = avatarPath;
-                }
-                // --- START OF FIX ---
-                // This now uses .setProperty() to override the theme's !important CSS rule
-                if (bannerCover && coverPath) {
-                    bannerCover.style.setProperty('background-image', `url(${coverPath})`, 'important');
-                }
-                // --- END OF FIX ---
-                // --- 2. NEW: ROLE-BASED MENU LOGIC ---
-
-                // Define which links belong to which role
-                const instructorLinks = ['instructor-dashboard.html', 'instructor-profile.html', 'instructor-my-courses.html', 'instructor-announcements.html', 'instructor-quiz-attempts.html', 'instructor-assignments.html', 'instructor-settings.html'];
-                const studentLinks = ['student-dashboard.html', 'student-profile.html', 'student-enrolled-courses.html', 'student-wishlist.html', 'student-reviews.html', 'student-my-quiz-attempts.html', 'student-order-history.html', 'student-settings.html'];
-
-                // Get all links in the user dropdown
-                const allLinks = document.querySelectorAll('.rbt-user-menu-list-wrapper ul.user-list-wrapper li a');
-
-                if (profile.role === 'instructor') {
-                    // Show/hide links for Instructors
-                    allLinks.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (instructorLinks.includes(href)) {
-                            link.parentElement.style.display = 'list-item';
-                } else {
-                            link.parentElement.style.display = 'none';
-                        }
-                    });
-                } else {
-                    // Show/hide links for Students
-                    allLinks.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (studentLinks.includes(href)) {
-                            link.parentElement.style.display = 'list-item';
-                        } else {
-                            link.parentElement.style.display = 'none';
-                        }
-                    });
-                }
-
-                // Always show the logout button
-                document.querySelectorAll('.logout-btn').forEach(btn => {
-                    if (btn.parentElement) btn.parentElement.style.display = 'list-item';
+                // --- 2. UPDATE ALL AVATAR ELEMENTS ---
+                // This combines all possible selectors for avatars
+                document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #nav-user-avatar, .rbt-admin-profile .admin-thumbnail img').forEach(img => {
+                    if (img) img.src = avatarPath;
                 });
 
+                // --- 3. ROLE-BASED MENU LOGIC ---
+                const settingsLink = document.querySelector('a[href*="settings.html"]');
+                const profileLink = document.querySelector('.rbt-admin-profile .rbt-btn-link');
+
+                if (profile.role === 'instructor') {
+                    if (settingsLink) settingsLink.href = 'instructor-settings.html';
+                    if (profileLink) profileLink.href = 'instructor-profile.html';
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                } else {
+                    if (settingsLink) settingsLink.href = 'student-settings.html';
+                    if (profileLink) profileLink.href = 'student-profile.html';
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                }
+
+                // --- 4. LOGOUT BUTTON ---
+                document.querySelectorAll('.logout-btn').forEach(btn => {
+                    if(btn.parentElement) btn.parentElement.style.display = 'list-item';
+                });
 
             } else {
                 localStorage.clear();
@@ -1229,22 +1216,13 @@ const updateUserDataOnPage = () => {
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            localStorage.clear();
-            window.location.href = '/login.html';
         });
 };
-// ADD THIS ONE LINE RIGHT AFTER THE FUNCTION DEFINITION
-updateUserDataOnPage();
-        const handlePageLogic = () => {
-            const path = window.location.pathname;
 
-            if (path.includes('student-')) {
-                if (!token) {
-                    window.location.href = '/login';
-                    return;
-                }
+// REMINDER: Make sure this line is at the end of your script to run the function
+document.addEventListener('DOMContentLoaded', () => {
     updateUserDataOnPage();
-            }
+});
 
             if (path.includes('/login') || path.includes('/login-instructor')) {
                 const loginForm = document.querySelector('#login-form');
@@ -4072,11 +4050,20 @@ if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
 // =================================================================
 // In main.js
 
+// In main.js, find and replace the block for the student quiz attempts page
+
 if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('lmsToken');
         if (!token) {
             window.location.href = '/login.html';
-    } else {
+            return;
+        }
+
+        // 1. Call the helper function to instantly update the banner and header
+        updateHeaderAndBanner();
+
+        // 2. Proceed with fetching the specific data for this page
         const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
         if (attemptsTableBody) {
             attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
@@ -4090,6 +4077,7 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                             return;
                         }
                         
+                        // This is the full table rendering logic that was missing
                         attemptsTableBody.innerHTML = result.attempts.map(attempt => {
                             const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
                             return `
@@ -4121,7 +4109,144 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
                     attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
                 });
         }
+    });
+}
+
+// =================================================================
+// SCRIPT FOR student-settings.html
+// =================================================================
+// =================================================================
+// FINAL SCRIPT FOR student-settings.html (Corrected)
+// =================================================================
+if (window.location.pathname.includes('student-settings.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = 'login.html';
     }
+
+    // --- FIX: Declare form and input elements ONCE at the top ---
+    const profileForm = document.getElementById('profile-tab-form');
+    const avatarUploadButton = document.getElementById('avatar-upload-button');
+    const avatarUploadInput = document.getElementById('avatar-upload-input');
+    const coverUploadButton = document.getElementById('cover-upload-button');
+    const coverUploadInput = document.getElementById('cover-upload-input');
+
+    const populatePage = (user) => {
+        if (!user) return;
+        
+        const fullName = `${user.firstName} ${user.lastName}`;
+        const avatarPath = user.avatar ? `/${user.avatar.replace(/\\/g, '/')}` : 'assets/images/team/avatar-2.jpg';
+        const coverPath = user.coverPhoto ? `/${user.coverPhoto.replace(/\\/g, '/')}` : '';
+
+        // Update banners and sidebars
+        document.querySelector('.rbt-dashboard-content-wrapper .tutor-content .title').textContent = fullName;
+        document.querySelector('.rbt-dashboard-content-wrapper .rbt-avatars img').src = avatarPath;
+        if (coverPath) {
+            document.querySelector('.rbt-dashboard-content-wrapper .tutor-bg-photo').style.backgroundImage = `url(${coverPath})`;
+        }
+        
+        // Update images inside the settings tab
+        document.querySelector('#profile .rbt-tutor-information .thumbnail img').src = avatarPath;
+        if (coverPath) {
+            document.querySelector('#profile .tutor-bg-photo').style.backgroundImage = `url(${coverPath})`;
+        }
+        
+        // Populate the profile form fields
+        if (profileForm) {
+            profileForm.querySelector('#firstname').value = user.firstName || '';
+            profileForm.querySelector('#lastname').value = user.lastName || '';
+            profileForm.querySelector('#username').value = user.email || '';
+            profileForm.querySelector('#phonenumber').value = user.contact?.phone || '';
+            profileForm.querySelector('#skill').value = user.occupation || '';
+            profileForm.querySelector('#bio').value = user.bio || '';
+        }
+    };
+    
+    const uploadImage = async (file, type) => {
+        const formData = new FormData();
+        formData.append(type, file);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/user/${type}`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            alert('Image updated successfully!');
+            localStorage.setItem('lmsUser', JSON.stringify(result.user));
+            populatePage(result.user);
+            updateUserDataOnPage();
+
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Call the global updater for header/nav
+        updateUserDataOnPage();
+
+        // 2. Fetch data specifically for this page's form
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    populatePage(result.data);
+                } else { throw new Error(result.message); }
+            })
+            .catch(err => alert('Could not load your profile data.'));
+
+        // 3. Set up event listeners
+        if (profileForm) {
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = {
+                    firstName: profileForm.querySelector('#firstname').value,
+                    lastName: profileForm.querySelector('#lastname').value,
+                    username: profileForm.querySelector('#username').value,
+                    phoneNumber: profileForm.querySelector('#phonenumber').value,
+                    occupation: profileForm.querySelector('#skill').value,
+                    bio: profileForm.querySelector('#bio').value,
+                };
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        body: JSON.stringify(formData)
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message);
+                    alert('Profile updated successfully!');
+                    localStorage.setItem('lmsUser', JSON.stringify(result.user));
+                    populatePage(result.user);
+                    updateUserDataOnPage();
+                } catch (error) {
+                    alert(`Update failed: ${error.message}`);
+                }
+            });
+        }
+        
+        if (avatarUploadButton && avatarUploadInput) {
+            avatarUploadButton.addEventListener('click', () => avatarUploadInput.click());
+            avatarUploadInput.addEventListener('change', () => {
+                const file = avatarUploadInput.files[0];
+                if (file) uploadImage(file, 'avatar');
+});
+        }
+
+        if (coverUploadButton && coverUploadInput) {
+            coverUploadButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                coverUploadInput.click();
+            });
+            coverUploadInput.addEventListener('change', () => {
+                const file = coverUploadInput.files[0];
+                if (file) uploadImage(file, 'cover');
+            });
+        }
+    });
 }
         handlePageLogic();
     };
