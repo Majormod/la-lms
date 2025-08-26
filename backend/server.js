@@ -277,6 +277,8 @@ app.get('/api/instructor/announcements', auth, async (req, res) => {
 // REPLACE your existing static route with this dynamic version
 // In server.js, replace the existing instructor quiz attempts route
 
+// In server.js, replace the existing instructor quiz attempts route
+
 app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
     try {
         if (req.user.role !== 'instructor') {
@@ -290,36 +292,46 @@ app.get('/api/instructor/quiz-attempts', auth, async (req, res) => {
             .populate('user', 'firstName lastName')
             .sort({ submittedAt: -1 });
 
-        // --- THIS IS THE FIX ---
         // Filter out any attempts where the user has been deleted
         attempts = attempts.filter(attempt => attempt.user);
 
         const formattedAttempts = attempts.map(attempt => {
-            const course = instructorCourses.find(c => c._id.equals(attempt.course));
-            let quizTitle = 'Unknown Quiz';
-            if (course) {
-                for (const episode of course.episodes) {
-                    const quiz = episode.quizzes.id(attempt.quiz);
-                    if (quiz) {
-                        quizTitle = quiz.title;
-                        break;
+            // --- START OF FIX ---
+            // We wrap the processing of each attempt in a try...catch block.
+            // This prevents one bad record from crashing the entire request.
+            try {
+                const course = instructorCourses.find(c => c._id.equals(attempt.course));
+                let quizTitle = 'Unknown Quiz';
+                if (course) {
+                    for (const episode of course.episodes) {
+                        if (episode.quizzes) { // Add a safety check here
+                           const quiz = episode.quizzes.id(attempt.quiz);
+                           if (quiz) {
+                               quizTitle = quiz.title;
+                               break;
+                           }
+                        }
                     }
                 }
+                
+                const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
+                
+                return {
+                    id: attempt._id,
+                    date: new Date(attempt.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    quizTitle: quizTitle,
+                    studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
+                    totalQuestions: attempt.answers.length,
+                    totalMarks: attempt.possibleScore,
+                    correctAnswers: correctAnswersCount,
+                    result: attempt.passed ? 'Pass' : 'Fail',
+                };
+            } catch (e) {
+                console.error(`Could not process quiz attempt with ID: ${attempt._id}. Error:`, e);
+                return null; // Return null for the failed attempt
             }
-            
-            const correctAnswersCount = attempt.answers.filter(a => a.isCorrect).length;
-            
-            return {
-                id: attempt._id,
-                date: new Date(attempt.submittedAt).toLocaleDateDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-                quizTitle: quizTitle,
-                studentName: `${attempt.user.firstName} ${attempt.user.lastName}`,
-                totalQuestions: attempt.answers.length,
-                totalMarks: attempt.possibleScore,
-                correctAnswers: correctAnswersCount,
-                result: attempt.passed ? 'Pass' : 'Fail',
-            };
-        });
+            // --- END OF FIX ---
+        }).filter(Boolean); // This final step removes any null entries from the array.
 
         res.json({ success: true, attempts: formattedAttempts });
 
