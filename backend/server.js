@@ -178,6 +178,7 @@ app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => 
 
 app.post('/api/user/cover', auth, upload.single('coverPhoto'), async (req, res) => {
     try {
+        console.log('--- COVER UPLOAD V3 IS RUNNING ---'); // <-- ADD THIS LINE
         if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
         const user = await User.findById(req.user.id);
         user.coverPhoto = `uploads/courses/${req.file.filename}`;
