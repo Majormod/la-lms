@@ -1136,44 +1136,53 @@ const renderCourseDetailsCurriculum = (episodes) => {
     });
 };
 
-        const updateUserDataOnPage = () => {
-            if (!token) return;
-            fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        const profile = result.data;
-                        const fullName = `${profile.firstName} ${profile.lastName}`;
-                        const bannerName = document.querySelector('.rbt-tutor-information .title');
-                        const bannerAvatar = document.querySelector('.rbt-tutor-information .rbt-avatars img');
-                        const bannerCover = document.querySelector('.tutor-bg-photo');
-                        const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                        const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
-                        const settingsAvatarImg = document.querySelector('#settings-avatar-img');
-                        const settingsCoverBanner = document.querySelector('#cover-photo-banner');
-                        if (bannerName) bannerName.textContent = fullName;
-                        if (profile.avatar) {
-                            if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
-                            if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
-                        }
-// REPLACE IT WITH THIS BLOCK
-if (profile.coverPhoto) {
-    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
-    document.querySelectorAll('.tutor-bg-photo').forEach(div => div.style.backgroundImage = coverUrl);
-}
-                        if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                        if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
-                    } else {
-                        localStorage.clear();
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-        };
+// REPLACE your old updateUserDataOnPage function with this one
+
+const updateUserDataOnPage = () => {
+    const token = localStorage.getItem('lmsToken'); // Assuming token is defined in a higher scope
+    if (!token) return;
+
+    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const profile = result.data;
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+
+                // --- Select ALL relevant elements ---
+                const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
+                const bannerAvatars = document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #settings-avatar-img');
+                const bannerCovers = document.querySelectorAll('.tutor-bg-photo'); // <-- FIX 1: Selects ALL cover photos
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                const headerDropdownAvatar = document.querySelector('#header-dropdown-avatar');
+
+                // --- Update elements using forEach loops ---
+                bannerNames.forEach(el => el.textContent = fullName);
+                
+                if (profile.avatar) {
+                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`; // Cache-busting
+                    bannerAvatars.forEach(img => img.src = avatarUrl);
+                    if (headerDropdownAvatar) headerDropdownAvatar.src = avatarUrl;
+                }
+
+                if (profile.coverPhoto) {
+                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`; // Cache-busting
+                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl); // <-- FIX 2: Updates ALL cover photos
+                }
+
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+
+            } else {
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+};
 
         const handlePageLogic = () => {
             const path = window.location.pathname;
