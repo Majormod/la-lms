@@ -1156,11 +1156,10 @@ const renderCourseDetailsCurriculum = (episodes) => {
                             if (bannerAvatar) bannerAvatar.src = `/${profile.avatar}`;
                             if (settingsAvatarImg) settingsAvatarImg.src = `/${profile.avatar}`;
                         }
-// This is the FIX
+// REPLACE IT WITH THIS BLOCK
 if (profile.coverPhoto) {
-    const coverPhotoUrl = `url('/${profile.coverPhoto.replace(/^\//, '')}')`; // Create a clean URL
-    if (bannerCover) bannerCover.style.backgroundImage = coverPhotoUrl;
-    if (settingsCoverBanner) settingsCoverBanner.style.backgroundImage = coverPhotoUrl;
+    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
+    document.querySelectorAll('.tutor-bg-photo').forEach(div => div.style.backgroundImage = coverUrl);
 }
                         if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
                         if (headerDropdownAvatar && profile.avatar) headerDropdownAvatar.src = `/${profile.avatar}`;
