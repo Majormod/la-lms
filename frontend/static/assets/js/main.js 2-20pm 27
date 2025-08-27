@@ -1200,18 +1200,9 @@ const updateUserDataOnPage = () => {
         });
 };
 
-const handlePageLogic = () => {
-    const path = window.location.pathname;
-    const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-    const API_BASE_URL = 'http://54.221.189.159';
+        const handlePageLogic = () => {
+            const path = window.location.pathname;
 
-    // This is the universal update that runs on every page for logged-in users.
-    if (token) {
-        updateUserDataOnPage();
-    }
-
-    // --- PAGE-SPECIFIC LOGIC STARTS HERE ---
             if (path.includes('student-')) {
                 if (!token) {
                     window.location.href = '/login';
@@ -3524,6 +3515,23 @@ if (instructor) {
         populateCourseDetails();
     });
 }
+// =================================================================
+// REFACTORED lesson.html SCRIPT
+// =================================================================
+// =================================================================
+// UPDATED SCRIPT FOR lesson.html (Handles Lessons & Quizzes)
+// =================================================================
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (Corrected Selectors)
+// =================================================================
+
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (All functions included)
+// =================================================================
+
+// =================================================================
+// FINAL SCRIPT FOR lesson.html (Simplified & Corrected)
+// =================================================================
 
 // =================================================================
 // FINAL SCRIPT FOR lesson.html (Matches UI Theme Exactly)
@@ -3800,38 +3808,8 @@ function renderQuizQuestions(quiz, container) {
         }
     }
 }
-    
-    // Logic for Student Dashboard Page
-    if (path.includes('student-dashboard.html')) {
-        if (!token || !user || user.role !== 'student') {
-            alert("Access Denied.");
-            window.location.href = '/login';
-            return;
-        }
-        
-        fetch(`${API_BASE_URL}/api/student/dashboard`, { headers: { 'x-auth-token': token } })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                const data = result.data;
-                const enrolledEl = document.querySelector('.bg-primary-opacity .odometer');
-                const activeEl = document.querySelector('.bg-secondary-opacity .odometer');
-                const completedEl = document.querySelector('.bg-violet-opacity .odometer');
-                
-                if (enrolledEl) enrolledEl.setAttribute('data-count', data.enrolledCourses);
-                if (activeEl) activeEl.setAttribute('data-count', data.activeCourses);
-                if (completedEl) completedEl.setAttribute('data-count', data.completedCourses);
-                
-                if (window.eduJs && window.eduJs.counterUp) {
-                    window.eduJs.counterUp();
-                }
-            }
-        });
-    }
 
-    // ... you can add other 'if' blocks for your other pages here ...
-
-}; // This is the end of the handlePageLogic function
+};
 
 if (window.location.pathname.includes('explore-courses.html')) {
 
@@ -4090,6 +4068,12 @@ if (window.location.pathname.includes('lesson-quiz-result.html')) {
         }
     });
 }
+// =================================================================
+// SCRIPT FOR instructor-quiz-attempts.html
+// =================================================================
+// =================================================================
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with filters & working buttons)
+// =================================================================
 // =================================================================
 // FINAL SCRIPT FOR instructor-quiz-attempts.html (with all fixes)
 // =================================================================
