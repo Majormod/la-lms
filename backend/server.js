@@ -1351,6 +1351,59 @@ app.get('/api/student/wishlist', auth, async (req, res) => {
     }
 });
 
+// CREATE OR UPDATE A REVIEW FOR A COURSE
+app.post('/api/courses/:courseId/reviews', auth, async (req, res) => {
+    try {
+        const { rating, comment } = req.body;
+        const courseId = req.params.courseId;
+        const studentId = req.user.id;
+
+        // For simplicity, we'll use findOneAndUpdate with 'upsert'
+        // This will create a review if one doesn't exist, or update it if it does.
+        const review = await Review.findOneAndUpdate(
+            { course: courseId, student: studentId },
+            { rating, comment },
+            { new: true, upsert: true, runValidators: true }
+        );
+
+        res.json({ success: true, message: "Review submitted successfully!", review });
+    } catch (error) {
+        console.error("Review submission error:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
+// GET ALL REVIEWS BY THE CURRENT STUDENT (with Pagination)
+app.get('/api/student/reviews', auth, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        // CHANGE THE DEFAULT LIMIT HERE
+        const limit = parseInt(req.query.limit) || 20; // Changed from 5 to 20
+        const skip = (page - 1) * limit;
+
+        // ... rest of the function remains the same ...
+        
+        const totalReviews = await Review.countDocuments({ student: req.user.id });
+        const totalPages = Math.ceil(totalReviews / limit);
+
+        const reviews = await Review.find({ student: req.user.id })
+            .populate('course', 'title')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip(skip);
+        
+        res.json({ 
+            success: true, 
+            reviews,
+            pagination: { currentPage: page, totalPages, totalReviews }
+        });
+    } catch (error) {
+        console.error("Get student reviews error:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 app.use(express.static(staticPath));
 

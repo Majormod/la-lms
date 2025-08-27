@@ -4041,6 +4041,156 @@ if (window.location.pathname.includes('student-wishlist.html')) {
     });
 }
 
+// In main.js
+
+if (window.location.pathname.includes('student-reviews.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.getElementById('reviews-table-body');
+        const token = localStorage.getItem('lmsToken');
+
+        const limit = 20; // <-- ADD THIS LINE HERE
+        
+        if (!token) {
+            tableBody.innerHTML = `<tr><td colspan="4">Please log in to see your reviews.</td></tr>`;
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/api/student/reviews`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.reviews.length > 0) {
+                    tableBody.innerHTML = ''; // Clear loading message
+                    data.reviews.forEach(review => {
+                        const stars = '⭐'.repeat(review.rating);
+                        const reviewDate = new Date(review.createdAt).toLocaleDateString();
+
+                        const row = `
+                            <tr>
+                                <th>
+                                    <a href="course-details.html?courseId=${review.course._id}">${review.course.title}</a>
+                                </th>
+                                <td>${stars} (${review.rating})</td>
+                                <td>${review.comment || '<i>No comment</i>'}</td>
+                                <td>${reviewDate}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="4">You haven't written any reviews yet.</td></tr>`;
+                }
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching student reviews:', error);
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-danger">Could not load reviews.</td></tr>`;
+        });
+    });
+}
+
+
+// In main.js
+
+if (window.location.pathname.includes('course-details.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get the courseId from the URL's query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+
+        if (!courseId) return; // Stop if there's no courseId
+
+        const reviewsListContainer = document.getElementById('reviews-list-container');
+        const paginationContainer = document.getElementById('reviews-pagination-container');
+        const limit = 5; // Reviews per page
+
+        const renderReview = (review) => {
+            const reviewDate = new Date(review.createdAt).toLocaleDateString();
+            const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
+            const stars = '⭐'.repeat(review.rating); // Simple star representation
+
+            return `
+                <div class="rbt-course-review">
+                    <div class="media">
+                        <div class="thumbnail">
+                            <a href="#"><img src="${studentAvatar}" alt="Student Avatar"></a>
+                        </div>
+                        <div class="media-body">
+                            <div class="author-info">
+                                <h5 class="title">${review.student.firstName} ${review.student.lastName}</h5>
+                                <div class="rating">${stars}</div>
+                            </div>
+                            <div class="content">
+                                <p class="description">${review.comment || ''}</p>
+                                <span class="review-date">${reviewDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderPaginationControls = (pagination) => {
+            paginationContainer.innerHTML = '';
+            if (pagination.totalPages <= 1) return;
+
+            // Previous Button
+            paginationContainer.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
+
+            // Page Number Buttons
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                paginationContainer.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+            }
+
+            // Next Button
+            paginationContainer.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
+        };
+
+        const fetchAndDisplayReviews = (page = 1) => {
+            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
+            
+            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=${limit}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        reviewsListContainer.innerHTML = '';
+                        if (data.reviews.length > 0) {
+                            data.reviews.forEach(review => {
+                                reviewsListContainer.innerHTML += renderReview(review);
+                            });
+                            renderPaginationControls(data.pagination);
+                        } else {
+                            reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
+                        }
+                    } else { throw new Error(data.message); }
+                })
+                .catch(error => {
+                    console.error('Error fetching course reviews:', error);
+                    reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`;
+                });
+        };
+        
+        // Event listener for pagination clicks
+        paginationContainer.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('a');
+            if (!target || target.classList.contains('disabled')) return;
+            
+            const page = target.dataset.page;
+            if (page) {
+                fetchAndDisplayReviews(parseInt(page));
+            }
+        });
+
+        // Initial fetch for the first page of reviews
+        fetchAndDisplayReviews(1);
+    });
+}
+
 
 
 }; // This is the end of the handlePageLogic function
