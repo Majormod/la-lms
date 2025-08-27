@@ -3522,6 +3522,71 @@ if (instructor) {
         };
 
         populateCourseDetails();
+
+        // In main.js, inside the 'course-details.html' block and 'DOMContentLoaded' listener
+
+const checkEnrollmentAndHandleReviewForm = async () => {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) return; // Only for logged-in users
+
+    try {
+        // Check if the user is enrolled in this course
+        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/enrollment-status`, {
+            headers: { 'x-auth-token': token }
+        });
+        const data = await response.json();
+
+        if (data.success && data.isEnrolled) {
+            // If enrolled, show the review form
+            const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+            reviewFormWrapper.style.display = 'block';
+
+            // Handle the form submission
+            const reviewForm = document.getElementById('review-form');
+            reviewForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+                const comment = document.getElementById('review-comment').value;
+
+                if (!rating) {
+                    alert('Please select a star rating.');
+                    return;
+                }
+
+                try {
+                    const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': token
+                        },
+                        body: JSON.stringify({ rating, comment })
+                    });
+                    const submitResult = await submitResponse.json();
+
+                    if (submitResult.success) {
+                        alert('Thank you for your review!');
+                        reviewFormWrapper.style.display = 'none'; // Hide form after submission
+                        fetchAndDisplayReviews(1); // Refresh the reviews list on the page
+                    } else {
+                        alert('Error: ' + submitResult.message);
+                    }
+                } catch (submitError) {
+                    console.error('Error submitting review:', submitError);
+                    alert('An error occurred while submitting your review.');
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error checking enrollment status:', error);
+    }
+};
+
+// Call this new function right after the initial review fetch
+fetchAndDisplayReviews(1);
+checkEnrollmentAndHandleReviewForm();
+
     });
 }
 
@@ -4049,7 +4114,7 @@ if (window.location.pathname.includes('student-reviews.html')) {
         const token = localStorage.getItem('lmsToken');
 
         const limit = 20; // <-- ADD THIS LINE HERE
-        
+
         if (!token) {
             tableBody.innerHTML = `<tr><td colspan="4">Please log in to see your reviews.</td></tr>`;
             return;

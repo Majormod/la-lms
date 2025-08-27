@@ -14,6 +14,7 @@ const User = require('./models/User');
 const Course = require('./models/Course');
 const auth = require('./authMiddleware');
 const QuizResult = require('./models/QuizResult');
+const Review = require('./models/Review');
 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
@@ -1404,6 +1405,22 @@ app.get('/api/student/reviews', auth, async (req, res) => {
     }
 });
 
+
+// CHECK ENROLLMENT STATUS FOR A STUDENT IN A COURSE
+app.get('/api/courses/:courseId/enrollment-status', auth, async (req, res) => {
+    try {
+        const courseId = req.params.courseId;
+        const studentId = req.user.id;
+
+        // Check if a course exists with the studentId in its students_enrolled array
+        const course = await Course.findOne({ _id: courseId, students_enrolled: studentId });
+
+        res.json({ success: true, isEnrolled: !!course });
+    } catch (error) {
+        console.error("Enrollment status check error:", error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
 
 app.use(express.static(staticPath));
 
