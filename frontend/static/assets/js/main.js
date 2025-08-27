@@ -1144,67 +1144,59 @@ const updateUserDataOnPage = () => {
 
     const token = localStorage.getItem('lmsToken');
     if (!token) {
-        console.log("Aborting: No token found.");
+        console.log("No token found. Aborting.");
         return;
     }
-
-    const API_BASE_URL = 'http://54.221.189.159'; // Ensure this is defined or accessible
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-                const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // CHECKPOINT 2: Did we get the correct data?
-                console.log("2. Profile data fetched:", profile);
+                // CHECKPOINT 2: Did we get the correct data from the server?
+                console.log("2. Profile data fetched successfully. Current avatar path is:", profile.avatar);
 
-                // --- Update All Text ---
-                document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name, #nav-user-name-dropdown').forEach(el => {
-                    if (el) el.textContent = fullName;
-                });
-                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-
-
-                // --- Update All Images (Banner, Settings, and Navbar) ---
                 if (profile.avatar) {
                     const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
-                    const selectorString = '.nav-user-avatar-img'; // The simple, universal class for all avatars
                     
+                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
+                    
+                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
                     const allAvatarImages = document.querySelectorAll(selectorString);
-                    
-                    console.log("3. Searching for ALL avatars with selector:", selectorString);
-                    console.log("4. Found", allAvatarImages.length, "elements:", allAvatarImages);
+                    console.log("3. Searching for avatar images with selector:", selectorString);
+                    console.log("4. Found these elements:", allAvatarImages);
 
                     if (allAvatarImages.length > 0) {
+                        console.log("5. Updating images now...");
                         allAvatarImages.forEach(img => {
                             if (img) img.src = avatarUrl;
                         });
-                        console.log("5. Avatar update complete.");
+                        console.log("6. Image update complete.");
                     } else {
-                        console.warn("6. WARNING: Could not find any avatar elements with the class 'nav-user-avatar-img' to update.");
+                        console.error("7. ERROR: Could not find any avatar elements to update. Check your HTML IDs and classes.");
                     }
                 }
-
-                // --- Update Cover Photo ---
+                // ... (the rest of your function for cover photos, names, etc.) ...
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+                const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
+                bannerNames.forEach(el => el.textContent = fullName);
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
                 if (profile.coverPhoto) {
                     const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
-                    document.querySelectorAll('.tutor-bg-photo').forEach(div => div.style.backgroundImage = coverUrl);
+                    const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
+                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
                 }
 
             } else {
-                // This happens if the token is invalid/expired
-                console.error("API call unsuccessful:", result.message);
-                localStorage.clear();
-                // Optionally, redirect to login or let nav.js handle the logged-out view
+                throw new Error(result.message || 'Failed to get profile');
             }
         })
         .catch(error => {
-            console.error('CRITICAL ERROR in updateUserDataOnPage fetch:', error);
+            console.error('Error in updateUserDataOnPage:', error);
             localStorage.clear();
-            // window.location.href = 'login.html'; // Be careful with redirects in catch blocks
+            window.location.href = 'login.html';
         });
 };
 
