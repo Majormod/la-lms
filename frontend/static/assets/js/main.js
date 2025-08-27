@@ -4109,6 +4109,45 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
             });
     }
 }
+
+// FINAL FIX: Paste this entire block at the very bottom of your main.js file.
+document.addEventListener('DOMContentLoaded', () => {
+
+    setTimeout(() => {
+        const token = localStorage.getItem('lmsToken');
+        if (!token) {
+            return; // Exit if user is not logged in
+        }
+
+        const API_BASE_URL = 'http://54.221.189.159';
+
+        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const profile = result.data;
+                    const fullName = `${profile.firstName} ${profile.lastName}`;
+
+                    // Update Name
+                    document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown').forEach(el => {
+                        if (el) el.textContent = fullName;
+                    });
+                    
+                    // Update Avatar
+                    if (profile.avatar) {
+                        const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
+                        const navAvatars = document.querySelectorAll('.nav-user-avatar-img');
+                        navAvatars.forEach(img => {
+                            if (img) img.src = avatarUrl;
+                        });
+                    }
+                }
+            })
+            .catch(err => console.error("Delayed navbar update failed:", err));
+            
+    }, 500); // 500 milliseconds = 0.5 second delay
+});
+
         handlePageLogic();
     };
 
