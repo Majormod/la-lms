@@ -1139,44 +1139,65 @@ const renderCourseDetailsCurriculum = (episodes) => {
 // REPLACE your old updateUserDataOnPage function with this one
 
 const updateUserDataOnPage = () => {
-    const token = localStorage.getItem('lmsToken');
-    if (!token) return;
+    // CHECKPOINT 1: Is the function running?
+    console.log("1. updateUserDataOnPage function has started.");
 
-    const API_BASE_URL = 'http://54.221.189.159';
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        console.log("No token found. Aborting.");
+        return;
+    }
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-                const fullName = `${profile.firstName} ${profile.lastName}`;
 
-                // --- Update Text ---
-                document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name, #nav-user-name-dropdown').forEach(el => {
-                    if (el) el.textContent = fullName;
-                });
-                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                // CHECKPOINT 2: Did we get the correct data from the server?
+                console.log("2. Profile data fetched successfully. Current avatar path is:", profile.avatar);
 
-                // --- Update All Images ---
                 if (profile.avatar) {
                     const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
-                    const allAvatarImages = document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, .nav-user-avatar-img');
-                    allAvatarImages.forEach(img => {
-                        if (img) img.src = avatarUrl;
-                    });
-                }
+                    
+                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
+                    
+                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
+                    const allAvatarImages = document.querySelectorAll(selectorString);
+                    console.log("3. Searching for avatar images with selector:", selectorString);
+                    console.log("4. Found these elements:", allAvatarImages);
 
-                // --- Update Cover Photo ---
+                    if (allAvatarImages.length > 0) {
+                        console.log("5. Updating images now...");
+                        allAvatarImages.forEach(img => {
+                            if (img) img.src = avatarUrl;
+                        });
+                        console.log("6. Image update complete.");
+                    } else {
+                        console.error("7. ERROR: Could not find any avatar elements to update. Check your HTML IDs and classes.");
+                    }
+                }
+                // ... (the rest of your function for cover photos, names, etc.) ...
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+                const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
+                bannerNames.forEach(el => el.textContent = fullName);
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
                 if (profile.coverPhoto) {
                     const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
-                    document.querySelectorAll('.tutor-bg-photo').forEach(div => div.style.backgroundImage = coverUrl);
+                    const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
+                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
                 }
+
             } else {
-                console.error("updateUserDataOnPage API call was not successful:", result.message);
+                throw new Error(result.message || 'Failed to get profile');
             }
         })
-        .catch(error => console.error('Error in updateUserDataOnPage fetch:', error));
+        .catch(error => {
+            console.error('Error in updateUserDataOnPage:', error);
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
 };
 
         const handlePageLogic = () => {
@@ -4126,26 +4147,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
     }, 500); // 500 milliseconds = 0.5 second delay
 });
-
-// Add this block inside your handlePageLogic function in main.js
-
-if (path.includes('student-settings.html')) {
-    const token = localStorage.getItem('lmsToken');
-    // This '|| {}' makes sure the code doesn't crash if lmsUser is missing
-    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}'); 
-
-    // This is the security guard for the page
-    if (!token || user.role !== 'student') {
-        alert("Access Denied. Please log in as a student to view this page.");
-        window.location.href = '/login';
-        return; // Stop further execution
-    }
-    
-    // --- Your page-specific logic goes here ---
-    // This is where you will add the code to populate the settings form
-    // and make the buttons work, just like we did for the instructor page.
-    // You do NOT need to call updateUserDataOnPage() here.
-}
 
         handlePageLogic();
     };
