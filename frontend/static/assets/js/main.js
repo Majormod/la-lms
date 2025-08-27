@@ -3969,6 +3969,8 @@ if (path.includes('student-enrolled-courses.html')) {
 // Student Wishlist Logic
 
 if (path.includes('student-wishlist.html')) {
+    console.log("--- WISHLIST SCRIPT: START ---");
+
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
 
@@ -3977,13 +3979,17 @@ if (path.includes('student-wishlist.html')) {
         window.location.href = '/login';
         return;
     }
+
+    const wishlistContainer = document.getElementById('wishlist-course-container');
     
-    const wishlistContainer = document.querySelector('.rbt-dashboard-content .row.g-5');
-    
-    // We can reuse the createCourseCard function from the explore page,
-    // but for simplicity, here is a dedicated one for the wishlist.
+    if (!wishlistContainer) {
+        console.error("Wishlist Error: Could not find the container with ID 'wishlist-course-container'.");
+        return;
+    }
+
+    // This is the function that builds a course card
     const createWishlistCard = (course) => {
-        // This is a simplified card, you can customize it as needed
+        // This is a simplified card, you can add more details like price if needed
         return `
             <div class="col-lg-4 col-md-6 col-12">
                 <div class="rbt-card variation-01 rbt-hover">
@@ -3995,7 +4001,9 @@ if (path.includes('student-wishlist.html')) {
                     <div class="rbt-card-body">
                         <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
                         <div class="rbt-card-bottom">
-                            <a class="rbt-btn btn-sm btn-border-gradient w-100 text-center" href="#">Remove</a>
+                            <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">
+                                View Course<i class="feather-arrow-right"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -4006,7 +4014,8 @@ if (path.includes('student-wishlist.html')) {
     fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
         .then(result => {
-            if (result.success && wishlistContainer) {
+            if (result.success) {
+                console.log("Wishlist data fetched:", result.courses);
                 wishlistContainer.innerHTML = ''; // Clear static content
                 if (result.courses.length > 0) {
                     result.courses.forEach(course => {
@@ -4015,6 +4024,8 @@ if (path.includes('student-wishlist.html')) {
                 } else {
                     wishlistContainer.innerHTML = '<p class="text-center">Your wishlist is empty.</p>';
                 }
+            } else {
+                console.error("API call to fetch wishlist failed.");
             }
         });
 }
