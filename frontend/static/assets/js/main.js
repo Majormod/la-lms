@@ -4295,9 +4295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // In main.js, inside the handlePageLogic function
 
 if (path.includes('student-dashboard.html')) {
-    const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-
+    
     // Security guard for the page
     if (!token || !user || user.role !== 'student') {
         alert("Access Denied. Please log in as a student.");
