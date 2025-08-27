@@ -3880,6 +3880,92 @@ function renderQuizQuestions(quiz, container) {
     .catch(error => console.error("Error fetching profile data:", error));
 }
 
+// In main.js, inside the handlePageLogic function
+
+if (path.includes('student-enrolled-courses.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+    if (!token || !user || user.role !== 'student') {
+        alert("Access Denied.");
+        window.location.href = '/login';
+        return;
+    }
+
+    // This helper function builds the HTML for a single course card
+    const createCourseCardHTML = (course) => {
+        const isCompleted = course.status === 'completed';
+        const progressColor = isCompleted ? 'bar-color-success' : 'bar-color-primary';
+
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="${course.title}">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <ul class="rbt-meta">
+                            <li><i class="feather-book"></i>${course.lessonCount} Lessons</li>
+                            <li><i class="feather-users"></i>${course.studentCount} Students</li>
+                        </ul>
+                        <div class="rbt-progress-style-1 mb--20 mt--10">
+                            <div class="single-progress">
+                                <h6 class="rbt-title-style-2 mb--10">${isCompleted ? 'Completed' : 'In Progress'}</h6>
+                                <div class="progress">
+                                    <div class="progress-bar ${progressColor}" style="width: ${course.progress}%" aria-valuenow="${course.progress}"></div>
+                                    <span class="rbt-title-style-2 progress-number">${course.progress}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn btn-sm ${isCompleted ? 'bg-primary-opacity' : 'btn-border-gradient'} w-100 text-center" href="${isCompleted ? '#' : `course-details.html?courseId=${course._id}`}">
+                                ${isCompleted ? 'Download Certificate' : 'Continue Course'}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    // This function takes a list of courses and renders them into a tab container
+    const renderCourses = (courseList, containerSelector) => {
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+        
+        container.innerHTML = ''; // Clear previous content
+        if (courseList.length === 0) {
+            container.innerHTML = '<p class="text-center">No courses in this category.</p>';
+            return;
+        }
+        courseList.forEach(course => {
+            container.innerHTML += createCourseCardHTML(course);
+        });
+    };
+
+    // Main logic to fetch, filter, and set up tabs
+    fetch(`${API_BASE_URL}/api/student/my-courses`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const allCourses = result.courses;
+                const activeCourses = allCourses.filter(c => c.status === 'active');
+                const completedCourses = allCourses.filter(c => c.status === 'completed');
+
+                // Render the initial tab
+                renderCourses(allCourses, '#home-4 .row');
+
+                // Set up click listeners for the other tabs
+                document.getElementById('profile-tab-4').addEventListener('click', () => renderCourses(activeCourses, '#profile-4 .row'));
+                document.getElementById('contact-tab-4').addEventListener('click', () => renderCourses(completedCourses, '#contact-4 .row'));
+                document.getElementById('home-tab-4').addEventListener('click', () => renderCourses(allCourses, '#home-4 .row'));
+            }
+        });
+}
+
     // ... you can add other 'if' blocks for your other pages here ...
 
 }; // This is the end of the handlePageLogic function

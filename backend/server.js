@@ -1267,6 +1267,51 @@ app.get('/api/student/dashboard', auth, async (req, res) => {
     }
 });
 
+// In server.js
+
+// STUDENT ENROLLED COURSES API ROUTE
+app.get('/api/student/my-courses', auth, async (req, res) => {
+    try {
+        // For now, we'll return a list of mock courses.
+        // Later, you will replace this with a real database query.
+        const enrolledCourses = [
+            {
+                _id: 'course-1',
+                title: 'React Front To Back',
+                thumbnail: 'assets/images/course/course-online-01.jpg',
+                lessonCount: 20,
+                studentCount: 40,
+                status: 'completed', // 'active' or 'completed'
+                progress: 100
+            },
+            {
+                _id: 'course-2',
+                title: 'PHP Beginner + Advanced',
+                thumbnail: 'assets/images/course/course-online-02.jpg',
+                lessonCount: 10,
+                studentCount: 30,
+                status: 'active',
+                progress: 40
+            },
+            {
+                _id: 'course-3',
+                title: 'Angular Zero to Mastery',
+                thumbnail: 'assets/images/course/course-online-03.jpg',
+                lessonCount: 14,
+                studentCount: 26,
+                status: 'active',
+                progress: 65
+            }
+        ];
+
+        res.status(200).json({ success: true, courses: enrolledCourses });
+
+    } catch (error) {
+        console.error('Error fetching student enrolled courses:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 // ADD THIS LINE:
