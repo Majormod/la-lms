@@ -568,8 +568,8 @@
                 });
             });
         },
-        eduJs.counterUp = function() {
-    // This checks if the element exists AND if the '.appear' plugin is ready.
+// REPLACE THE BAD CODE WITH THIS
+counterUp: function() {
     if (typeof $.fn.appear === 'function' && $(".odometer").length > 0) {
         $(".odometer").appear(function(e) {
             var countNumber = $(this).attr("data-count");
