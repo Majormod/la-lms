@@ -1243,6 +1243,30 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 });
 
 
+// STUDENT DASHBOARD API ROUTE
+app.get('/api/student/dashboard', auth, async (req, res) => {
+    try {
+        // Optional: Ensure the user is a student
+        if (req.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+
+        // In a real application, you would query your database here.
+        // For now, we will return mock data.
+        const studentDashboardData = {
+            enrolledCourses: 5,
+            activeCourses: 2,
+            completedCourses: 3,
+        };
+
+        res.status(200).json({ success: true, data: studentDashboardData });
+
+    } catch (error) {
+        console.error('Error fetching student dashboard data:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
 app.use(express.static(staticPath));
 
 // ADD THIS LINE:
