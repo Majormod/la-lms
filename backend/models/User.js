@@ -22,7 +22,11 @@ const userSchema = new mongoose.Schema({
         github: String,
     },
     registrationDate: { type: Date, default: Date.now },
-});
+        wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }]
+}, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
     if (!this.isModified('password')) {

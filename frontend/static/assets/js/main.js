@@ -3966,7 +3966,60 @@ if (path.includes('student-enrolled-courses.html')) {
         });
 }
 
-    // ... you can add other 'if' blocks for your other pages here ...
+// Student Wishlist Logic
+
+if (path.includes('student-wishlist.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+    if (!token || !user || user.role !== 'student') {
+        alert("Access Denied.");
+        window.location.href = '/login';
+        return;
+    }
+    
+    const wishlistContainer = document.querySelector('.rbt-dashboard-content .row.g-5');
+    
+    // We can reuse the createCourseCard function from the explore page,
+    // but for simplicity, here is a dedicated one for the wishlist.
+    const createWishlistCard = (course) => {
+        // This is a simplified card, you can customize it as needed
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="${course.title}">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn btn-sm btn-border-gradient w-100 text-center" href="#">Remove</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success && wishlistContainer) {
+                wishlistContainer.innerHTML = ''; // Clear static content
+                if (result.courses.length > 0) {
+                    result.courses.forEach(course => {
+                        wishlistContainer.innerHTML += createWishlistCard(course);
+                    });
+                } else {
+                    wishlistContainer.innerHTML = '<p class="text-center">Your wishlist is empty.</p>';
+                }
+            }
+        });
+}
+
+
 
 }; // This is the end of the handlePageLogic function
 
@@ -4042,7 +4095,7 @@ if (typeof $ !== 'undefined' && $.ui) {
             const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
             const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
             const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-            return `<div class="course-grid-3"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
+            return `<div class="course-grid-3 data-course-id="${course._id}"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
         };
 
         // --- Main Function to Fetch and Display Courses ---
@@ -4128,6 +4181,47 @@ fetchAndDisplayCourses();
 
         // --- Initial Fetch on Page Load ---
         fetchAndDisplayCourses(); 
+    
+    // In main.js, inside the 'explore-courses.html' logic
+
+courseListContainer.addEventListener('click', async (e) => {
+    const bookmarkBtn = e.target.closest('.rbt-bookmark-btn a');
+    if (!bookmarkBtn) return;
+
+    e.preventDefault();
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        alert('Please log in to add courses to your wishlist.');
+        window.location.href = '/login';
+        return;
+    }
+
+    const courseCard = bookmarkBtn.closest('.rbt-card');
+    const courseId = courseCard.dataset.courseId; // We will add this dataset in the next step
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/user/wishlist/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': token,
+            },
+            body: JSON.stringify({ courseId }),
+        });
+        const result = await response.json();
+        if (result.success) {
+            // Toggle the 'active' class to change the color
+            bookmarkBtn.classList.toggle('active');
+        }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+    }
+});
+    
+    
+    
+    
+    
     });
 }
 // In main.js, add this new block for the results page logic
