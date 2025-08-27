@@ -3968,128 +3968,122 @@ if (path.includes('student-enrolled-courses.html')) {
 
 // Student Wishlist Logic
 
-if (path.includes('student-wishlist.html')) {
-    console.log("--- WISHLIST SCRIPT: START ---");
+if (window.location.pathname.includes('student-wishlist.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        const wishlistContainer = document.getElementById('wishlist-courses-container');
+        const token = localStorage.getItem('lmsToken');
 
-    const token = localStorage.getItem('lmsToken');
-    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+        if (!token) {
+            // If the user is not logged in, show a message and stop.
+            wishlistContainer.innerHTML = '<div class="col-12"><p>Please log in to see your wishlist.</p></div>';
+            return;
+        }
 
-    if (!token || !user || user.role !== 'student') {
-        alert("Access Denied.");
-        window.location.href = '/login';
-        return;
-    }
-
-    const wishlistContainer = document.getElementById('wishlist-course-container');
-    
-    if (!wishlistContainer) {
-        console.error("Wishlist Error: Could not find the container with ID 'wishlist-course-container'.");
-        return;
-    }
-
-    // This is the function that builds a course card
-    const createWishlistCard = (course) => {
-        // This is a simplified card, you can add more details like price if needed
-        return `
-            <div class="col-lg-4 col-md-6 col-12">
+        // This function creates a course card. We can reuse it from the explore page logic.
+        // Make sure this function is defined in a scope accessible to this block.
+        const createCourseCard = (course) => {
+            let priceHtml = '';
+            if (course.isFree || course.price === 0) {
+                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+            } else {
+                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+            }
+            const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
+            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+            
+            return `
+            <div class="col-lg-4 col-md-6 col-12" data-course-id="${course._id}">
                 <div class="rbt-card variation-01 rbt-hover">
                     <div class="rbt-card-img">
                         <a href="course-details.html?courseId=${course._id}">
-                            <img src="/${course.thumbnail}" alt="${course.title}">
+                            <img src="/${course.thumbnail}" alt="Course Thumbnail">
                         </a>
                     </div>
                     <div class="rbt-card-body">
-                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
-                        <div class="rbt-card-bottom">
-                            <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">
-                                View Course<i class="feather-arrow-right"></i>
-                            </a>
+                        <div class="rbt-card-top">
+                            <div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div>
+                            <div class="rbt-bookmark-btn"><a class="rbt-round-btn active" title="Remove from Bookmark" href="#"><i class="feather-bookmark"></i></a></div>
                         </div>
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul>
+                        <div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div>
                     </div>
                 </div>
-            </div>
-        `;
-    };
+            </div>`;
+        };
 
-    fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } })
+        // Fetch the wishlist from the API
+        fetch(`${API_BASE_URL}/api/student/wishlist`, {
+            headers: { 'x-auth-token': token }
+        })
         .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                console.log("Wishlist data fetched:", result.courses);
-                wishlistContainer.innerHTML = ''; // Clear static content
-                if (result.courses.length > 0) {
-                    result.courses.forEach(course => {
-                        wishlistContainer.innerHTML += createWishlistCard(course);
+        .then(data => {
+            if (data.success) {
+                wishlistContainer.innerHTML = ''; // Clear any placeholders
+                if (data.courses.length > 0) {
+                    data.courses.forEach(course => {
+                        wishlistContainer.innerHTML += createCourseCard(course);
                     });
                 } else {
-                    wishlistContainer.innerHTML = '<p class="text-center">Your wishlist is empty.</p>';
+                    // Show a message if the wishlist is empty
+                    wishlistContainer.innerHTML = '<div class="col-12 text-center"><p>Your wishlist is empty. Browse courses to add them!</p></div>';
                 }
             } else {
-                console.error("API call to fetch wishlist failed.");
+                throw new Error(data.message || 'Failed to fetch wishlist.');
             }
+        })
+        .catch(error => {
+            console.error('Error fetching wishlist:', error);
+            wishlistContainer.innerHTML = '<div class="col-12"><p class="text-danger">Could not load your wishlist. Please try again later.</p></div>';
         });
+    });
 }
 
 
 
 }; // This is the end of the handlePageLogic function
 
-if (window.location.pathname.includes('explore-courses.html')) {
+// In main.js
 
+if (window.location.pathname.includes('explore-courses.html')) {
     document.addEventListener('DOMContentLoaded', () => {
         // --- Get DOM Elements ---
         const courseListContainer = document.getElementById('course-list-container');
         const courseCountBadge = document.getElementById('course-count-badge');
         const courseResultCount = document.getElementById('course-result-count');
-        const searchForm = document.getElementById('course-search-form'); // Assumes your form has this ID
-        const searchInput = document.getElementById('course-search-input'); // Assumes your input has this ID
-        const sortBySelect = document.getElementById('sort-by-select'); // Assumes your select has this ID
-// In main.js, inside the 'explore-courses.html' block and 'DOMContentLoaded'
 
-// --- Initialize Price Range Slider ---
-if (typeof $ !== 'undefined' && $.ui) {
-    const sliderRange = $("#slider-range");
-    const amount = $("#amount");
-    const filterBtn = $("#price-range-filter-btn");
+        // --- Initialize Price Range Slider ---
+        if (typeof $ !== 'undefined' && $.ui) {
+            const sliderRange = $("#slider-range");
+            const amount = $("#amount");
+            const filterBtn = $("#price-range-filter-btn");
 
-    sliderRange.slider({
-        range: true,
-        min: 0,
-        max: 5000, // You can adjust this max value
-        values: [0, 5000], // Initial range
-        slide: function(event, ui) {
-            amount.val("₹" + ui.values[0] + " - ₹" + ui.values[1]);
+            sliderRange.slider({
+                range: true,
+                min: 0,
+                max: 5000,
+                values: [0, 5000],
+                slide: function (event, ui) {
+                    amount.val("₹" + ui.values[0] + " - ₹" + ui.values[1]);
+                }
+            });
+
+            amount.val("₹" + sliderRange.slider("values", 0) + " - ₹" + sliderRange.slider("values", 1));
+
+            filterBtn.on('click', function (e) {
+                e.preventDefault();
+                handleFilterChange(); // Use the main filter handler
+            });
         }
-    });
 
-    // Set the initial value in the input field
-    amount.val("₹" + sliderRange.slider("values", 0) + " - ₹" + sliderRange.slider("values", 1));
+        // --- Function to Create a Single Course Card ---
+        // CHANGED: Now accepts a 'userWishlist' set to determine the icon state
+        const createCourseCard = (course, userWishlist = new Set()) => {
+            const isWishlisted = userWishlist.has(course._id);
+            const activeClass = isWishlisted ? 'active' : ''; // Add 'active' class if wishlisted
 
-    // Add click listener to the filter button
-    filterBtn.on('click', function(e) {
-        e.preventDefault();
-        
-        // Get the current min and max values from the slider
-        const minPrice = sliderRange.slider("values", 0);
-        const maxPrice = sliderRange.slider("values", 1);
-        
-        // Get other existing filter values
-        const currentParams = {
-            sortBy: document.getElementById('sort-by-select')?.value,
-            search: document.getElementById('course-search-input')?.value,
-            category: document.getElementById('category-select')?.value,
-            price: document.getElementById('offer-select')?.value,
-            minPrice: minPrice, // Add min price
-            maxPrice: maxPrice  // Add max price
-        };
-
-        fetchAndDisplayCourses(currentParams);
-    });
-}
-        // --- Function to Create a Single Course Card (from previous step) ---
-        const createCourseCard = (course) => {
-            // ... (Your complete createCourseCard function is here) ...
-            // (The detailed function from our last step that creates the full card)
             let priceHtml = '';
             if (course.isFree || course.price === 0) {
                 priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
@@ -4106,18 +4100,68 @@ if (typeof $ !== 'undefined' && $.ui) {
             const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
             const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
             const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-            return `<div class="course-grid-3 data-course-id="${course._id}"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a></div><div class="rbt-card-body"><div class="rbt-card-top"><div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div><div class="rbt-bookmark-btn"><a class="rbt-round-btn" title="Bookmark" href="#"><i class="feather-bookmark"></i></a></div></div><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul><p class="rbt-card-text">${course.description.substring(0,100)}...</p><div class="rbt-author-meta mb--10"><div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div><div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category||'General'}</a></div></div><div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div></div></div></div>`;
+            
+            // BUG FIX: Correctly added the data-course-id attribute here
+            return `
+                <div class="course-grid-3" data-course-id="${course._id}">
+                    <div class="rbt-card variation-01 rbt-hover">
+                        <div class="rbt-card-img">
+                            <a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
+                        </div>
+                        <div class="rbt-card-body">
+                            <div class="rbt-card-top">
+                                <div class="rbt-review">
+                                    <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    <span class="rating-count">(15 Reviews)</span>
+                                </div>
+                                <div class="rbt-bookmark-btn">
+                                    <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                                </div>
+                            </div>
+                            <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                            <ul class="rbt-meta">
+                                <li><i class="feather-book"></i>${lessonCount} Lessons</li>
+                                <li><i class="feather-users"></i>50 Students</li>
+                            </ul>
+                            <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
+                            <div class="rbt-author-meta mb--10">
+                                <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
+                                <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
+                            </div>
+                            <div class="rbt-card-bottom">
+                                ${priceHtml}
+                                <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
         };
 
         // --- Main Function to Fetch and Display Courses ---
+        // CHANGED: Now fetches user wishlist first to set the initial state of bookmark icons
         const fetchAndDisplayCourses = async (queryParams = {}) => {
-            // Remove empty query parameters
+            let userWishlist = new Set();
+            const token = localStorage.getItem('lmsToken');
+
+            // Step 1: If user is logged in, fetch their wishlist
+            if (token) {
+                try {
+                    const wishlistRes = await fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } });
+                    const wishlistData = await wishlistRes.json();
+                    if (wishlistData.success) {
+                        userWishlist = new Set(wishlistData.courses.map(course => course._id));
+                    }
+                } catch (error) {
+                    console.error("Could not fetch user wishlist for initial state.", error);
+                }
+            }
+
+            // Step 2: Fetch courses with filters
             Object.keys(queryParams).forEach(key => {
-                if (queryParams[key] === '' || queryParams[key] === null) {
+                if (queryParams[key] === '' || queryParams[key] === null || queryParams[key] === undefined) {
                     delete queryParams[key];
                 }
             });
-            
             const queryString = new URLSearchParams(queryParams).toString();
             const fetchUrl = `${API_BASE_URL}/api/courses?${queryString}`;
 
@@ -4126,13 +4170,13 @@ if (typeof $ !== 'undefined' && $.ui) {
                 const data = await response.json();
 
                 if (data.success) {
-                    courseListContainer.innerHTML = ''; 
+                    courseListContainer.innerHTML = '';
                     if (data.courses.length > 0) {
-                        data.courses.forEach(course => courseListContainer.innerHTML += createCourseCard(course));
+                        // Step 3: Pass the wishlist to the card creation function
+                        data.courses.forEach(course => courseListContainer.innerHTML += createCourseCard(course, userWishlist));
                     } else {
                         courseListContainer.innerHTML = '<div class="col-12 text-center"><p>No courses found matching your criteria.</p></div>';
                     }
-                    // Update counts
                     courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination.totalCourses} Courses`;
                     courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination.totalCourses} results`;
                 }
@@ -4142,99 +4186,76 @@ if (typeof $ !== 'undefined' && $.ui) {
             }
         };
 
-        // --- Function to Handle Filter Changes ---
-// In main.js, inside the 'explore-courses.html' block
+        // --- Function to Handle All Filter Changes ---
+        const handleFilterChange = () => {
+            const minPrice = $("#slider-range").slider("values", 0);
+            const maxPrice = $("#slider-range").slider("values", 1);
+            
+            const params = {
+                sortBy: document.getElementById('sort-by-select')?.value,
+                search: document.getElementById('course-search-input')?.value,
+                category: document.getElementById('category-select')?.value,
+                price: document.getElementById('offer-select')?.value,
+                minPrice: minPrice,
+                maxPrice: maxPrice
+            };
+            fetchAndDisplayCourses(params);
+        };
 
-// --- Function to Handle Filter Changes ---
-const handleFilterChange = () => {
-    // Get the DOM elements again inside the handler
-    const sortBySelect = document.getElementById('sort-by-select');
-    const searchInput = document.getElementById('course-search-input');
-    const categorySelect = document.getElementById('category-select'); // New
-    const priceSelect = document.getElementById('offer-select');      // New
-
-    const params = {
-        sortBy: sortBySelect ? sortBySelect.value : 'latest',
-        search: searchInput ? searchInput.value : '',
-        category: categorySelect ? categorySelect.value : '',
-        price: priceSelect ? priceSelect.value : ''
-    };
-    fetchAndDisplayCourses(params);
-};
-
-// --- Add Event Listeners ---
-document.getElementById('course-search-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleFilterChange();
-});
-
-// Attach the handler to all filter dropdowns
-document.getElementById('sort-by-select')?.addEventListener('change', handleFilterChange);
-document.getElementById('school-select')?.addEventListener('change', handleFilterChange);
-document.getElementById('author-select')?.addEventListener('change', handleFilterChange);
-document.getElementById('offer-select')?.addEventListener('change', handleFilterChange);
-document.getElementById('category-select')?.addEventListener('change', handleFilterChange);
-
-
-// --- Initial Fetch on Page Load ---
-fetchAndDisplayCourses();
-        
         // --- Add Event Listeners ---
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault(); // Prevent page from reloading on form submit
-                handleFilterChange();
-            });
-        }
-        if (sortBySelect) {
-            sortBySelect.addEventListener('change', handleFilterChange);
-        }
+        document.getElementById('course-search-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleFilterChange();
+        });
+
+        // Attach the handler to all filter dropdowns that trigger a reload
+        ['sort-by-select', 'school-select', 'author-select', 'offer-select', 'category-select'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', handleFilterChange);
+        });
+
+        // --- Wishlist Click Handler ---
+        courseListContainer.addEventListener('click', async (e) => {
+            const bookmarkBtn = e.target.closest('.rbt-bookmark-btn a');
+            if (!bookmarkBtn) return;
+
+            e.preventDefault();
+            const token = localStorage.getItem('lmsToken');
+            if (!token) {
+                alert('Please log in to add courses to your wishlist.');
+                window.location.href = '/login';
+                return;
+            }
+            
+            // BUG FIX: Changed to find the closest parent with the data-course-id
+            const courseCard = bookmarkBtn.closest('.course-grid-3');
+            const courseId = courseCard.dataset.courseId;
+
+            if (!courseId) {
+                console.error("Could not find courseId for this card.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/wishlist/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ courseId }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    bookmarkBtn.classList.toggle('active');
+                }
+            } catch (error) {
+                console.error('Error toggling wishlist:', error);
+            }
+        });
 
         // --- Initial Fetch on Page Load ---
-        fetchAndDisplayCourses(); 
-    
-    // In main.js, inside the 'explore-courses.html' logic
-
-courseListContainer.addEventListener('click', async (e) => {
-    const bookmarkBtn = e.target.closest('.rbt-bookmark-btn a');
-    if (!bookmarkBtn) return;
-
-    e.preventDefault();
-    const token = localStorage.getItem('lmsToken');
-    if (!token) {
-        alert('Please log in to add courses to your wishlist.');
-        window.location.href = '/login';
-        return;
-    }
-
-    const courseCard = bookmarkBtn.closest('.rbt-card');
-    const courseId = courseCard.dataset.courseId; // We will add this dataset in the next step
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/user/wishlist/toggle`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': token,
-            },
-            body: JSON.stringify({ courseId }),
-        });
-        const result = await response.json();
-        if (result.success) {
-            // Toggle the 'active' class to change the color
-            bookmarkBtn.classList.toggle('active');
-        }
-    } catch (error) {
-        console.error('Error toggling wishlist:', error);
-    }
-});
-    
-    
-    
-    
-    
+        fetchAndDisplayCourses();
     });
 }
+
+
 // In main.js, add this new block for the results page logic
 // Add this entire block to the end of your main.js file
 

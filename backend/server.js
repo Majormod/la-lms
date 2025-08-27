@@ -1312,27 +1312,28 @@ app.get('/api/student/my-courses', auth, async (req, res) => {
     }
 });
 
-// In server.js
 
 // ADD OR REMOVE A COURSE FROM THE WISHLIST
 app.post('/api/user/wishlist/toggle', auth, async (req, res) => {
     try {
         const { courseId } = req.body;
         const user = await User.findById(req.user.id);
-        
+
         const index = user.wishlist.indexOf(courseId);
-        
+
         if (index === -1) {
-            // If course is not in wishlist, add it
-            user.wishlist.push(courseId);
+            user.wishlist.push(courseId); // Add to wishlist
         } else {
-            // If course is already in wishlist, remove it
-            user.wishlist.splice(index, 1);
+            user.wishlist.splice(index, 1); // Remove from wishlist
         }
+
+        // THIS IS THE FIX: Tell the database the array has changed
+        user.markModified('wishlist');
 
         await user.save();
         res.json({ success: true, wishlist: user.wishlist });
     } catch (error) {
+        console.error("Wishlist toggle error:", error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
