@@ -1312,6 +1312,45 @@ app.get('/api/student/my-courses', auth, async (req, res) => {
     }
 });
 
+// In server.js
+
+// ADD OR REMOVE A COURSE FROM THE WISHLIST
+app.post('/api/user/wishlist/toggle', auth, async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const user = await User.findById(req.user.id);
+        
+        const index = user.wishlist.indexOf(courseId);
+        
+        if (index === -1) {
+            // If course is not in wishlist, add it
+            user.wishlist.push(courseId);
+        } else {
+            // If course is already in wishlist, remove it
+            user.wishlist.splice(index, 1);
+        }
+
+        await user.save();
+        res.json({ success: true, wishlist: user.wishlist });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// GET THE STUDENT'S WISHLISTED COURSES
+app.get('/api/student/wishlist', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).populate({
+            path: 'wishlist',
+            populate: { path: 'instructor', select: 'firstName lastName' }
+        });
+        res.json({ success: true, courses: user.wishlist });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
 app.use(express.static(staticPath));
 
 // ADD THIS LINE:
