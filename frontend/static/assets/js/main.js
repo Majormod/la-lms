@@ -4294,42 +4294,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // In main.js, inside the handlePageLogic function
 
-if (path.includes('student-dashboard.html')) {
-    
-    // Security guard for the page
-    if (!token || !user || user.role !== 'student') {
-        alert("Access Denied. Please log in as a student.");
-        window.location.href = '/login';
-        return; // Stop further execution
-    }
-
-    // Fetch the dynamic dashboard data
-    fetch(`${API_BASE_URL}/api/student/dashboard`, {
-        headers: { 'x-auth-token': token }
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            const data = result.data;
-
-            // Select the odometer elements
-            const enrolledEl = document.querySelector('.bg-primary-opacity .odometer');
-            const activeEl = document.querySelector('.bg-secondary-opacity .odometer');
-            const completedEl = document.querySelector('.bg-violet-opacity .odometer');
-            
-            // Update the 'data-count' attribute with the new data
-            if(enrolledEl) enrolledEl.setAttribute('data-count', data.enrolledCourses);
-            if(activeEl) activeEl.setAttribute('data-count', data.activeCourses);
-            if(completedEl) completedEl.setAttribute('data-count', data.completedCourses);
-            
-            // Re-initialize the theme's counter animation
-            if (window.eduJs && window.eduJs.counterUp) {
-                window.eduJs.counterUp();
-            }
-        }
-    })
-    .catch(error => console.error('Failed to load student dashboard data:', error));
-}
 
         handlePageLogic();
     };
