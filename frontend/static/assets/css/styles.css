@@ -40790,3 +40790,13 @@ padding: 0 10px 0 10px;
 .dark-theme .rbt-dashboard-table thead th {
     color: #FFFFFF;
 }
+/* Add this to your main CSS file */
+.rbt-bookmark-btn .rbt-round-btn.active {
+    background: #ffc107; /* A nice yellow color */
+    color: #fff;
+    border-color: #ffc107;
+}
+
+.rbt-bookmark-btn .rbt-round-btn.active i {
+    fill: #fff; /* Fills the feather icon */
+}

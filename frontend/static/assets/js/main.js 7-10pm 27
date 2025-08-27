@@ -3968,79 +3968,66 @@ if (path.includes('student-enrolled-courses.html')) {
 
 // Student Wishlist Logic
 
-// In main.js, add this entire new block for the wishlist page
+if (path.includes('student-wishlist.html')) {
+    console.log("--- WISHLIST SCRIPT: START ---");
 
-if (window.location.pathname.includes('student-wishlist.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        const wishlistContainer = document.getElementById('wishlist-courses-container');
-        const token = localStorage.getItem('lmsToken');
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
 
-        if (!token) {
-            // If the user is not logged in, show a message and stop.
-            wishlistContainer.innerHTML = '<div class="col-12"><p>Please log in to see your wishlist.</p></div>';
-            return;
-        }
+    if (!token || !user || user.role !== 'student') {
+        alert("Access Denied.");
+        window.location.href = '/login';
+        return;
+    }
 
-        // This function creates a course card. We can reuse it from the explore page logic.
-        // Make sure this function is defined in a scope accessible to this block.
-        const createCourseCard = (course) => {
-            let priceHtml = '';
-            if (course.isFree || course.price === 0) {
-                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
-            } else {
-                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
-                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
-                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
-            }
-            const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
-            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-            
-            return `
-            <div class="col-lg-4 col-md-6 col-12" data-course-id="${course._id}">
+    const wishlistContainer = document.getElementById('wishlist-course-container');
+    
+    if (!wishlistContainer) {
+        console.error("Wishlist Error: Could not find the container with ID 'wishlist-course-container'.");
+        return;
+    }
+
+    // This is the function that builds a course card
+    const createWishlistCard = (course) => {
+        // This is a simplified card, you can add more details like price if needed
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
                 <div class="rbt-card variation-01 rbt-hover">
                     <div class="rbt-card-img">
                         <a href="course-details.html?courseId=${course._id}">
-                            <img src="/${course.thumbnail}" alt="Course Thumbnail">
+                            <img src="/${course.thumbnail}" alt="${course.title}">
                         </a>
                     </div>
                     <div class="rbt-card-body">
-                        <div class="rbt-card-top">
-                            <div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div>
-                            <div class="rbt-bookmark-btn"><a class="rbt-round-btn active" title="Remove from Bookmark" href="#"><i class="feather-bookmark"></i></a></div>
-                        </div>
                         <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
-                        <ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul>
-                        <div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">
+                                View Course<i class="feather-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>`;
-        };
+            </div>
+        `;
+    };
 
-        // Fetch the wishlist from the API
-        fetch(`${API_BASE_URL}/api/student/wishlist`, {
-            headers: { 'x-auth-token': token }
-        })
+    fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } })
         .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                wishlistContainer.innerHTML = ''; // Clear any placeholders
-                if (data.courses.length > 0) {
-                    data.courses.forEach(course => {
-                        wishlistContainer.innerHTML += createCourseCard(course);
+        .then(result => {
+            if (result.success) {
+                console.log("Wishlist data fetched:", result.courses);
+                wishlistContainer.innerHTML = ''; // Clear static content
+                if (result.courses.length > 0) {
+                    result.courses.forEach(course => {
+                        wishlistContainer.innerHTML += createWishlistCard(course);
                     });
                 } else {
-                    // Show a message if the wishlist is empty
-                    wishlistContainer.innerHTML = '<div class="col-12 text-center"><p>Your wishlist is empty. Browse courses to add them!</p></div>';
+                    wishlistContainer.innerHTML = '<p class="text-center">Your wishlist is empty.</p>';
                 }
             } else {
-                throw new Error(data.message || 'Failed to fetch wishlist.');
+                console.error("API call to fetch wishlist failed.");
             }
-        })
-        .catch(error => {
-            console.error('Error fetching wishlist:', error);
-            wishlistContainer.innerHTML = '<div class="col-12"><p class="text-danger">Could not load your wishlist. Please try again later.</p></div>';
         });
-    });
 }
 
 
