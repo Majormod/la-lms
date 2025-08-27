@@ -4293,7 +4293,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // In main.js, inside the handlePageLogic function
+if (path.includes('student-dashboard.html')) {
+    console.log("--- STUDENT DASHBOARD SCRIPT: START ---");
 
+    // const token = localStorage.getItem('lmsToken'); // Already available
+    // const user = JSON.parse(localStorage.getItem('lmsUser') || '{}'); // Already available
+
+    // --- SECURITY GUARD ---
+    // if (!token || !user || user.role !== 'student') {
+    //     alert("Access Denied. Please log in as a student.");
+    //     window.location.href = '/login';
+    //     return;
+    // }
+
+    // --- FETCH DATA ---
+    // fetch(`${API_BASE_URL}/api/student/dashboard`, {
+    //         headers: { 'x-auth-token': token }
+    //     })
+    //     .then(res => res.json())
+    //     .then(result => {
+    //         if (result.success) {
+    //             console.log("Student dashboard data:", result.data);
+    //         }
+    //     })
+    //     .catch(error => console.error('Failed to load student dashboard data:', error));
+}
 
         handlePageLogic();
     };
