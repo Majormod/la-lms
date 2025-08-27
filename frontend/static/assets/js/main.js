@@ -1068,89 +1068,147 @@
     };
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
-eduJs.lmsInit = function () {
-    const API_BASE_URL = 'http://54.221.189.159';
-
-    // =================================================================
-    // ===== All functions are defined first =====
-    // =================================================================
-
-    const updateUserDataOnPage = () => {
+    eduJs.lmsInit = function () {
+        const API_BASE_URL = 'http://54.221.189.159';
         const token = localStorage.getItem('lmsToken');
-        if (!token) return;
+        const user = JSON.parse(localStorage.getItem('lmsUser'));
 
-        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    const profile = result.data;
-                    const fullName = `${profile.firstName} ${profile.lastName}`;
+        // In main.js, add this to the top (global scope)
+// Helper function to trigger the hidden file input
+window.triggerExerciseFileUpload = function() {
+    document.getElementById('lesson-exercise-file').click();
+}
 
-                    // --- Update Text ---
-                    document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name, #nav-user-name-dropdown').forEach(el => {
-                        if(el) el.textContent = fullName;
-                    });
-                    const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
-                    if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+// Helper function to display the chosen file's name
+window.displayExerciseFileName = function(fileInput) {
+    const fileNameDisplay = document.getElementById('exercise-file-name');
+    if (fileInput.files.length > 0) {
+        fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+    } else {
+        fileNameDisplay.textContent = '';
+    }
+}
+const renderCourseDetailsCurriculum = (episodes) => {
+    const courseContentWrapper = document.getElementById('coursecontent')?.querySelector('.accordion');
+    if (!courseContentWrapper) return;
 
-                    // --- Update All Images (Banner AND Nav) ---
-                    if (profile.avatar) {
-                        const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
-                        const allAvatarImages = document.querySelectorAll(
-                            '.rbt-tutor-information .rbt-avatars img, .nav-user-avatar-img'
-                        );
+    if (!episodes || episodes.length === 0) {
+        // If there's no curriculum, you can either show a message or hide the section
+        courseContentWrapper.innerHTML = '<p>No curriculum has been added to this course yet.</p>';
+        return;
+    }
+
+    courseContentWrapper.innerHTML = ''; // Clear static content
+    
+    episodes.forEach((episode, index) => {
+        // Create the HTML for the lessons list (view only)
+        const lessonsHtml = episode.lessons.map(lesson => `
+            <li>
+                <a href="#">
+                    <div class="course-content-left">
+                        <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
+                    </div>
+                    <div class="course-content-right">
+                        <span class="min-lable">${lesson.duration || ''}</span>
+                    </div>
+                </a>
+            </li>
+        `).join('');
+
+        // Create the HTML for the topic/episode accordion item
+        const episodeHtml = `
+            <div class="accordion-item card">
+                <h2 class="accordion-header card-header" id="headingTwo${index}">
+                    <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" aria-expanded="${index === 0}">
+                        ${episode.title} <span class="rbt-badge-5 ml--10">${episode.lessons.length} Lessons</span>
+                    </button>
+                </h2>
+                <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                    <div class="accordion-body card-body pr--0">
+                        <ul class="rbt-course-main-content liststyle">
+                            ${lessonsHtml}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        courseContentWrapper.innerHTML += episodeHtml;
+    });
+};
+
+// REPLACE your old updateUserDataOnPage function with this one
+
+const updateUserDataOnPage = () => {
+    // CHECKPOINT 1: Is the function running?
+    console.log("1. updateUserDataOnPage function has started.");
+
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        console.log("No token found. Aborting.");
+        return;
+    }
+
+    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const profile = result.data;
+
+                // CHECKPOINT 2: Did we get the correct data from the server?
+                console.log("2. Profile data fetched successfully. Current avatar path is:", profile.avatar);
+
+                if (profile.avatar) {
+                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
+                    
+                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
+                    
+                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
+                    const allAvatarImages = document.querySelectorAll(selectorString);
+                    console.log("3. Searching for avatar images with selector:", selectorString);
+                    console.log("4. Found these elements:", allAvatarImages);
+
+                    if (allAvatarImages.length > 0) {
+                        console.log("5. Updating images now...");
                         allAvatarImages.forEach(img => {
                             if (img) img.src = avatarUrl;
                         });
+                        console.log("6. Image update complete.");
+                    } else {
+                        console.error("7. ERROR: Could not find any avatar elements to update. Check your HTML IDs and classes.");
                     }
-
-                    // --- Update Cover Photo ---
-                    if (profile.coverPhoto) {
-                        const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
-                        document.querySelectorAll('.tutor-bg-photo').forEach(div => div.style.backgroundImage = coverUrl);
-                    }
-                } else {
-                    // If the token is invalid, log the user out.
-                    localStorage.clear();
-                    window.location.href = 'login.html';
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-                localStorage.clear();
-                window.location.href = 'login.html';
-            });
-    };
-    
-    // (Your other helper functions like renderCourseDetailsCurriculum, etc., go here)
+                // ... (the rest of your function for cover photos, names, etc.) ...
+                const fullName = `${profile.firstName} ${profile.lastName}`;
+                const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
+                bannerNames.forEach(el => el.textContent = fullName);
+                const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
+                if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
+                if (profile.coverPhoto) {
+                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
+                    const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
+                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
+                }
 
-    // =================================================================
-    // ===== Main Page Logic Controller =====
-    // =================================================================
-    
-const handlePageLogic = () => {
-    const path = window.location.pathname;
-    const token = localStorage.getItem('lmsToken'); // Get token once at the top
-    const user = JSON.parse(localStorage.getItem('lmsUser'));
+            } else {
+                throw new Error(result.message || 'Failed to get profile');
+            }
+        })
+        .catch(error => {
+            console.error('Error in updateUserDataOnPage:', error);
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+};
 
-    // =================================================================
-    // ===== START OF THE FIX =====
-    // =================================================================
-    // This block now runs on EVERY page.
-    // If a user is logged in, it will update their navbar info.
-    if (token) {
-        updateUserDataOnPage();
-    }
-    // =================================================================
-    // ===== END OF THE FIX =====
-    // =================================================================
+        const handlePageLogic = () => {
+            const path = window.location.pathname;
 
             if (path.includes('student-')) {
                 if (!token) {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
             }
 
             if (path.includes('/login') || path.includes('/login-instructor')) {
@@ -1236,7 +1294,7 @@ const handlePageLogic = () => {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 fetch(`${API_BASE_URL}/api/instructor/dashboard`, { headers: { 'x-auth-token': token } })
                     .then(res => res.json())
                     .then(result => {
@@ -1282,7 +1340,7 @@ const handlePageLogic = () => {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
                     .then(res => res.json())
                     .then(result => {
@@ -1314,7 +1372,7 @@ const handlePageLogic = () => {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 const fetchAndDisplayCoursesByStatus = () => {
                     fetch(`${API_BASE_URL}/api/instructor/my-courses-status`, { headers: { 'x-auth-token': token } })
                         .then(res => res.json())
@@ -1404,7 +1462,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
             return;
         }
 // ADD THIS LINE TO FIX THE HEADER
-         
+        updateUserDataOnPage(); 
 
         const user = JSON.parse(userString);
 
@@ -1521,7 +1579,7 @@ if (window.location.pathname.includes('/instructor-')) {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 const fetchQuizAttempts = () => {
                     const attemptsTableBody = document.querySelector('.rbt-dashboard-table tbody');
                     if (!attemptsTableBody) return;
@@ -1563,7 +1621,7 @@ if (window.location.pathname.includes('/instructor-')) {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 const fetchAssignments = () => {
                     const assignmentsTableBody = document.querySelector('.rbt-dashboard-table tbody');
                     if (!assignmentsTableBody) return;
@@ -1627,7 +1685,7 @@ if (window.location.pathname.includes('/instructor-')) {
                     window.location.href = '/login';
                     return;
                 }
-                
+                updateUserDataOnPage();
                 const populateSettingsForms = () => {
                     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
                         .then(res => res.json())
@@ -1681,7 +1739,7 @@ if (window.location.pathname.includes('/instructor-')) {
                             .then(result => {
                                 if (result.success) {
                                     alert('Profile updated successfully!');
-                                    
+                                    updateUserDataOnPage();
                                 } else {
                                     alert('Error updating profile.');
                                 }
@@ -1750,7 +1808,7 @@ if (window.location.pathname.includes('/instructor-')) {
                     fileInput.addEventListener('change', (e) => {
                         const formData = new FormData(); formData.append('avatar', e.target.files[0]);
                         fetch(`${API_BASE_URL}/api/user/avatar`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Avatar updated!');  } });
+                            .then(res => res.json()).then(result => { if (result.success) { alert('Avatar updated!'); updateUserDataOnPage(); } });
                     });
                 }
                 if (coverUploadButton) {
@@ -1760,7 +1818,7 @@ if (window.location.pathname.includes('/instructor-')) {
                     fileInput.addEventListener('change', (e) => {
                         const formData = new FormData(); formData.append('coverPhoto', e.target.files[0]);
                         fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Cover photo updated!');  } });
+                            .then(res => res.json()).then(result => { if (result.success) { alert('Cover photo updated!'); updateUserDataOnPage(); } });
                     });
                 }
                 populateSettingsForms();
@@ -4051,10 +4109,8 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
             });
     }
 }
-
-    // This is the single entry point that starts everything.
-    handlePageLogic();
-};
+        handlePageLogic();
+    };
 
     eduJs.i();
 
