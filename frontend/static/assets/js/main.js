@@ -568,15 +568,15 @@
                 });
             });
         },
-// REPLACE THE BAD CODE WITH THIS
-counterUp: function() {
-    if (typeof $.fn.appear === 'function' && $(".odometer").length > 0) {
-        $(".odometer").appear(function(e) {
-            var countNumber = $(this).attr("data-count");
-            $(this).html(countNumber);
-        });
-    }
-},
+        counterUp: function () {
+            var odo = $(".odometer");
+            odo.each(function () {
+                $(".odometer").appear(function (e) {
+                    var countNumber = $(this).attr("data-count");
+                    $(this).html(countNumber);
+                });
+            });
+        },
         pricingPlan: function () {
             var mainPlan = $(".rbt-pricing-area");
             mainPlan.each(function () {
@@ -4145,7 +4145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => console.error("Delayed navbar update failed:", err));
             
-    }, 3000); // 500 milliseconds = 0.5 second delay
+    }, 500); // 500 milliseconds = 0.5 second delay
 });
 
         handlePageLogic();
