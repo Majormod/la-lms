@@ -4145,7 +4145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => console.error("Delayed navbar update failed:", err));
             
-    }, 500); // 500 milliseconds = 0.5 second delay
+    }, 1500); // 500 milliseconds = 0.5 second delay
 });
 
         handlePageLogic();
