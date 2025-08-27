@@ -3829,6 +3829,57 @@ function renderQuizQuestions(quiz, container) {
         });
     }
 
+    if (path.includes('student-profile.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+    // Security guard for the page
+    if (!token || !user) {
+        alert("Access Denied. Please log in to view your profile.");
+        window.location.href = '/login';
+        return; // Stop further execution
+    }
+    
+    // Fetch the user's profile data
+    fetch(`${API_BASE_URL}/api/user/profile`, {
+        headers: { 'x-auth-token': token }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            const profile = result.data;
+            
+            // This object maps the labels in your HTML to the data we received
+            const profileDataMap = {
+                'Registration Date': profile.registrationDate,
+                'First Name': profile.firstName,
+                'Last Name': profile.lastName,
+                'Username': profile.username,
+                'Email': profile.email,
+                'Phone Number': profile.phone || 'Not Provided',
+                'Skill/Occupation': profile.occupation || 'Not Provided',
+                'Biography': profile.bio || 'Not Provided'
+            };
+
+            // This code smartly finds each row, reads the label, and fills in the value
+            document.querySelectorAll('.rbt-profile-row').forEach(row => {
+                const labelEl = row.querySelector('.col-lg-4 .rbt-profile-content');
+                const valueEl = row.querySelector('.col-lg-8 .rbt-profile-content');
+
+                if (labelEl && valueEl) {
+                    const labelText = labelEl.textContent.trim();
+                    if (profileDataMap.hasOwnProperty(labelText)) {
+                        valueEl.textContent = profileDataMap[labelText];
+                    }
+                }
+            });
+        } else {
+            console.error("Failed to fetch profile data:", result.message);
+        }
+    })
+    .catch(error => console.error("Error fetching profile data:", error));
+}
+
     // ... you can add other 'if' blocks for your other pages here ...
 
 }; // This is the end of the handlePageLogic function
