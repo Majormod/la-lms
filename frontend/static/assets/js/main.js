@@ -1160,10 +1160,8 @@ const updateUserDataOnPage = () => {
                 if (profile.avatar) {
                     const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
                     
-                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
-                    
-                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
-                    const allAvatarImages = document.querySelectorAll(selectorString);
+                    // REPLACE WITH THIS LINE
+const allAvatarImages = document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, .nav-user-avatar-img');
                     console.log("3. Searching for avatar images with selector:", selectorString);
                     console.log("4. Found these elements:", allAvatarImages);
 
