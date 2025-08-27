@@ -14,7 +14,6 @@ const User = require('./models/User');
 const Course = require('./models/Course');
 const auth = require('./authMiddleware');
 const QuizResult = require('./models/QuizResult');
-const Enrollment = require('./models/Enrollment');
 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
@@ -1244,30 +1243,26 @@ app.get('/api/student/my-quiz-attempts', auth, async (req, res) => {
 });
 
 
-// STUDENT DASHBOARD API ROUTE (with real data)
+// STUDENT DASHBOARD API ROUTE
 app.get('/api/student/dashboard', auth, async (req, res) => {
     try {
-        const studentId = req.user.id;
+        // Optional: Ensure the user is a student
+        if (req.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
 
-        // 1. Get the total number of enrolled courses for this student
-        const enrolledCourses = await Enrollment.countDocuments({ student: studentId });
-
-        // 2. Get active courses (assuming you have a 'status' field in your Enrollment model)
-        const activeCourses = await Enrollment.countDocuments({ student: studentId, status: 'active' });
-        
-        // 3. Get completed courses
-        const completedCourses = await Enrollment.countDocuments({ student: studentId, status: 'completed' });
-
+        // In a real application, you would query your database here.
+        // For now, we will return mock data.
         const studentDashboardData = {
-            enrolledCourses,
-            activeCourses,
-            completedCourses,
+            enrolledCourses: 1,
+            activeCourses: 1,
+            completedCourses: 1,
         };
 
         res.status(200).json({ success: true, data: studentDashboardData });
 
     } catch (error) {
-        console.error('Error fetching real student dashboard data:', error);
+        console.error('Error fetching student dashboard data:', error);
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
