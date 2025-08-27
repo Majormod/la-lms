@@ -568,17 +568,15 @@
                 });
             });
         },
-        // Inside main.js
-
-eduJs.counterUp = function() {
-    // ADD THIS CHECK:
-    if ($(".odometer").length) { 
-        $(".odometer").appear(function (e) {
-            var countNumber = $(this).attr("data-count");
-            $(this).html(countNumber);
-        });
-    }
-},
+        counterUp: function () {
+            var odo = $(".odometer");
+            odo.each(function () {
+                $(".odometer").appear(function (e) {
+                    var countNumber = $(this).attr("data-count");
+                    $(this).html(countNumber);
+                });
+            });
+        },
         pricingPlan: function () {
             var mainPlan = $(".rbt-pricing-area");
             mainPlan.each(function () {
