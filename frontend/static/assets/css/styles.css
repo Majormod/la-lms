@@ -40801,146 +40801,35 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
-.rbt-comment-form {
-            margin-top: 30px;
-        }
-        
-        .comment-form-inner {
-            margin-bottom: 25px;
-        }
-        
-        .comment-form-inner h3.title {
-            color: #2c3e50;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .comment-form-inner p {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .rating_wrap {
-            margin-bottom: 25px;
-        }
-        
-        .rating_wrap h6.label {
-            color: #2c3e50;
-            font-size: 16px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        /* Fixed rating system */
-        .rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: flex-start;
-            gap: 5px;
-        }
-        
-        .rating input {
-            display: none !important;
-        }
-        
-        .rating label {
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ddd;
-            font-size: 28px;
-            transition: color 0.2s ease;
-        }
-        
-        .rating label:before {
-            content: '★';
-        }
-        
-        .rating input:checked ~ label,
-        .rating label:hover,
-        .rating label:hover ~ label {
-            color: #ffc107;
-        }
-        
-        /* Form styling */
-        .rbt-form-group {
-            margin-bottom: 20px;
-        }
-        
-        .rbt-form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        #review-comment {
-            width: 100%;
-            min-height: 120px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            resize: vertical;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        #review-comment:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        
-        .rbt-btn {
-            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .rbt-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .instructions {
-            background: #f8f9fa;
-            border-left: 4px solid #3498db;
-            padding: 15px;
-            margin-top: 30px;
-            border-radius: 4px;
-        }
-        
-        .instructions h3 {
-            color: #3498db;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        
-        .instructions ul {
-            padding-left: 20px;
-            color: #555;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .success-message {
-            display: none;
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            text-align: center;
-        }
+.rating_wrap .rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.rating_wrap .rating input[type="radio"] {
+    display: none;
+}
+
+.rating_wrap .rating label {
+    font-size: 24px;
+    color: #d1d1d1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 0 2px;
+}
+
+.rating_wrap .rating label:before {
+    content: '★';
+}
+
+.rating_wrap .rating label:hover,
+.rating_wrap .rating label:hover ~ label,
+.rating_wrap .rating input:checked ~ label {
+    color: #ffc107;
+}
+
+/* Keep stars colored after selection */
+.rating:not(:hover) input:checked ~ label {
+    color: #ffc107;
+}
