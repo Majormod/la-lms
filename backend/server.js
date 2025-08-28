@@ -1374,6 +1374,35 @@ app.post('/api/courses/:courseId/reviews', auth, async (req, res) => {
     }
 });
 
+// In server.js
+
+// GET ALL REVIEWS FOR A SPECIFIC COURSE (with Pagination)
+app.get('/api/courses/:courseId/reviews', async (req, res) => {
+    try {
+        const courseId = req.params.courseId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        const totalReviews = await Review.countDocuments({ course: courseId });
+        const totalPages = Math.ceil(totalReviews / limit);
+
+        const reviews = await Review.find({ course: courseId })
+            .populate('student', 'firstName lastName avatar')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip(skip);
+
+        res.json({ 
+            success: true, 
+            reviews,
+            pagination: { currentPage: page, totalPages, totalReviews }
+        });
+    } catch (error) {
+        console.error("Get course reviews error:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 // GET ALL REVIEWS BY THE CURRENT STUDENT (with Pagination)
 app.get('/api/student/reviews', auth, async (req, res) => {
