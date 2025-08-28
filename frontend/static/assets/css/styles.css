@@ -40801,39 +40801,57 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
-/* --- Final Star Rating CSS with Correct Padding --- */
+/* --- Final Star Rating CSS: Surgical Override --- */
 
-#add-review-form-wrapper .review-form-rating { 
-  border: none;
-  display: inline-flex;
-  flex-direction: row-reverse;
-  justify-content: flex-start;
+/* Step 1: Aggressively hide the actual radio button input. */
+#add-review-form-wrapper .review-form-rating > input[type="radio"] {
+    display: none !important;
+    appearance: none !important; /* Also hide browser-native appearance */
 }
 
-/* Hides the radio buttons */
-#add-review-form-wrapper .review-form-rating > input { 
-  display: none;
-}
-
+/* Step 2: Reset the label itself, removing the theme's padding. */
 #add-review-form-wrapper .review-form-rating > label {
-  color: #d1d1d1;
-  cursor: pointer;
-  font-size: 28px;
-  
-  /* --- YOUR PADDING VALUE RESTORED --- */
-  padding: 30px 15px 20px 15px; 
-  
-  transition: color 0.2s;
+    padding-left: 0 !important; /* Neutralize the theme's padding for the fake circle */
+    position: static !important; /* Prevent the theme from positioning pseudo-elements relative to the label */
+    display: inline-block; /* Ensure proper block-level behavior for padding */
+    
+    /* Apply YOUR desired padding and styles */
+    padding: 30px 15px 20px 15px; 
+    color: #d1d1d1;
+    cursor: pointer;
+    font-size: 28px;
+    transition: color 0.2s;
+    line-height: 1; /* Keep vertical alignment tight */
 }
 
-/* Creates the star character */
-#add-review-form-wrapper .review-form-rating > label::before {
-  content: '★';
+/* Step 3: Take FULL control of the ::before pseudo-element and force it to be a star. */
+/* We use a more specific selector to win the fight. */
+#add-review-form-wrapper .review-form-rating > input[type="radio"] + label::before {
+    /* FORCE our content */
+    content: '★' !important;
+    font-family: initial !important; /* Prevents icon fonts from interfering */
+    font-size: 28px !important;
+
+    /* RESET all theme styles for the fake radio button */
+    display: inline-block !important; /* Make sure it's visible */
+    position: static !important;
+    background-color: transparent !important;
+    border: none !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important; /* Remove any rotation/scaling */
+    opacity: 1 !important; /* Make sure it's fully visible */
 }
 
-/* Handles the coloring on hover and selection */
+/* Step 4: Completely disable and hide the theme's ::after pseudo-element (the checkmark). */
+#add-review-form-wrapper .review-form-rating > input[type="radio"] + label::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* Step 5: The hover/checked logic remains the same. */
 #add-review-form-wrapper .review-form-rating > input:checked ~ label,
 #add-review-form-wrapper .review-form-rating:not(:checked) > label:hover,
-#add-review-form-wrapper .review-form-rating:not(:checked) > label:hover ~ label { 
-  color: #ffc107;
+#add-review-form-wrapper .review-form-rating:not(:checked) > label:hover ~ label {
+    color: #ffc107;
 }
