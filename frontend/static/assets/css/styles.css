@@ -40802,36 +40802,39 @@ padding: 0 10px 0 10px;
 }
 /* CSS for the Star Rating Input */
 /* FINAL CSS to override theme's fake radio buttons */
-/* --- Final Star Rating CSS --- */
+/* --- Final Star Rating CSS with Correct Padding --- */
 
-#add-review-form-wrapper .rating { 
+#add-review-form-wrapper .review-form-rating { 
   border: none;
-  display: inline-flex; /* Aligns stars horizontally */
-  flex-direction: row-reverse; /* Reverses order to make the hover effect work */
-  justify-content: flex-start; /* Aligns stars to the left */
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
-/* THIS IS THE MOST IMPORTANT RULE */
-#add-review-form-wrapper .rating > input { 
-  display: none; /* Hides the ugly radio buttons */
+/* Hides the radio buttons */
+#add-review-form-wrapper .review-form-rating > input { 
+  display: none;
 }
 
-#add-review-form-wrapper .rating > label {
-  color: #d1d1d1; /* Color of an unselected star */
+#add-review-form-wrapper .review-form-rating > label {
+  color: #d1d1d1;
   cursor: pointer;
-  font-size: 28px; /* Size of the star */
-  padding: 0 4px; /* Space between stars */
+  font-size: 28px;
+  
+  /* --- YOUR PADDING VALUE RESTORED --- */
+  padding: 30px 15px 20px 15px; 
+  
   transition: color 0.2s;
 }
 
-/* This creates the star character */
-#add-review-form-wrapper .rating > label::before {
+/* Creates the star character */
+#add-review-form-wrapper .review-form-rating > label::before {
   content: '★';
 }
 
-/* This handles the coloring magic on hover and selection */
-#add-review-form-wrapper .rating > input:checked ~ label,
-#add-review-form-wrapper .rating:not(:checked) > label:hover,
-#add-review-form-wrapper .rating:not(:checked) > label:hover ~ label { 
-  color: #ffc107; /* Color of a selected or hovered star */
+/* Handles the coloring on hover and selection */
+#add-review-form-wrapper .review-form-rating > input:checked ~ label,
+#add-review-form-wrapper .review-form-rating:not(:checked) > label:hover,
+#add-review-form-wrapper .review-form-rating:not(:checked) > label:hover ~ label { 
+  color: #ffc107;
 }
