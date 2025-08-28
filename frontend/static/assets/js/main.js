@@ -3397,123 +3397,97 @@ if (window.location.pathname.includes('course-details.html')) {
                 </div>
             `;
             accordionContainer.appendChild(episodeElement);
+        });
+    }
 
-            // =================================================================
-    // --- STEP 1: PASTE THE NEW REVIEW FUNCTIONS BELOW ---
-    // =================================================================
-
-    const fetchAndDisplayReviews = (page = 1) => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const courseId = urlParams.get('courseId');
-        const reviewsListContainer = document.getElementById('reviews-list-container');
-        const paginationContainer = document.getElementById('reviews-pagination-container');
-
-        if (!reviewsListContainer || !paginationContainer) return;
-        
-        reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
-        fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    reviewsListContainer.innerHTML = '';
-                    if (data.reviews.length > 0) {
-                        data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
-                        renderPaginationControls(data.pagination, paginationContainer);
-                    } else {
-                        reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
-                    }
-                }
-            }).catch(error => {
-                console.error('Error fetching course reviews:', error);
-                reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`;
-            });
+    // REPLACE the placeholder 'renderPaginationControls' with this full function
+    const renderPaginationControls = (pagination, container) => {
+        container.innerHTML = '';
+        if (pagination.totalPages <= 1) return;
+        container.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
+        for (let i = 1; i <= pagination.totalPages; i++) {
+            container.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+        }
+        container.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
     };
 
-    // In main.js, inside the if...('course-details.html') block
+    // REPLACE the placeholder 'checkEnrollmentAndHandleReviewForm' with this full function
+    const checkEnrollmentAndHandleReviewForm = async () => {
+        const token = localStorage.getItem('lmsToken');
+        const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        if (!token || !reviewFormWrapper || !courseId) return;
 
-// REPLACE the placeholder 'renderReview' with this full function
-const renderReview = (review) => {
-    const studentName = `${review.student.firstName} ${review.student.lastName}`;
-    const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
-    const reviewDate = new Date(review.createdAt).toLocaleDateString();
-    let ratingHTML = '';
-    for (let i = 0; i < review.rating; i++) { ratingHTML += `<a href="#"><i class="fa fa-star"></i></a>`; }
-    for (let i = review.rating; i < 5; i++) { ratingHTML += `<a href="#"><i class="fa-regular fa-star"></i></a>`; }
-
-    return `
-    <div class="rbt-course-review about-author">
-        <div class="media">
-            <div class="thumbnail"><a href="#"><img src="${studentAvatar}" alt="${studentName}"></a></div>
-            <div class="media-body">
-                <div class="author-info">
-                    <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5>
-                    <div class="rating">${ratingHTML}</div>
-                </div>
-                <div class="content">
-                    <p class="description">${review.comment || ''}</p>
-                    <span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span>
-                </div>
-            </div>
-        </div>
-    </div>`;
-};
-
-// REPLACE the placeholder 'renderPaginationControls' with this full function
-const renderPaginationControls = (pagination, container) => {
-    container.innerHTML = '';
-    if (pagination.totalPages <= 1) return;
-    container.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
-    for (let i = 1; i <= pagination.totalPages; i++) {
-        container.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
-    }
-    container.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
-};
-
-// REPLACE the placeholder 'checkEnrollmentAndHandleReviewForm' with this full function
-const checkEnrollmentAndHandleReviewForm = async () => {
-    const token = localStorage.getItem('lmsToken');
-    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
-    if (!token || !reviewFormWrapper || !courseId) return;
-
-    reviewFormWrapper.style.display = 'block';
-    const reviewForm = document.getElementById('review-form');
-    reviewForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-        const comment = document.getElementById('review-comment').value;
-        if (!rating) { alert('Please select a star rating.'); return; }
-        try {
-            const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                body: JSON.stringify({ rating, comment })
-            });
-            const submitResult = await submitResponse.json();
-            if (submitResult.success) {
-                alert('Thank you for your review!');
-                reviewFormWrapper.style.display = 'none';
-                fetchAndDisplayReviews(1);
-            } else { alert('Error: ' + submitResult.message); }
-        } catch (submitError) {
-            console.error('Error submitting review:', submitError);
-            alert('An error occurred while submitting your review.');
-        }
-    });
-};
-
+        reviewFormWrapper.style.display = 'block';
+        const reviewForm = document.getElementById('review-form');
+        reviewForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+            const comment = document.getElementById('review-comment').value;
+            if (!rating) { alert('Please select a star rating.'); return; }
+            try {
+                const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ rating, comment })
+                });
+                const submitResult = await submitResponse.json();
+                if (submitResult.success) {
+                    alert('Thank you for your review!');
+                    reviewFormWrapper.style.display = 'none';
+                    fetchAndDisplayReviews(1);
+                } else { alert('Error: ' + submitResult.message); }
+            } catch (submitError) {
+                console.error('Error submitting review:', submitError);
+                alert('An error occurred while submitting your review.');
+            }
         });
-    } // End of renderCourseContent
+    };
+
+    // End of renderCourseContent
     // Your original page-loading logic, now correctly calling the updated render functions.
     document.addEventListener('DOMContentLoaded', () => {
+        // ==========================================================
+        // --- PASTE THE NEW REVIEWS SECTION CODE HERE ---
+        // ==========================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+
+        const fetchAndDisplayReviews = (page = 1) => {
+            const reviewsListContainer = document.getElementById('reviews-list-container');
+            const paginationContainer = document.getElementById('reviews-pagination-container');
+            if (!courseId || !reviewsListContainer || !paginationContainer) return;
+            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
+            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
+                .then(res => res.json()).then(data => {
+                    if (data.success) {
+                        reviewsListContainer.innerHTML = '';
+                        if (data.reviews.length > 0) {
+                            data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
+                            renderPaginationControls(data.pagination, paginationContainer);
+                        } else { reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>'; }
+                    }
+                }).catch(error => { console.error('Error fetching reviews:', error); reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`; });
+        };
+        
+        const renderReview = (review) => {
+            const studentName = `${review.student.firstName} ${review.student.lastName}`;
+            const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
+            const reviewDate = new Date(review.createdAt).toLocaleDateString();
+            let ratingHTML = '';
+            for (let i = 0; i < review.rating; i++) { ratingHTML += `<a href="#"><i class="fa fa-star"></i></a>`; }
+            for (let i = review.rating; i < 5; i++) { ratingHTML += `<a href="#"><i class="fa-regular fa-star"></i></a>`; }
+            return `<div class="rbt-course-review about-author"><div class="media"><div class="thumbnail"><a href="#"><img src="${studentAvatar}" alt="${studentName}"></a></div><div class="media-body"><div class="author-info"><h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5><div class="rating">${ratingHTML}</div></div><div class="content"><p class="description">${review.comment || ''}</p><span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span></div></div></div></div>`;
+        };
+        
         const populateCourseDetails = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const courseId = urlParams.get('courseId');
             if (!courseId) {
                 document.body.innerHTML = '<h1>Error: Course ID is missing.</h1>';
                 return;
-            };
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
@@ -3600,25 +3574,24 @@ const checkEnrollmentAndHandleReviewForm = async () => {
                     }
                     
                     // --- 8. Populate Instructor Bio Box ---
-// --- 8. Populate Instructor Bio Box ---
-const instructor = course.instructor;
-if (instructor) {
-    // MODIFIED: Targets the new, unique ID for the bio box avatar.
-    document.getElementById('instructor-bio-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
-    
-    // The rest of your logic remains the same
-    document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
-    document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
-    document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
+                    const instructor = course.instructor;
+                    if (instructor) {
+                        // MODIFIED: Targets the new, unique ID for the bio box avatar.
+                        document.getElementById('instructor-bio-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
+                        
+                        // The rest of your logic remains the same
+                        document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
+                        document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
+                        document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
 
-    const socialContainer = document.getElementById('instructor-socials');
-    socialContainer.innerHTML = ''; // Clear static icons
-    if (instructor.social) {
-        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
-        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
-        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
-    }
-}
+                        const socialContainer = document.getElementById('instructor-socials');
+                        socialContainer.innerHTML = ''; // Clear static icons
+                        if (instructor.social) {
+                            if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+                            if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+                            if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching course details:', error);
@@ -3630,66 +3603,59 @@ if (instructor) {
 
         // In main.js, inside the 'course-details.html' block and 'DOMContentLoaded' listener
 
-// REVISED: This function no longer checks for enrollment.
-const checkEnrollmentAndHandleReviewForm = async () => {
-    const token = localStorage.getItem('lmsToken');
-    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+        // REVISED: This function no longer checks for enrollment.
+        const checkEnrollmentAndHandleReviewForm = async () => {
+            const token = localStorage.getItem('lmsToken');
+            const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
 
-    // If user is logged in, simply show the form.
-    if (token) {
-        reviewFormWrapper.style.display = 'block';
+            // If user is logged in, simply show the form.
+            if (token) {
+                reviewFormWrapper.style.display = 'block';
 
-        const reviewForm = document.getElementById('review-form');
-        reviewForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+                const reviewForm = document.getElementById('review-form');
+                reviewForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-            const comment = document.getElementById('review-comment').value;
+                    const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+                    const comment = document.getElementById('review-comment').value;
 
-            if (!rating) {
-                alert('Please select a star rating.');
-                return;
-            }
+                    if (!rating) {
+                        alert('Please select a star rating.');
+                        return;
+                    }
 
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const courseId = urlParams.get('courseId');
-                
-                const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-auth-token': token
-                    },
-                    body: JSON.stringify({ rating, comment })
+                    try {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const courseId = urlParams.get('courseId');
+                        
+                        const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-auth-token': token
+                            },
+                            body: JSON.stringify({ rating, comment })
+                        });
+                        const submitResult = await submitResponse.json();
+
+                        if (submitResult.success) {
+                            alert('Thank you for your review!');
+                            reviewFormWrapper.style.display = 'none';
+                            fetchAndDisplayReviews(1); // Refresh the reviews list
+                        } else {
+                            alert('Error: ' + submitResult.message);
+                        }
+                    } catch (submitError) {
+                        console.error('Error submitting review:', submitError);
+                        alert('An error occurred while submitting your review.');
+                    }
                 });
-                const submitResult = await submitResponse.json();
-
-                if (submitResult.success) {
-                    alert('Thank you for your review!');
-                    reviewFormWrapper.style.display = 'none';
-                    fetchAndDisplayReviews(1); // Refresh the reviews list
-                } else {
-                    alert('Error: ' + submitResult.message);
-                }
-            } catch (submitError) {
-                console.error('Error submitting review:', submitError);
-                alert('An error occurred while submitting your review.');
             }
-        });
-    }
-};
+        };
 
-// ... keep your other functions like fetchAndDisplayReviews(), renderReview(), etc.
-
-// Make sure the initial calls at the end of your DOMContentLoaded listener are correct
-fetchAndDisplayReviews(1);
-checkEnrollmentAndHandleReviewForm();
-
-// Call this new function right after the initial review fetch
-fetchAndDisplayReviews(1);
-checkEnrollmentAndHandleReviewForm();
-
+        // Make sure the initial calls at the end of your DOMContentLoaded listener are correct
+        fetchAndDisplayReviews(1);
+        checkEnrollmentAndHandleReviewForm();
     }); // End of DOMContentLoaded
 }
 
