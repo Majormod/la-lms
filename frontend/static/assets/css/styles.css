@@ -40801,35 +40801,38 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
-.rating_wrap .rating {
-    display: inline-flex;
-    flex-direction: row-reverse;
-    justify-content: flex-start;
-}
+/* FINAL CSS to override theme's fake radio buttons */
 
+/* Hide the actual input element */
 #review-form .rating input[type="radio"] {
     display: none !important;
 }
 
-.rating_wrap .rating label {
+/* This is the most important part:
+   We are taking over the theme's fake radio button and forcing it to be our star.
+*/
+#review-form .rating label::before {
+    content: '★' !important; /* Override the theme's content (the circle) with our star */
+    font-family: initial !important; /* Prevents the theme's icon font from interfering */
     font-size: 24px;
+    display: inline-block; /* Make sure it's visible */
+}
+
+/* Your existing star styling for layout and color */
+#review-form .rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+}
+
+#review-form .rating label {
     color: #d1d1d1;
     cursor: pointer;
     transition: color 0.2s ease;
     padding: 30px 15px 20px 15px;
 }
 
-.rating_wrap .rating label:before {
-    content: '★';
-}
-
-.rating_wrap .rating label:hover,
-.rating_wrap .rating label:hover ~ label,
-.rating_wrap .rating input:checked ~ label {
-    color: #ffc107;
-}
-
-/* Keep stars colored after selection */
-.rating:not(:hover) input:checked ~ label {
+#review-form .rating label:hover,
+#review-form .rating label:hover ~ label,
+#review-form .rating input:checked ~ label {
     color: #ffc107;
 }
