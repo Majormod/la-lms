@@ -3397,9 +3397,52 @@ if (window.location.pathname.includes('course-details.html')) {
                 </div>
             `;
             accordionContainer.appendChild(episodeElement);
-        });
-    }
 
+            // =================================================================
+    // --- STEP 1: PASTE THE NEW REVIEW FUNCTIONS BELOW ---
+    // =================================================================
+
+    const fetchAndDisplayReviews = (page = 1) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const reviewsListContainer = document.getElementById('reviews-list-container');
+        const paginationContainer = document.getElementById('reviews-pagination-container');
+
+        if (!reviewsListContainer || !paginationContainer) return;
+        
+        reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
+        fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    reviewsListContainer.innerHTML = '';
+                    if (data.reviews.length > 0) {
+                        data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
+                        renderPaginationControls(data.pagination, paginationContainer);
+                    } else {
+                        reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
+                    }
+                }
+            }).catch(error => {
+                console.error('Error fetching course reviews:', error);
+                reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`;
+            });
+    };
+
+    const renderReview = (review) => { /* ... The detailed renderReview function I provided earlier ... */ };
+    const renderPaginationControls = (pagination, container) => { /* ... The pagination rendering logic ... */ };
+
+    const checkEnrollmentAndHandleReviewForm = async () => {
+        const token = localStorage.getItem('lmsToken');
+        const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+        if (!token || !reviewFormWrapper) return;
+        
+        reviewFormWrapper.style.display = 'block';
+        // ... The rest of the checkEnrollmentAndHandleReviewForm function
+    };
+
+        });
+    } // End of renderCourseContent
     // Your original page-loading logic, now correctly calling the updated render functions.
     document.addEventListener('DOMContentLoaded', () => {
         const populateCourseDetails = async () => {
@@ -3585,7 +3628,7 @@ checkEnrollmentAndHandleReviewForm();
 fetchAndDisplayReviews(1);
 checkEnrollmentAndHandleReviewForm();
 
-    });
+    }); // End of DOMContentLoaded
 }
 
 // =================================================================
