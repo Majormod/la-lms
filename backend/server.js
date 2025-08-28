@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
-const { isAuthenticated, isInstructor } = require('./middleware/auth'); 
+const { isAuthenticated, isInstructor } = require('./authMiddleware');
 
 
 // --- GLOBAL VARIABLES & IMPORTS ---
