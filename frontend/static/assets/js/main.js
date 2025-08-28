@@ -3690,7 +3690,6 @@ if (ratingWidget) {
         fetchAndDisplayReviews(1);
         checkEnrollmentAndHandleReviewForm();
     }); // End of DOMContentLoaded
-}
 
 // =================================================================
 // FINAL SCRIPT FOR lesson.html (Matches UI Theme Exactly)
