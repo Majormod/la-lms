@@ -3429,17 +3429,79 @@ if (window.location.pathname.includes('course-details.html')) {
             });
     };
 
-    const renderReview = (review) => { /* ... The detailed renderReview function I provided earlier ... */ };
-    const renderPaginationControls = (pagination, container) => { /* ... The pagination rendering logic ... */ };
+    // In main.js, inside the if...('course-details.html') block
 
-    const checkEnrollmentAndHandleReviewForm = async () => {
-        const token = localStorage.getItem('lmsToken');
-        const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
-        if (!token || !reviewFormWrapper) return;
-        
-        reviewFormWrapper.style.display = 'block';
-        // ... The rest of the checkEnrollmentAndHandleReviewForm function
-    };
+// REPLACE the placeholder 'renderReview' with this full function
+const renderReview = (review) => {
+    const studentName = `${review.student.firstName} ${review.student.lastName}`;
+    const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
+    const reviewDate = new Date(review.createdAt).toLocaleDateString();
+    let ratingHTML = '';
+    for (let i = 0; i < review.rating; i++) { ratingHTML += `<a href="#"><i class="fa fa-star"></i></a>`; }
+    for (let i = review.rating; i < 5; i++) { ratingHTML += `<a href="#"><i class="fa-regular fa-star"></i></a>`; }
+
+    return `
+    <div class="rbt-course-review about-author">
+        <div class="media">
+            <div class="thumbnail"><a href="#"><img src="${studentAvatar}" alt="${studentName}"></a></div>
+            <div class="media-body">
+                <div class="author-info">
+                    <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5>
+                    <div class="rating">${ratingHTML}</div>
+                </div>
+                <div class="content">
+                    <p class="description">${review.comment || ''}</p>
+                    <span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+};
+
+// REPLACE the placeholder 'renderPaginationControls' with this full function
+const renderPaginationControls = (pagination, container) => {
+    container.innerHTML = '';
+    if (pagination.totalPages <= 1) return;
+    container.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
+    for (let i = 1; i <= pagination.totalPages; i++) {
+        container.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+    }
+    container.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
+};
+
+// REPLACE the placeholder 'checkEnrollmentAndHandleReviewForm' with this full function
+const checkEnrollmentAndHandleReviewForm = async () => {
+    const token = localStorage.getItem('lmsToken');
+    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    if (!token || !reviewFormWrapper || !courseId) return;
+
+    reviewFormWrapper.style.display = 'block';
+    const reviewForm = document.getElementById('review-form');
+    reviewForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+        const comment = document.getElementById('review-comment').value;
+        if (!rating) { alert('Please select a star rating.'); return; }
+        try {
+            const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ rating, comment })
+            });
+            const submitResult = await submitResponse.json();
+            if (submitResult.success) {
+                alert('Thank you for your review!');
+                reviewFormWrapper.style.display = 'none';
+                fetchAndDisplayReviews(1);
+            } else { alert('Error: ' + submitResult.message); }
+        } catch (submitError) {
+            console.error('Error submitting review:', submitError);
+            alert('An error occurred while submitting your review.');
+        }
+    });
+};
 
         });
     } // End of renderCourseContent
