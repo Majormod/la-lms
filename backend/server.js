@@ -7,8 +7,13 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
-const { isAuthenticated, isInstructor } = require('./authMiddleware');
-
+const isAuthenticated = require('./authMiddleware');
+const isInstructor = (req, res, next) => {
+    if (req.user && req.user.role === 'instructor') {
+        return next();
+    }
+    return res.status(403).json({ msg: 'Access denied. Instructor role required.' });
+};
 
 // --- GLOBAL VARIABLES & IMPORTS ---
 const staticPath = path.join(__dirname, '../frontend/static');
