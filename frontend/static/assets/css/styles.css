@@ -40802,54 +40802,69 @@ padding: 0 10px 0 10px;
 }
 /* CSS for the Star Rating Input */
 /* --- Final Star Rating CSS: Surgical Override --- */
+/* --- Final and Complete Star Rating CSS --- */
 
-/* Step 1: Aggressively hide the actual radio button input. */
-#add-review-form-wrapper .review-form-rating > input[type="radio"] {
-    display: none !important;
-    appearance: none !important; /* Also hide browser-native appearance */
+/* Step 1: Align the "Your rating *" text and the stars on the same line. */
+#add-review-form-wrapper .rating_wrap {
+  display: flex;
+  align-items: center;
 }
 
-/* Step 2: Reset the label itself, removing the theme's padding. */
+/* Step 2: Style the star container itself and add space from the text. */
+#add-review-form-wrapper .review-form-rating { 
+  border: none;
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-left: 10px; /* Adjust this value for spacing */
+}
+
+/* Step 3: Aggressively hide the actual radio button input. */
+#add-review-form-wrapper .review-form-rating > input[type="radio"] {
+    display: none !important;
+    appearance: none !important;
+}
+
+/* Step 4: Reset the label, remove theme padding, and apply your desired padding. */
 #add-review-form-wrapper .review-form-rating > label {
-    padding-left: 0 !important; /* Neutralize the theme's padding for the fake circle */
-    position: static !important; /* Prevent the theme from positioning pseudo-elements relative to the label */
-    display: inline-block; /* Ensure proper block-level behavior for padding */
+    padding-left: 0 !important;
+    position: static !important;
+    display: inline-block;
     
-    /* Apply YOUR desired padding and styles */
+    /* Your desired padding for a larger clickable area */
     padding: 30px 15px 20px 15px; 
+    
     color: #d1d1d1;
     cursor: pointer;
     font-size: 28px;
     transition: color 0.2s;
-    line-height: 1; /* Keep vertical alignment tight */
+    line-height: 1;
 }
 
-/* Step 3: Take FULL control of the ::before pseudo-element and force it to be a star. */
-/* We use a more specific selector to win the fight. */
+/* Step 5: Take control of the ::before pseudo-element and force it to be a star. */
 #add-review-form-wrapper .review-form-rating > input[type="radio"] + label::before {
-    /* FORCE our content */
     content: '★' !important;
-    font-family: initial !important; /* Prevents icon fonts from interfering */
+    font-family: initial !important;
     font-size: 28px !important;
 
-    /* RESET all theme styles for the fake radio button */
-    display: inline-block !important; /* Make sure it's visible */
+    /* Reset all theme styles for the fake radio button */
+    display: inline-block !important;
     position: static !important;
     background-color: transparent !important;
     border: none !important;
     width: auto !important;
     height: auto !important;
-    transform: none !important; /* Remove any rotation/scaling */
-    opacity: 1 !important; /* Make sure it's fully visible */
+    transform: none !important;
+    opacity: 1 !important;
 }
 
-/* Step 4: Completely disable and hide the theme's ::after pseudo-element (the checkmark). */
+/* Step 6: Completely disable and hide the theme's ::after pseudo-element (the checkmark). */
 #add-review-form-wrapper .review-form-rating > input[type="radio"] + label::after {
     content: none !important;
     display: none !important;
 }
 
-/* Step 5: The hover/checked logic remains the same. */
+/* Step 7: The hover and selection logic. */
 #add-review-form-wrapper .review-form-rating > input:checked ~ label,
 #add-review-form-wrapper .review-form-rating:not(:checked) > label:hover,
 #add-review-form-wrapper .review-form-rating:not(:checked) > label:hover ~ label {
