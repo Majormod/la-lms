@@ -40801,7 +40801,6 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
-/* FINAL CSS to override theme's fake radio buttons */
 /* --- Final Star Rating CSS with Correct Padding --- */
 
 #add-review-form-wrapper .review-form-rating { 
