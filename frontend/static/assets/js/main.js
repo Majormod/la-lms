@@ -3462,22 +3462,7 @@ const checkEnrollmentAndHandleReviewForm = async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
 
-        const fetchAndDisplayReviews = (page = 1) => {
-            const reviewsListContainer = document.getElementById('reviews-list-container');
-            const paginationContainer = document.getElementById('reviews-pagination-container');
-            if (!courseId || !reviewsListContainer || !paginationContainer) return;
-            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
-            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
-                .then(res => res.json()).then(data => {
-                    if (data.success) {
-                        reviewsListContainer.innerHTML = '';
-                        if (data.reviews.length > 0) {
-                            data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
-                            renderPaginationControls(data.pagination, paginationContainer);
-                        } else { reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>'; }
-                    }
-                }).catch(error => { console.error('Error fetching reviews:', error); reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`; });
-        };
+
         
 // Render Review Design
 
@@ -3518,8 +3503,23 @@ const renderReview = (review) => {
         </div>
     </div>`;
 };
+        const fetchAndDisplayReviews = (page = 1) => {
+            const reviewsListContainer = document.getElementById('reviews-list-container');
+            const paginationContainer = document.getElementById('reviews-pagination-container');
+            if (!courseId || !reviewsListContainer || !paginationContainer) return;
+            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
+            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
+                .then(res => res.json()).then(data => {
+                    if (data.success) {
+                        reviewsListContainer.innerHTML = '';
+                        if (data.reviews.length > 0) {
+                            data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
+                            renderPaginationControls(data.pagination, paginationContainer);
+                        } else { reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>'; }
+                    }
+                }).catch(error => { console.error('Error fetching reviews:', error); reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`; });
+        };
 const ratingWidget = document.querySelector('#add-review-form-wrapper .review-form-rating');
-
 if (ratingWidget) {
     const ratingLabels = ratingWidget.querySelectorAll('label');
 
