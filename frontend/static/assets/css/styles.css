@@ -40801,36 +40801,35 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
- /* Fixed rating system */
-        .rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: flex-start;
-        }
-        
-        .rating input {
-            display: none !important;
-        }
-        
-        .rating label {
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: block;
-            position: relative;
-            margin-right: 8px;
-        }
-        
-        .rating label:before {
-            content: '★';
-            font-size: 32px;
-            color: #ddd;
-            display: block;
-            transition: color 0.2s ease;
-        }
-        
-        .rating input:checked ~ label:before,
-        .rating label:hover:before,
-        .rating label:hover ~ label:before {
-            color: #ffc107;
-        }
+.rating_wrap .rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+#review-form .rating input[type="radio"] {
+    display: none !important;
+}
+
+.rating_wrap .rating label {
+    font-size: 24px;
+    color: #d1d1d1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 30px 15px 20px 15px;
+}
+
+.rating_wrap .rating label:before {
+    content: '★';
+}
+
+.rating_wrap .rating label:hover,
+.rating_wrap .rating label:hover ~ label,
+.rating_wrap .rating input:checked ~ label {
+    color: #ffc107;
+}
+
+/* Keep stars colored after selection */
+.rating:not(:hover) input:checked ~ label {
+    color: #ffc107;
+}
