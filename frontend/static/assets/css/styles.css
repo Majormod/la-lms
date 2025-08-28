@@ -40800,3 +40800,40 @@ padding: 0 10px 0 10px;
 .rbt-bookmark-btn .rbt-round-btn.active i {
     fill: #fff; /* Fills the feather icon */
 }
+/* CSS for the Star Rating Input */
+.rating_wrap {
+    text-align: left;
+    margin-bottom: 20px;
+}
+.rating_wrap .rating {
+    display: inline-flex;
+    flex-direction: row-reverse; /* This makes the stars fill from left to right */
+    justify-content: flex-end;
+}
+.rating_wrap .rating input {
+    display: none; /* Hide the actual radio buttons */
+}
+.rating_wrap .rating label {
+    font-size: 24px;
+    color: #e0e0e0; /* Color for an empty star */
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0 2px;
+}
+.rating_wrap .rating label:before {
+    content: '★'; /* Unicode star character */
+}
+
+/* This styles the stars on hover */
+.rating_wrap .rating:hover label {
+    color: #ffc107; /* Yellow hover color */
+}
+/* This keeps the stars to the left of the hovered star also yellow */
+.rating_wrap .rating label:hover ~ label {
+    color: #ffc107;
+}
+
+/* This styles the selected stars */
+.rating_wrap .rating input:checked ~ label {
+    color: #ffc107; /* Yellow selected color */
+}
