@@ -3518,7 +3518,61 @@ const renderReview = (review) => {
         </div>
     </div>`;
 };
-        
+const ratingWidget = document.querySelector('#add-review-form-wrapper .review-form-rating');
+    if (!ratingWidget) {
+        return; // If the widget isn't on this page, do nothing.
+    }
+
+    const ratingLabels = ratingWidget.querySelectorAll('label');
+
+    // This function adds or removes the '.selected' class to color the stars.
+    const updateStars = (selectedValue) => {
+        ratingLabels.forEach(label => {
+            const starValue = parseInt(label.htmlFor.replace('star', ''));
+            // A simpler way to add/remove the class based on a condition.
+            label.classList.toggle('selected', starValue <= selectedValue);
+        });
+    };
+
+    // --- NEW LOGIC: We now listen for clicks on the LABELS (the stars) ---
+    ratingLabels.forEach(label => {
+        label.addEventListener('click', function(event) {
+            // Find the hidden radio button that corresponds to this label.
+            const clickedInput = document.getElementById(this.htmlFor);
+            if (clickedInput) {
+                // MANUALLY check the radio button. This makes the selection "stick".
+                clickedInput.checked = true;
+                // Update the stars immediately based on the new selection.
+                updateStars(clickedInput.value);
+            }
+        });
+
+        // The hover effect: when you mouse over a star, light it up.
+        label.addEventListener('mouseover', function() {
+            const hoverValue = parseInt(this.htmlFor.replace('star', ''));
+            updateStars(hoverValue);
+        });
+    });
+
+    // When the mouse leaves the entire widget...
+    ratingWidget.addEventListener('mouseout', () => {
+        // ...find the currently CHECKED input (the one we clicked)...
+        const checkedInput = ratingWidget.querySelector('input:checked');
+        if (checkedInput) {
+            // ...and reset the stars to match that permanent selection.
+            updateStars(checkedInput.value);
+        } else {
+            // If nothing has ever been clicked, turn all stars off.
+            updateStars(0);
+        }
+    });
+
+    // On page load, check if a star is already selected and update visuals.
+    const initiallyChecked = ratingWidget.querySelector('input:checked');
+    if (initiallyChecked) {
+        updateStars(initiallyChecked.value);
+    }
+});
         const populateCourseDetails = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const courseId = urlParams.get('courseId');
