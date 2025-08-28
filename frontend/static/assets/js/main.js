@@ -4870,7 +4870,7 @@ modalElement.addEventListener('hidden.bs.modal', event => {
   document.body.classList.remove('modal-open');
   document.body.style.overflow = '';
   document.body.style.paddingRight = '';
-});emailService.js
+});
     const courseSelect = document.getElementById('announcement-course');
     const sendBtn = document.getElementById('send-announcement-btn');
     const announcementTableBody = document.getElementById('announcements-table-body');
