@@ -40800,72 +40800,38 @@ padding: 0 10px 0 10px;
 .rbt-bookmark-btn .rbt-round-btn.active i {
     fill: #fff; /* Fills the feather icon */
 }
-
-
-
-
-
-
-
 /* CSS for the Star Rating Input */
 /* FINAL CSS to override theme's fake radio buttons */
-/* --- Corrected Star Rating CSS - Version 3 (Ensures Visibility) --- */
+/* --- Final Star Rating CSS --- */
 
-/* 1. Hides the actual radio button input */
-/* This is crucial to remove the native radio button appearance */
-#add-review-form-wrapper .rating input[type="radio"] {
-    display: none !important;
-    -webkit-appearance: none !important; /* For Safari/Chrome */
-    -moz-appearance: none !important;    /* For Firefox */
-    appearance: none !important;         /* Standard */
+#add-review-form-wrapper .rating { 
+  border: none;
+  display: inline-flex; /* Aligns stars horizontally */
+  flex-direction: row-reverse; /* Reverses order to make the hover effect work */
+  justify-content: flex-start; /* Aligns stars to the left */
 }
 
-/* 2. Styles the container for the stars */
-/* Uses flexbox to arrange stars in reverse order (5,4,3,2,1) */
-#add-review-form-wrapper .rating {
-    display: flex; /* Use flex for consistent layout */
-    flex-direction: row-reverse; /* Arranges stars from right to left (visually 1 to 5) */
-    justify-content: flex-start; /* Aligns stars to the start of the flex container */
-    gap: 0; /* Ensures no extra spacing from flexbox itself */
+/* THIS IS THE MOST IMPORTANT RULE */
+#add-review-form-wrapper .rating > input { 
+  display: none; /* Hides the ugly radio buttons */
 }
 
-/* 3. Styles each star label (the clickable area) */
-/* Resetting problematic theme styles and applying star color/spacing */
-#add-review-form-wrapper .rating label {
-    color: #d1d1d1; /* Default grey color for unselected stars */
-    cursor: pointer;
-    transition: color 0.2s ease;
-    
-    /* Ensure the label is a block element to properly contain the star */
-    display: block; 
-    
-    /* Crucial for spacing and making the star visible */
-    padding: 0 5px; /* Adjust horizontal spacing between stars as needed */
-    font-size: 24px; /* Size of the star icon */
-
-    /* Reset potential conflicting theme styles */
-    position: relative; /* Can be relative, absolute, or static */
-    line-height: 1; /* Prevents extra vertical space */
-    height: 24px; /* Ensure a consistent height for the label */
-    width: 24px; /* Ensure a consistent width for the label */
-    text-align: center; /* Center the star within its label */
+#add-review-form-wrapper .rating > label {
+  color: #d1d1d1; /* Color of an unselected star */
+  cursor: pointer;
+  font-size: 28px; /* Size of the star */
+  padding: 0 4px; /* Space between stars */
+  transition: color 0.2s;
 }
 
-/* 4. Generates the star character using a pseudo-element */
-/* This is where the actual star '★' comes from */
-#add-review-form-wrapper .rating label::before {
-    content: '★'; /* The star character */
-    font-family: initial !important; /* Prevent icon fonts from overriding */
-    display: inline-block !important; /* Ensure it's rendered and visible */
-    font-size: 24px; /* Match label font-size */
-    line-height: 1; /* Important for vertical alignment */
+/* This creates the star character */
+#add-review-form-wrapper .rating > label::before {
+  content: '★';
 }
 
-
-/* 5. Styles for hover and checked states */
-/* Changes star color when hovered or when a higher rating is selected */
-#add-review-form-wrapper .rating label:hover,
-#add-review-form-wrapper .rating label:hover ~ label,
-#add-review-form-wrapper .rating input[type="radio"]:checked ~ label {
-    color: #ffc107; /* Gold color for selected/hovered stars */
+/* This handles the coloring magic on hover and selection */
+#add-review-form-wrapper .rating > input:checked ~ label,
+#add-review-form-wrapper .rating:not(:checked) > label:hover,
+#add-review-form-wrapper .rating:not(:checked) > label:hover ~ label { 
+  color: #ffc107; /* Color of a selected or hovered star */
 }
