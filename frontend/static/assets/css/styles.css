@@ -40802,33 +40802,36 @@ padding: 0 10px 0 10px;
 }
 /* CSS for the Star Rating Input */
 /* REVISED CSS for the Star Rating Input */
+/* FINAL CORRECTED CSS for Star Rating */
 
-.rating_wrap {
-    margin-bottom: 20px;
-}
 .rating_wrap .rating {
-    /* These three lines are the most important for the layout */
     display: inline-flex;
-    flex-direction: row-reverse;
+    flex-direction: row-reverse; /* This is crucial for the hover effect */
     justify-content: flex-end;
 }
-.rating_wrap .rating input {
-    display: none; /* Hide the actual radio buttons */
-}
-.rating_wrap .rating label {
-    font-size: 24px;
-    color: #d1d1d1; /* A slightly better default gray */
-    cursor: pointer;
-    transition: color 0.2s ease;
-    padding: 0 2px;
-}
-.rating_wrap .rating label:before {
-    content: '★'; /* The star character */
+
+/* This is a more specific rule to hide the inputs */
+.rating_wrap .rating input[type="radio"] {
+    display: none;
 }
 
-/* This single, powerful rule handles all coloring for hover and selection */
-.rating_wrap .rating:hover label,
+.rating_wrap .rating label {
+    font-size: 24px;
+    color: #d1d1d1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 0 2px; /* A small padding is better than 15px */
+}
+
+.rating_wrap .rating label:before {
+    content: '★';
+}
+
+/* This is the corrected hover/selection logic. 
+It removes the faulty rule that selected all stars at once.
+*/
+.rating_wrap .rating label:hover,
 .rating_wrap .rating label:hover ~ label,
 .rating_wrap .rating input:checked ~ label {
-    color: #ffc107; /* The yellow color for stars */
+    color: #ffc107;
 }
