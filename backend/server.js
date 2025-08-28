@@ -1459,11 +1459,11 @@ const nodemailer = require('nodemailer');
 
 
 // Configure Multer for file uploads
-const upload = multer({ dest: 'uploads/' }); // Creates a temporary 'uploads' folder
+const announcementUpload = multer({ dest: 'uploads/' });
 
 // --- ADD THIS NEW ANNOUNCEMENT ROUTE ---
 // It uses 'upload.single('attachment')' to handle the file
-app.post('/api/announcements', isAuthenticated, isInstructor, upload.single('attachment'), async (req, res) => {
+app.post('/api/announcements', isAuthenticated, isInstructor, announcementUpload.single('attachment'), async (req, res) => {
     try {
         const { courseId, message } = req.body;
         const instructorId = req.user.id; // From isAuthenticated middleware
