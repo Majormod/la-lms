@@ -15,6 +15,7 @@ const Course = require('./models/Course');
 const auth = require('./authMiddleware');
 const QuizResult = require('./models/QuizResult');
 const Review = require('./models/Review');
+const { sendAnnouncementEmail } = require('./emailService'); 
 
 // Using multer's .fields() method to accept up to two different files
 // In server.js
@@ -1448,6 +1449,69 @@ app.get('/api/courses/:courseId/enrollment-status', auth, async (req, res) => {
     } catch (error) {
         console.error("Enrollment status check error:", error);
         res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+// Add these imports at the top of your server.js
+const multer = require('multer');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
+
+// Configure Multer for file uploads
+const upload = multer({ dest: 'uploads/' }); // Creates a temporary 'uploads' folder
+
+// --- ADD THIS NEW ANNOUNCEMENT ROUTE ---
+// It uses 'upload.single('attachment')' to handle the file
+app.post('/api/announcements', isAuthenticated, isInstructor, upload.single('attachment'), async (req, res) => {
+    try {
+        const { courseId, message } = req.body;
+        const instructorId = req.user.id; // From isAuthenticated middleware
+
+        // 1. Find the course and all enrolled students
+        const course = await Course.findById(courseId).populate('students');
+        if (!course || course.instructor.toString() !== instructorId) {
+            return res.status(403).json({ success: false, message: 'You are not the instructor of this course.' });
+        }
+        
+        // 2. Save the announcement to the database
+        const announcement = new Announcement({
+            course: courseId,
+            instructor: instructorId,
+            message: message,
+            // You could save attachment path here if needed:
+            // attachmentPath: req.file ? req.file.path : null 
+        });
+        await announcement.save();
+
+        // 3. Send emails to all students
+        if (course.students && course.students.length > 0) {
+            const studentEmails = course.students.map(student => student.email);
+            const instructor = await User.findById(instructorId);
+            const instructorName = `${instructor.firstName} ${instructor.lastName}`;
+                    sendAnnouncementEmail(studentEmails, instructorName, course.title, message, req.file);
+
+            // Send email in the background
+            sendAnnouncementEmail(studentEmails, instructorName, course.title, message, req.file);
+        }
+
+        res.json({ success: true, message: 'Announcement sent successfully.' });
+
+    } catch (error) {
+        console.error('Error sending announcement:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+// --- ADD THIS NEW ROUTE TO GET ANNOUNCEMENTS FOR THE TABLE ---
+app.get('/api/instructors/:instructorId/announcements', isAuthenticated, async (req, res) => {
+    try {
+        const announcements = await Announcement.find({ instructor: req.params.instructorId })
+            .sort({ createdAt: -1 }) // Sort by newest first
+            .populate('course', 'title'); // Get course title
+        res.json({ success: true, announcements });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
 

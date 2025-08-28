@@ -4859,6 +4859,18 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
     const addAnnouncementBtn = document.querySelector('.rbt-callto-action .rbt-btn');
     const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
+    // --- ADD THIS CODE BLOCK BELOW IT ---
+const modalElement = document.getElementById('addAnnouncementModal');
+modalElement.addEventListener('hidden.bs.modal', event => {
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.remove();
+  }
+  // Also ensure the body is scrollable again
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+});emailService.js
     const courseSelect = document.getElementById('announcement-course');
     const sendBtn = document.getElementById('send-announcement-btn');
     const announcementTableBody = document.getElementById('announcements-table-body');
