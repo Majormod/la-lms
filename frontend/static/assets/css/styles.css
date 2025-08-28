@@ -40801,13 +40801,15 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
+/* REVISED CSS for the Star Rating Input */
+
 .rating_wrap {
-    text-align: left;
     margin-bottom: 20px;
 }
 .rating_wrap .rating {
+    /* These three lines are the most important for the layout */
     display: inline-flex;
-    flex-direction: row-reverse; /* This makes the stars fill from left to right */
+    flex-direction: row-reverse;
     justify-content: flex-end;
 }
 .rating_wrap .rating input {
@@ -40815,25 +40817,18 @@ padding: 0 10px 0 10px;
 }
 .rating_wrap .rating label {
     font-size: 24px;
-    color: #e0e0e0; /* Color for an empty star */
+    color: #d1d1d1; /* A slightly better default gray */
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color 0.2s ease;
     padding: 0 2px;
 }
 .rating_wrap .rating label:before {
-    content: '★'; /* Unicode star character */
+    content: '★'; /* The star character */
 }
 
-/* This styles the stars on hover */
-.rating_wrap .rating:hover label {
-    color: #ffc107; /* Yellow hover color */
-}
-/* This keeps the stars to the left of the hovered star also yellow */
-.rating_wrap .rating label:hover ~ label {
-    color: #ffc107;
-}
-
-/* This styles the selected stars */
+/* This single, powerful rule handles all coloring for hover and selection */
+.rating_wrap .rating:hover label,
+.rating_wrap .rating label:hover ~ label,
 .rating_wrap .rating input:checked ~ label {
-    color: #ffc107; /* Yellow selected color */
+    color: #ffc107; /* The yellow color for stars */
 }
