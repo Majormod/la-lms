@@ -4253,7 +4253,7 @@ if (window.location.pathname.includes('course-details.html')) {
         fetchAndDisplayReviews(1);
     });
 }
-/*
+*/
 
 
 }; // This is the end of the handlePageLogic function
