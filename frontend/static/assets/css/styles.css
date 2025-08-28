@@ -40802,7 +40802,6 @@ padding: 0 10px 0 10px;
 }
 /* --- FINAL CSS OVERRIDE FOR STAR RATING --- */
 /* FINAL, SIMPLIFIED CSS FOR STAR RATING */
-
 /* 1. Set up the layout */
 #review-form .rating {
     display: inline-flex;
