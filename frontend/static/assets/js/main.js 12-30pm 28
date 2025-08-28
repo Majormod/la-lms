@@ -3299,127 +3299,398 @@ if (editCourseForm) {
 // =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
 // =================================================================
-// In main.js - Replace your entire 'course-details.html' block with this.
-
 if (window.location.pathname.includes('course-details.html')) {
 
-    document.addEventListener('DOMContentLoaded', () => {
+    /**
+     * NEW HELPER FUNCTION: Renders all contents of an episode (lessons AND quizzes).
+     * This replaces your old 'renderLessons' function.
+     */
+    function renderEpisodeContents(episode, courseId) {
+        // Combine lessons and quizzes into a single array, adding a 'type' property.
+        const lessons = episode.lessons ? episode.lessons.map(item => ({ ...item, type: 'lesson' })) : [];
+        const quizzes = episode.quizzes ? episode.quizzes.map(item => ({ ...item, type: 'quiz' })) : [];
+        const contents = [...lessons, ...quizzes];
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const courseId = urlParams.get('courseId');
+        if (contents.length === 0) {
+            return '<p class="text-muted ps-4">No content in this topic yet.</p>';
+        }
 
-        if (!courseId) {
-            document.body.innerHTML = '<h1>Error: Course ID is missing.</h1>';
+        // Map over the combined array and render the correct HTML based on 'type'.
+        return `
+            <ul class="rbt-course-main-content liststyle">
+                ${contents.map(content => {
+                    if (content.type === 'lesson') {
+                        return `
+                            <li>
+                                <a href="lesson.html?courseId=${courseId}&lessonId=${content._id}">
+                                    <div class="course-content-left">
+                                        <i class="feather-${content.vimeoUrl ? 'play-circle' : 'file-text'}"></i>
+                                        <div class="title-summary-wrapper">
+                                            <span class="text">${content.title}</span>
+                                            ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="course-content-right">
+                                        ${content.duration ? `<span class="min-lable">${content.duration}</span>` : ''}
+                                        ${content.isPreview ? '<span class="rbt-badge-5 bg-primary-opacity">Preview</span>' : ''}
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    } else if (content.type === 'quiz') {
+                        return `
+                            <li>
+                                <a href="lesson.html?courseId=${courseId}&quizId=${content._id}">
+                                    <div class="course-content-left">
+                                        <i class="feather-help-circle"></i>
+                                        <div class="title-summary-wrapper">
+                                            <span class="text">${content.title}</span>
+                                            ${content.summary ? `<small class="text-muted">${content.summary}</small>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="course-content-right">
+                                        <span class="min-lable">${content.questions.length} Questions</span>
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    }
+                }).join('')}
+            </ul>
+        `;
+    }
+
+    /**
+     * MODIFIED: This function builds the entire accordion using the new helper function.
+     * This replaces your old 'renderCourseContent' function.
+     */
+    function renderCourseContent(episodes, courseId) {
+        const accordionContainer = document.querySelector('#coursecontent .rbt-accordion-02.accordion');
+        if (!accordionContainer || !episodes) {
             return;
         }
 
-        // ==========================================================
-        // --- 1. ALL FUNCTION DEFINITIONS ---
-        // By defining all functions here, they are available to all other code inside this block.
-        // ==========================================================
+        accordionContainer.innerHTML = ''; // Clear existing static content
 
-        // --- Main Course Content Functions ---
+        episodes.forEach((episode, index) => {
+            const episodeElement = document.createElement('div');
+            episodeElement.className = 'accordion-item card';
+            
+            const lessonCount = episode.lessons ? episode.lessons.length : 0;
+            const quizCount = episode.quizzes ? episode.quizzes.length : 0;
+            const totalContentCount = lessonCount + quizCount;
+            
+            episodeElement.innerHTML = `
+                <h2 class="accordion-header card-header" id="headingTwo${index}">
+                    <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" aria-expanded="${index === 0}">
+                        <div class="title-summary-wrapper">
+                            <span>${episode.title}</span>
+                            ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
+                        </div>
+                        <span class="rbt-badge-5 ml--10">${totalContentCount} Item${totalContentCount !== 1 ? 's' : ''}</span>
+                    </button>
+                </h2>
+                <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="headingTwo${index}">
+                    <div class="accordion-body card-body pr--0">
+                        ${renderEpisodeContents(episode, courseId)}
+                    </div>
+                </div>
+            `;
+            accordionContainer.appendChild(episodeElement);
+
+            // =================================================================
+    // --- STEP 1: PASTE THE NEW REVIEW FUNCTIONS BELOW ---
+    // =================================================================
+
+    const fetchAndDisplayReviews = (page = 1) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const reviewsListContainer = document.getElementById('reviews-list-container');
+        const paginationContainer = document.getElementById('reviews-pagination-container');
+
+        if (!reviewsListContainer || !paginationContainer) return;
+        
+        reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
+        fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    reviewsListContainer.innerHTML = '';
+                    if (data.reviews.length > 0) {
+                        data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
+                        renderPaginationControls(data.pagination, paginationContainer);
+                    } else {
+                        reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
+                    }
+                }
+            }).catch(error => {
+                console.error('Error fetching course reviews:', error);
+                reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`;
+            });
+    };
+
+    // In main.js, inside the if...('course-details.html') block
+
+// REPLACE the placeholder 'renderReview' with this full function
+const renderReview = (review) => {
+    const studentName = `${review.student.firstName} ${review.student.lastName}`;
+    const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
+    const reviewDate = new Date(review.createdAt).toLocaleDateString();
+    let ratingHTML = '';
+    for (let i = 0; i < review.rating; i++) { ratingHTML += `<a href="#"><i class="fa fa-star"></i></a>`; }
+    for (let i = review.rating; i < 5; i++) { ratingHTML += `<a href="#"><i class="fa-regular fa-star"></i></a>`; }
+
+    return `
+    <div class="rbt-course-review about-author">
+        <div class="media">
+            <div class="thumbnail"><a href="#"><img src="${studentAvatar}" alt="${studentName}"></a></div>
+            <div class="media-body">
+                <div class="author-info">
+                    <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5>
+                    <div class="rating">${ratingHTML}</div>
+                </div>
+                <div class="content">
+                    <p class="description">${review.comment || ''}</p>
+                    <span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+};
+
+// REPLACE the placeholder 'renderPaginationControls' with this full function
+const renderPaginationControls = (pagination, container) => {
+    container.innerHTML = '';
+    if (pagination.totalPages <= 1) return;
+    container.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
+    for (let i = 1; i <= pagination.totalPages; i++) {
+        container.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+    }
+    container.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
+};
+
+// REPLACE the placeholder 'checkEnrollmentAndHandleReviewForm' with this full function
+const checkEnrollmentAndHandleReviewForm = async () => {
+    const token = localStorage.getItem('lmsToken');
+    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    if (!token || !reviewFormWrapper || !courseId) return;
+
+    reviewFormWrapper.style.display = 'block';
+    const reviewForm = document.getElementById('review-form');
+    reviewForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+        const comment = document.getElementById('review-comment').value;
+        if (!rating) { alert('Please select a star rating.'); return; }
+        try {
+            const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ rating, comment })
+            });
+            const submitResult = await submitResponse.json();
+            if (submitResult.success) {
+                alert('Thank you for your review!');
+                reviewFormWrapper.style.display = 'none';
+                fetchAndDisplayReviews(1);
+            } else { alert('Error: ' + submitResult.message); }
+        } catch (submitError) {
+            console.error('Error submitting review:', submitError);
+            alert('An error occurred while submitting your review.');
+        }
+    });
+};
+
+        });
+    } // End of renderCourseContent
+    // Your original page-loading logic, now correctly calling the updated render functions.
+    document.addEventListener('DOMContentLoaded', () => {
         const populateCourseDetails = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('courseId');
+            if (!courseId) {
+                document.body.innerHTML = '<h1>Error: Course ID is missing.</h1>';
+                return;
+            };
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
                 const result = await response.json();
+
                 if (result.success) {
                     const course = result.course;
+
+                    // --- 1. Populate Header Section ---
                     document.getElementById('course-title').textContent = course.title;
                     document.getElementById('course-subtitle').textContent = course.description.substring(0, 100) + '...';
-                    // ... (and the rest of your original logic to populate the page) ...
-                    renderCourseContent(course.episodes, course._id);
-                }
-            } catch (error) { console.error('Error fetching course details:', error); }
-        };
-
-        const renderEpisodeContents = (episode, courseId) => { /* ... your full renderEpisodeContents function ... */ };
-        const renderCourseContent = (episodes, courseId) => { /* ... your full renderCourseContent function ... */ };
-
-
-        // --- Reviews Section Functions ---
-        const fetchAndDisplayReviews = (page = 1) => {
-            const reviewsListContainer = document.getElementById('reviews-list-container');
-            const paginationContainer = document.getElementById('reviews-pagination-container');
-            if (!reviewsListContainer || !paginationContainer) return;
-            
-            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
-            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        reviewsListContainer.innerHTML = '';
-                        if (data.reviews.length > 0) {
-                            data.reviews.forEach(review => reviewsListContainer.innerHTML += renderReview(review));
-                            renderPaginationControls(data.pagination, paginationContainer);
-                        } else {
-                            reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
+                    
+                    // --- 2. Populate Instructor Info & Avatar ---
+                    if (course.instructor) {
+                        const instructorName = `${course.instructor.firstName} ${course.instructor.lastName}`;
+                        document.getElementById('instructor-info').innerHTML = `By <a href="#">${instructorName}</a>`;
+                        const instructorAvatar = document.getElementById('instructor-avatar');
+                        if (instructorAvatar && course.instructor.avatar) {
+                            instructorAvatar.src = `/${course.instructor.avatar}`;
+                            instructorAvatar.alt = instructorName;
                         }
                     }
-                }).catch(error => console.error('Error fetching course reviews:', error));
-        };
-        
-        const renderReview = (review) => {
-            const studentName = `${review.student.firstName} ${review.student.lastName}`;
-            const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
-            const reviewDate = new Date(review.createdAt).toLocaleDateString();
-            let ratingHTML = '';
-            for (let i = 0; i < review.rating; i++) { ratingHTML += `<a href="#"><i class="fa fa-star"></i></a>`; }
-            for (let i = review.rating; i < 5; i++) { ratingHTML += `<a href="#"><i class="fa-regular fa-star"></i></a>`; }
-            return `<div class="rbt-course-review about-author"><div class="media"><div class="thumbnail"><a href="#"><img src="${studentAvatar}" alt="${studentName}"></a></div><div class="media-body"><div class="author-info"><h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5><div class="rating">${ratingHTML}</div></div><div class="content"><p class="description">${review.comment || ''}</p><span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span></div></div></div></div>`;
-        };
 
-        const renderPaginationControls = (pagination, container) => {
-            container.innerHTML = '';
-            if (pagination.totalPages <= 1) return;
-            container.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
-            for (let i = 1; i <= pagination.totalPages; i++) {
-                container.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+                    // --- 3. Populate Video/Thumbnail ---
+                    document.getElementById('course-thumbnail').src = `/${course.thumbnail}`;
+                    const sidebarImage = document.getElementById('sidebar-thumbnail');
+                    if (sidebarImage) {
+                        sidebarImage.src = `/${course.thumbnail}`;
+                    }
+                    if (course.previewVideoUrl) {
+                        document.getElementById('video-preview-link').href = course.previewVideoUrl;
+                        const sidebarVideoLink = document.getElementById('sidebar-video-link');
+                        if (sidebarVideoLink) {
+                            sidebarVideoLink.href = course.previewVideoUrl;
+                        }
+                    }
+
+                    // --- 4. Populate Main Content Overview ---
+                    const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
+                    if (overviewContainer) {
+                        overviewContainer.innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3">Overview</h4></div><p>${course.description}</p>`;
+                    }
+
+                    // --- 5. Populate Course Content Accordion (THIS NOW WORKS FOR QUIZZES) ---
+                    renderCourseContent(course.episodes, course._id);
+
+                    // --- 6. Display Certificate Information ---
+                    const certificateSection = document.getElementById('course-certificate-section');
+                    const certificateImage = document.getElementById('course-certificate');
+                    const certificateInfo = document.getElementById('certificate-info');
+                    if (certificateSection && certificateImage && certificateInfo) {
+                        if (course.certificateTemplate && course.certificateTemplate !== 'none') {
+                            certificateSection.style.display = 'block';
+                            const templateImages = { 'option1': 'assets/images/icons/certificate-none.svg', 'option2': 'assets/images/others/preview-01.png', 'option3': 'assets/images/others/preview-02.png', 'option4': 'assets/images/others/preview-03.png', 'option5': 'assets/images/others/preview-04.png', 'option6': 'assets/images/others/preview-05.png', 'optionport1': 'assets/images/icons/certificate-none-portrait.svg', 'optionport2': 'assets/images/others/preview-port-01.png', 'optionport3': 'assets/images/others/preview-port-02.png', 'optionport4': 'assets/images/others/preview-port-03.png', 'optionport5': 'assets/images/others/preview-port-05.png', 'optionport6': 'assets/images/others/preview-port-06.png' };
+                            const imagePath = templateImages[course.certificateTemplate];
+                            if (imagePath) {
+                                certificateImage.src = imagePath;
+                                certificateImage.alt = 'Course Completion Certificate';
+                            }
+                            certificateInfo.textContent = `This course includes a ${course.certificateOrientation} certificate upon completion.`;
+                        } else {
+                            certificateSection.style.display = 'none';
+                        }
+                    }
+                    
+                    // --- 7. Populate Sidebar Price and Button ---
+                    const priceContainer = document.getElementById('my-custom-price-display');
+                    const buttonContainer = document.querySelector('.add-to-card-button');
+                    if (priceContainer) {
+                        let priceHtml = '';
+                        if (course.price && course.price > 0) {
+                            const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                            priceHtml = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
+                            if (buttonContainer) {
+                                buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient radius-round hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Add to Cart</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
+                            }
+                        } else {
+                            priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+                            if (buttonContainer) {
+                                buttonContainer.innerHTML = `<a class="rbt-btn btn-border-gradient hover-icon-reverse w-100 d-block text-center" href="#"><span class="btn-text">Enroll Now</span><span class="btn-icon"><i class="feather-arrow-right"></i></span></a>`;
+                            }
+                        }
+                        priceContainer.innerHTML = priceHtml;
+                    }
+                    
+                    // --- 8. Populate Instructor Bio Box ---
+// --- 8. Populate Instructor Bio Box ---
+const instructor = course.instructor;
+if (instructor) {
+    // MODIFIED: Targets the new, unique ID for the bio box avatar.
+    document.getElementById('instructor-bio-avatar').src = `/${instructor.avatar}` || 'assets/images/testimonial/client-03.png';
+    
+    // The rest of your logic remains the same
+    document.getElementById('instructor-name').textContent = `${instructor.firstName} ${instructor.lastName}`;
+    document.getElementById('instructor-occupation').textContent = instructor.occupation || 'Instructor';
+    document.getElementById('instructor-bio').textContent = instructor.bio || 'No biography provided.';
+
+    const socialContainer = document.getElementById('instructor-socials');
+    socialContainer.innerHTML = ''; // Clear static icons
+    if (instructor.social) {
+        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+    }
+}
+                }
+            } catch (error) {
+                console.error('Error fetching course details:', error);
+                document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
             }
-            container.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
         };
 
-        const checkEnrollmentAndHandleReviewForm = async () => {
-            const token = localStorage.getItem('lmsToken');
-            const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
-            if (!token || !reviewFormWrapper) return;
-            
-            reviewFormWrapper.style.display = 'block';
-            const reviewForm = document.getElementById('review-form');
-            reviewForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-                const comment = document.getElementById('review-comment').value;
-                if (!rating) { alert('Please select a star rating.'); return; }
-                const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ rating, comment }) });
+        populateCourseDetails();
+
+        // In main.js, inside the 'course-details.html' block and 'DOMContentLoaded' listener
+
+// REVISED: This function no longer checks for enrollment.
+const checkEnrollmentAndHandleReviewForm = async () => {
+    const token = localStorage.getItem('lmsToken');
+    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+
+    // If user is logged in, simply show the form.
+    if (token) {
+        reviewFormWrapper.style.display = 'block';
+
+        const reviewForm = document.getElementById('review-form');
+        reviewForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+            const comment = document.getElementById('review-comment').value;
+
+            if (!rating) {
+                alert('Please select a star rating.');
+                return;
+            }
+
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const courseId = urlParams.get('courseId');
+                
+                const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ rating, comment })
+                });
                 const submitResult = await submitResponse.json();
+
                 if (submitResult.success) {
                     alert('Thank you for your review!');
                     reviewFormWrapper.style.display = 'none';
-                    fetchAndDisplayReviews(1);
+                    fetchAndDisplayReviews(1); // Refresh the reviews list
+                } else {
+                    alert('Error: ' + submitResult.message);
                 }
-            });
-        };
-
-        // ==========================================================
-        // --- 2. EVENT LISTENERS ---
-        // ==========================================================
-        document.getElementById('reviews-pagination-container')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = e.target.closest('a');
-            if (!target || target.classList.contains('disabled')) return;
-            const page = target.dataset.page;
-            if (page) fetchAndDisplayReviews(parseInt(page));
+            } catch (submitError) {
+                console.error('Error submitting review:', submitError);
+                alert('An error occurred while submitting your review.');
+            }
         });
+    }
+};
 
-        // ==========================================================
-        // --- 3. INITIAL PAGE LOAD ---
-        // Now that all functions are defined, we call them to build the page.
-        // ==========================================================
-        populateCourseDetails();
-        fetchAndDisplayReviews(1);
-        checkEnrollmentAndHandleReviewForm();
-    });
+// ... keep your other functions like fetchAndDisplayReviews(), renderReview(), etc.
+
+// Make sure the initial calls at the end of your DOMContentLoaded listener are correct
+fetchAndDisplayReviews(1);
+checkEnrollmentAndHandleReviewForm();
+
+// Call this new function right after the initial review fetch
+fetchAndDisplayReviews(1);
+checkEnrollmentAndHandleReviewForm();
+
+    }); // End of DOMContentLoaded
 }
 
 // =================================================================
