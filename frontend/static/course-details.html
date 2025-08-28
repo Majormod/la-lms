@@ -1696,13 +1696,28 @@
         <div class="col-12">
             <div class="rating_wrap">
                 <h6 class="label">Your rating *</h6>
-                <div class="rating">
-                    <input type="radio" name="rating" id="rating-5" value="5"><label for="rating-5"></label>
-                    <input type="radio" name="rating" id="rating-4" value="4"><label for="rating-4"></label>
-                    <input type="radio" name="rating" id="rating-3" value="3"><label for="rating-3"></label>
-                    <input type="radio" name="rating" id="rating-2" value="2"><label for="rating-2"></label>
-                    <input type="radio" name="rating" id="rating-1" value="1"><label for="rating-1"></label>
-                </div>
+                 <p>Please rate your experience by selecting a star rating below</p>
+        
+        <div class="rating_wrap">
+            <form class="rating">
+                <input type="radio" id="star5" name="rating" value="5">
+                <label for="star5"></label>
+                
+                <input type="radio" id="star4" name="rating" value="4">
+                <label for="star4"></label>
+                
+                <input type="radio" id="star3" name="rating" value="3">
+                <label for="star3"></label>
+                
+                <input type="radio" id="star2" name="rating" value="2">
+                <label for="star2"></label>
+                
+                <input type="radio" id="star1" name="rating" value="1">
+                <label for="star1"></label>
+            </form>
+            
+            <div class="result" id="rating-result">Your rating will appear here</div>
+        </div>
             </div>
         </div>
         <div class="col-12">

@@ -40801,37 +40801,44 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* CSS for the Star Rating Input */
-/* REVISED CSS for the Star Rating Input */
-/* FINAL CORRECTED CSS for Star Rating */
-
-.rating_wrap .rating {
-    display: inline-flex;
-    flex-direction: row-reverse; /* This is crucial for the hover effect */
-    justify-content: flex-end;
-}
-
-/* This is a more specific rule to hide the inputs */
-.rating_wrap .rating input[type="radio"] {
-    display: none;
-}
-
-.rating_wrap .rating label {
-    font-size: 24px;
-    color: #d1d1d1;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    padding: 0 2px; /* A small padding is better than 15px */
-}
-
-.rating_wrap .rating label:before {
-    content: '★';
-}
-
-/* This is the corrected hover/selection logic. 
-It removes the faulty rule that selected all stars at once.
-*/
-.rating_wrap .rating label:hover,
-.rating_wrap .rating label:hover ~ label,
-.rating_wrap .rating input:checked ~ label {
-    color: #ffc107;
-}
+        .rating_wrap {
+            margin: 25px 0;
+        }
+        
+        .rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+        }
+        
+        .rating input[type="radio"] {
+            display: none;
+        }
+        
+        .rating label {
+            font-size: 40px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            padding: 0 5px;
+        }
+        
+        .rating label:before {
+            content: '★';
+        }
+        
+        /* Hover effect - color current and previous stars */
+        .rating label:hover,
+        .rating label:hover ~ label {
+            color: #ffc107;
+        }
+        
+        /* Selected state - color checked and previous stars */
+        .rating input:checked ~ label {
+            color: #ffc107;
+        }
+        
+        /* Keep color after selection when hovering */
+        .rating:not(:hover) input:checked ~ label {
+            color: #ffc107;
+        }
