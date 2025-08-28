@@ -3519,7 +3519,8 @@ const renderReview = (review) => {
                     }
                 }).catch(error => { console.error('Error fetching reviews:', error); reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`; });
         };
-        
+window.fetchAndDisplayReviews = fetchAndDisplayReviews;
+
 const ratingWidget = document.querySelector('#add-review-form-wrapper .review-form-rating');
 
 if (ratingWidget) {
