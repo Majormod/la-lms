@@ -1453,10 +1453,10 @@ app.get('/api/courses/:courseId/enrollment-status', auth, async (req, res) => {
 });
 
 // Add these imports at the top of your server.js
-const multer = require('multer');
+
 const nodemailer = require('nodemailer');
-const fs = require('fs');
-const path = require('path');
+
+
 
 // Configure Multer for file uploads
 const upload = multer({ dest: 'uploads/' }); // Creates a temporary 'uploads' folder
