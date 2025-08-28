@@ -3525,63 +3525,61 @@ if (instructor) {
 
         // In main.js, inside the 'course-details.html' block and 'DOMContentLoaded' listener
 
+// REVISED: This function no longer checks for enrollment.
 const checkEnrollmentAndHandleReviewForm = async () => {
     const token = localStorage.getItem('lmsToken');
-    if (!token) return; // Only for logged-in users
+    const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
 
-    try {
-        // Check if the user is enrolled in this course
-        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/enrollment-status`, {
-            headers: { 'x-auth-token': token }
+    // If user is logged in, simply show the form.
+    if (token) {
+        reviewFormWrapper.style.display = 'block';
+
+        const reviewForm = document.getElementById('review-form');
+        reviewForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+            const comment = document.getElementById('review-comment').value;
+
+            if (!rating) {
+                alert('Please select a star rating.');
+                return;
+            }
+
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const courseId = urlParams.get('courseId');
+                
+                const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ rating, comment })
+                });
+                const submitResult = await submitResponse.json();
+
+                if (submitResult.success) {
+                    alert('Thank you for your review!');
+                    reviewFormWrapper.style.display = 'none';
+                    fetchAndDisplayReviews(1); // Refresh the reviews list
+                } else {
+                    alert('Error: ' + submitResult.message);
+                }
+            } catch (submitError) {
+                console.error('Error submitting review:', submitError);
+                alert('An error occurred while submitting your review.');
+            }
         });
-        const data = await response.json();
-
-        if (data.success && data.isEnrolled) {
-            // If enrolled, show the review form
-            const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
-            reviewFormWrapper.style.display = 'block';
-
-            // Handle the form submission
-            const reviewForm = document.getElementById('review-form');
-            reviewForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-                const comment = document.getElementById('review-comment').value;
-
-                if (!rating) {
-                    alert('Please select a star rating.');
-                    return;
-                }
-
-                try {
-                    const submitResponse = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-auth-token': token
-                        },
-                        body: JSON.stringify({ rating, comment })
-                    });
-                    const submitResult = await submitResponse.json();
-
-                    if (submitResult.success) {
-                        alert('Thank you for your review!');
-                        reviewFormWrapper.style.display = 'none'; // Hide form after submission
-                        fetchAndDisplayReviews(1); // Refresh the reviews list on the page
-                    } else {
-                        alert('Error: ' + submitResult.message);
-                    }
-                } catch (submitError) {
-                    console.error('Error submitting review:', submitError);
-                    alert('An error occurred while submitting your review.');
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error checking enrollment status:', error);
     }
 };
+
+// ... keep your other functions like fetchAndDisplayReviews(), renderReview(), etc.
+
+// Make sure the initial calls at the end of your DOMContentLoaded listener are correct
+fetchAndDisplayReviews(1);
+checkEnrollmentAndHandleReviewForm();
 
 // Call this new function right after the initial review fetch
 fetchAndDisplayReviews(1);
