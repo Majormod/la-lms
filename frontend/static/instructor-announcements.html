@@ -1634,6 +1634,45 @@
         </svg>
     </div>
 
+    <!-- Announcement Modal -->
+<div class="rbt-default-modal modal fade" id="addAnnouncementModal" tabindex="-1" aria-labelledby="addAnnouncementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAnnouncementModalLabel">New Announcement</h5>
+                <button type="button" class="rbt-round-btn" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="feather-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="inner rbt-default-form">
+                    <form id="announcement-form">
+                        <div class="row">
+                            <div class="col-12 mb--20">
+                                <label for="announcement-course"><strong>Select Course*</strong></label>
+                                <select id="announcement-course" class="rbt-modern-select" required>
+                                    <option disabled selected value="">Loading courses...</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb--20">
+                                <label for="announcement-message"><strong>Message*</strong></label>
+                                <textarea id="announcement-message" rows="5" placeholder="Write your announcement here..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label for="announcement-attachment"><strong>Attachment (Optional)</strong></label>
+                                <input type="file" id="announcement-attachment" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="rbt-btn btn-border btn-md" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="send-announcement-btn" class="rbt-btn btn-gradient btn-md">Send Announcement</button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- JS
 ============================================ -->
     <!-- Modernizer JS -->

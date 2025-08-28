@@ -4853,6 +4853,132 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
     }
 }
 
+if (window.location.pathname.includes('instructor-announcements.html')) {
+    const user = JSON.parse(localStorage.getItem('lmsUser'));
+    const token = localStorage.getItem('lmsToken');
+
+    const addAnnouncementBtn = document.querySelector('.rbt-callto-action .rbt-btn');
+    const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
+    const courseSelect = document.getElementById('announcement-course');
+    const sendBtn = document.getElementById('send-announcement-btn');
+    const announcementTableBody = document.getElementById('announcements-table-body');
+
+    // --- 1. Fetch Instructor's Courses and Populate Dropdown ---
+    const populateCoursesDropdown = () => {
+        if (!user || user.role !== 'instructor') return;
+        
+        fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                courseSelect.innerHTML = '<option disabled selected value="">Select a course</option>';
+                data.courses.forEach(course => {
+                    courseSelect.innerHTML += `<option value="${course._id}">${course.title}</option>`;
+                });
+            } else {
+                courseSelect.innerHTML = '<option disabled selected value="">Could not load courses</option>';
+            }
+        });
+    };
+
+    // --- 2. Fetch and Display Existing Announcements ---
+    const fetchAndDisplayAnnouncements = () => {
+        if (!user || user.role !== 'instructor') return;
+        
+        fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            announcementTableBody.innerHTML = ''; // Clear table
+            if (data.success && data.announcements.length > 0) {
+                data.announcements.forEach(ann => {
+                    const date = new Date(ann.createdAt);
+                    const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                    const row = `
+                        <tr>
+                            <th>
+                                <span class="h6 mb--5">${formattedDate}</span>
+                                <p class="b3">${formattedTime}</p>
+                            </th>
+                            <td>
+                                <span class="h6 mb--5">${ann.course.title}</span>
+                                <p class="b3">${ann.message.substring(0, 100)}...</p>
+                            </td>
+                            <td>
+                                <div class="rbt-button-group justify-content-end">
+                                    <a class="rbt-btn-link left-icon" href="#"><i class="feather-trash-2"></i> Delete</a>
+                                </div>
+                            </td>
+                        </tr>`;
+                    announcementTableBody.innerHTML += row;
+                });
+            } else {
+                announcementTableBody.innerHTML = '<tr><td colspan="3">You have not sent any announcements yet.</td></tr>';
+            }
+        });
+    };
+
+    // --- 3. Handle Form Submission ---
+    sendBtn.addEventListener('click', () => {
+        const courseId = courseSelect.value;
+        const message = document.getElementById('announcement-message').value;
+        const attachment = document.getElementById('announcement-attachment').files[0];
+
+        if (!courseId || !message) {
+            alert('Please select a course and write a message.');
+            return;
+        }
+
+        sendBtn.textContent = 'Sending...';
+        sendBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('courseId', courseId);
+        formData.append('message', message);
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+
+        fetch(`${API_BASE_URL}/api/announcements`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Announcement sent successfully!');
+                announcementModal.hide();
+                document.getElementById('announcement-form').reset();
+                fetchAndDisplayAnnouncements(); // Refresh the list
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .finally(() => {
+            sendBtn.textContent = 'Send Announcement';
+            sendBtn.disabled = false;
+        });
+    });
+
+    // --- 4. Open Modal ---
+    if (addAnnouncementBtn) {
+        addAnnouncementBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            populateCoursesDropdown(); // Refresh courses list each time
+            announcementModal.show();
+        });
+    }
+    
+    // --- Initial Load ---
+    fetchAndDisplayAnnouncements();
+}
+
 // FINAL FIX: Paste this entire block at the very bottom of your main.js file.
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -4890,8 +5016,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
     }, 500); // 500 milliseconds = 0.5 second delay
 });
-
-
 
         handlePageLogic();
     };
