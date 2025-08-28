@@ -40801,43 +40801,36 @@ padding: 0 10px 0 10px;
     fill: #fff; /* Fills the feather icon */
 }
 /* --- FINAL CSS OVERRIDE FOR STAR RATING --- */
+/* FINAL, SIMPLIFIED CSS FOR STAR RATING */
 
-/* First, ensure the layout container is correct */
+/* 1. Set up the layout */
 #review-form .rating {
     display: inline-flex;
     flex-direction: row-reverse;
-    justify-content: flex-start;
 }
 
-/* Hide the actual radio input element so it can't interfere */
+/* 2. Hide the real radio button */
 #review-form .rating input[type="radio"] {
     display: none !important;
 }
 
-/* This rule targets the label and is designed to BEAT the theme's rule */
+/* 3. Style our label and override the theme's padding */
 #review-form .rating label {
-    /* --- Style Resets --- */
-    padding-left: 2px !important;   /* CRITICAL: Overrides the theme's 20px padding */
-    font-size: 24px !important;     /* Set our own font size */
-    line-height: 1 !important;      /* Reset line height */
-    position: static !important;    /* Override the theme's 'position: relative' */
-    font-weight: normal !important;
-
-    /* --- Our Star Styles --- */
+    padding: 0 2px !important;   /* CRITICAL: This removes the theme's 20px padding */
+    font-size: 24px;
     color: #d1d1d1;
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
-/* This forces the label's pseudo-element to be OUR star, not the theme's radio button */
+/* 4. Force the label's content to be a star */
 #review-form .rating label::before {
-    content: '★' !important;
-    font-family: initial !important; /* Ignore any special icon fonts from the theme */
+    content: '★';
 }
 
-/* This is the hover and selection logic, with !important to ensure it wins */
+/* 5. Handle the hover and selection coloring */
 #review-form .rating label:hover,
 #review-form .rating label:hover ~ label,
 #review-form .rating input:checked ~ label {
-    color: #ffc107 !important;
+    color: #ffc107;
 }
