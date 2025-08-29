@@ -4764,8 +4764,8 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
     const populateCoursesDropdown = () => {
         fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
+    headers: { 'x-auth-token': token }
+})
         .then(res => res.json())
         .then(data => {
             if (data.success && data.courses) {
@@ -4783,9 +4783,9 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
     };
 
     const fetchAndDisplayAnnouncements = () => {
-        fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
+fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
+    headers: { 'x-auth-token': token }
+})
         .then(res => res.json())
         .then(data => {
             announcementTableBody.innerHTML = '';
