@@ -5037,26 +5037,46 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
             }
         };
 
-        const populateInstructor = (instructor) => {
-            const container = document.getElementById('intructor');
-            if (!container || !instructor) return;
-            container.innerHTML = `
-                <div class="about-author border-0 pb--0 pt--0">
-                    <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
-                    <div class="media align-items-center">
-                        <div class="thumbnail"><a href="#"><img src="/${instructor.avatar}" alt="Author Images"></a></div>
-                        <div class="media-body">
-                            <div class="author-info">
-                                <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${instructor.firstName} ${instructor.lastName}</a></h5>
-                                <span class="b3 subtitle">${instructor.occupation || ''}</span>
-                            </div>
-                            <div class="content">
-                                <p class="description">${instructor.bio || ''}</p>
-                            </div>
-                        </div>
+// REPLACE your existing populateInstructor function with this one
+
+const populateInstructor = (instructor) => {
+    const container = document.getElementById('intructor');
+    if (!container || !instructor) return;
+
+    // NOTE: The student/review/course counts are static for now, as that data isn't on the instructor object yet.
+    container.innerHTML = `
+        <div class="about-author border-0 pb--0 pt--0">
+            <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
+            <div class="media align-items-center">
+                <div class="thumbnail">
+                    <a href="#"><img id="instructor-bio-avatar" src="/${instructor.avatar}" alt="Author Images"></a>
+                </div>
+                <div class="media-body">
+                    <div class="author-info">
+                        <h5 class="title"><a id="instructor-name" class="hover-flip-item-wrapper" href="#">${instructor.firstName} ${instructor.lastName}</a></h5>
+                        <span id="instructor-occupation" class="b3 subtitle">${instructor.occupation || ''}</span>
+                        <ul class="rbt-meta mb--20 mt--10">
+                            <li><i class="fa fa-star color-warning"></i>4.9 Rating</li>
+                            <li><i class="feather-users"></i>500 Students</li>
+                            <li><a href="#"><i class="feather-video"></i>5 Courses</a></li>
+                        </ul>
                     </div>
-                </div>`;
-        };
+                    <div class="content">
+                        <p id="instructor-bio" class="description">${instructor.bio || ''}</p>
+                        <ul id="instructor-socials" class="social-icon social-default icon-naked justify-content-start"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    // This part adds the social media icons dynamically
+    const socialContainer = document.getElementById('instructor-socials');
+    if (socialContainer && instructor.social) {
+        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+    }
+};
 
         // =================================================================
         // ===== MAIN FETCH AND EXECUTION LOGIC =====
@@ -5079,7 +5099,19 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
             renderCourseCurriculum(course.episodes || []);
             populateInstructor(course.instructor);
             // You can add a populateSidebar(course) function here as well if needed
+            // --- ADD THIS NEW LOGIC ---
+            const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+            if (user && user.role === 'student') {
+                // Later, you can add a check here to see if the student is enrolled.
+                // For now, we'll just show the form if they are a student.
+                const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+                if (reviewFormWrapper) {
+                    reviewFormWrapper.style.display = 'block';
+                }
+            }
+            // --- END OF NEW LOGIC ---
         })
+        
         .catch(error => {
             console.error('Error fetching MasterClass details:', error);
             document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
