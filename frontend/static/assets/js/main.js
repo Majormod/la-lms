@@ -4966,7 +4966,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get the course ID from the URL (e.g., .../details.html?id=COURSE_ID)
     const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('id');
+    const courseId = urlParams.get('courseId');
 
     if (!courseId) {
         reviewsListContainer.innerHTML = '<p>Error: Course ID not found in URL.</p>';
