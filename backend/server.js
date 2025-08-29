@@ -324,7 +324,7 @@ app.post('/api/instructor/courses', auth, upload.single('thumbnail'), async (req
         }
 
         // 1. Receive the new fields from the form data
-const { title, slug, description, price, originalPrice, difficultyLevel, maxStudents, isPublic, isQAEnabled, previewVideoUrl } = req.body;
+const { title, slug, description, price, originalPrice, difficultyLevel, maxStudents, isPublic, isQAEnabled, previewVideoUrl, isMasterclass } = req.body;
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Course thumbnail is required.' });
         }
