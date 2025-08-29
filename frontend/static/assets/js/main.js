@@ -5254,7 +5254,7 @@ const populateInstructor = (instructor) => {
         // ===== MAIN FETCH AND EXECUTION LOGIC =====
         // =================================================================
 
-        fetch(`${API_BASE_URL}/api/courses/preview/${courseId}`, {
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
             headers: { 'x-auth-token': token }
         })
         .then(res => res.json())
