@@ -2699,8 +2699,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
                     console.error('Error parsing startDate:', e);
                 }
             }
-            // --- ADD THIS ---
-updatePreviewButton(course.isMasterclass, course._id); 
+            
             // Language - handle both array and string
             if (course.language && course.language.length > 0) {
                 const languageSelect = document.getElementById('language');
@@ -3192,6 +3191,7 @@ if (editCourseForm) {
 }
     }; // End of window.onload
 }
+
 // =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
 // =================================================================
