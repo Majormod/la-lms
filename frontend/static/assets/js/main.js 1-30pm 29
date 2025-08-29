@@ -2677,10 +2677,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
                 duration: course.duration,
                 requirements: course.requirements
             });
-const thumbnailPreview = document.getElementById('createfileImage');
-if (thumbnailPreview && course.thumbnail) {
-    thumbnailPreview.src = `/${course.thumbnail}`;
-}
+
             // Basic fields
             if (courseTitleInput) courseTitleInput.value = course.title || '';
             if (slugInput) slugInput.value = course.slug || '';
@@ -2688,6 +2685,7 @@ if (thumbnailPreview && course.thumbnail) {
             if (priceInput) course.originalPrice ? priceInput.value = course.originalPrice : '';
             if (discountedPriceInput) course.price ? discountedPriceInput.value = course.price : '';
             if (videoUrlInput) videoUrlInput.value = course.previewVideoUrl || '';
+            if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
             if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
             
             // Additional Information fields - FIXED
@@ -2701,8 +2699,7 @@ if (thumbnailPreview && course.thumbnail) {
                     console.error('Error parsing startDate:', e);
                 }
             }
-            // --- ADD THIS ---
-updatePreviewButton(course.isMasterclass, course._id); 
+            
             // Language - handle both array and string
             if (course.language && course.language.length > 0) {
                 const languageSelect = document.getElementById('language');
