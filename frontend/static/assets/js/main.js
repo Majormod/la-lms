@@ -5067,43 +5067,64 @@ document.addEventListener('DOMContentLoaded', () => {
      * Handles the submission of a new review.
      * @param {Event} event - The form submission event.
      */
-    const handleReviewSubmit = async (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem('lmsToken'); // **IMPORTANT**: Assumes JWT is stored under this key
+const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem('lmsToken'); // Using 'lmsToken' to be consistent
 
-        if (!token) {
-            alert('You must be logged in to submit a review.');
-            return;
+    if (!token) {
+        alert('You must be logged in to submit a review.');
+        return;
+    }
+
+    // --- START OF FIX ---
+
+    // 1. Correctly find the CHECKED radio button to get the rating
+    const ratingInput = reviewForm.querySelector('input[name="rating"]:checked');
+    
+    // 2. Correctly find the comment textarea by its proper ID
+    const commentInput = reviewForm.querySelector('#review-comment');
+
+    // --- END OF FIX ---
+
+    // Get the values, and add a check in case no rating was selected
+    const rating = ratingInput ? ratingInput.value : null;
+    const comment = commentInput ? commentInput.value : '';
+
+    if (!rating) {
+        alert('Please select a star rating.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/courses/${courseId}/reviews`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ rating, comment })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to submit review.');
         }
 
-        const rating = reviewForm.querySelector('#rating').value;
-        const comment = reviewForm.querySelector('#comment').value;
+        // Success!
+        reviewForm.reset();
+        // Manually reset the visual stars since the form's reset doesn't trigger our JS
+        document.querySelectorAll('.review-form-rating label').forEach(label => {
+            label.classList.remove('selected');
+        });
 
-        try {
-            const response = await fetch(`/api/courses/${courseId}/reviews`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ rating, comment })
-            });
+        fetchAndDisplayReviews(1); // Refresh reviews
+        alert('Review submitted successfully!');
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to submit review.');
-            }
-
-            // Success!
-            reviewForm.reset();
-            fetchAndDisplayReviews(1); // Refresh reviews, showing the new one on the first page
-            alert('Review submitted successfully!');
-
-        } catch (error) {
-            console.error('Error submitting review:', error);
-            alert(`Error: ${error.message}`);
-        }
-    };
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
 
 
     // --- 3. EVENT LISTENERS & INITIALIZATION ---
