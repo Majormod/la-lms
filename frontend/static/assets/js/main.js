@@ -1932,6 +1932,17 @@ let courseData = null;
 let currentEditingEpisodeId = null;
 let currentEditingLessonId = null;
 
+const updatePreviewButton = (isMasterclass, courseId) => {
+    const previewBtn = document.getElementById('preview-course-btn');
+    if (!previewBtn) return;
+
+    if (isMasterclass) {
+        previewBtn.setAttribute('data-href', `masterclass-details.html?courseId=${courseId}`);
+    } else {
+        previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
+    }
+};
+
 $(document).ready(function () {
     $('#language').selectpicker();
 });
@@ -1982,16 +1993,7 @@ const newFilesListContainer = document.getElementById('new-files-list');
 const fileInput = document.getElementById('lesson-exercise-files');
 // main.js -> edit-course.html block
 
-const updatePreviewButton = (isMasterclass, courseId) => {
-    const previewBtn = document.getElementById('preview-course-btn');
-    if (!previewBtn) return;
 
-    if (isMasterclass) {
-        previewBtn.setAttribute('data-href', `masterclass-details.html?courseId=${courseId}`);
-    } else {
-        previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
-    }
-};
 // Clear any previous state
 existingFilesContainer.innerHTML = '';
 newFilesListContainer.innerHTML = '';
