@@ -4307,26 +4307,18 @@ if (window.location.pathname.includes('explore-courses.html')) {
 
         // --- Function to Create a Single Course Card ---
         // CHANGED: Now accepts a 'userWishlist' set to determine the icon state
-// --- Function to Create a Single Course Card ---
 const createCourseCard = (course, userWishlist = new Set()) => {
-    // =================================================================
-    // STEP 1: Add this logic at the top of the function
-    // =================================================================
     let detailPageUrl;
     if (course.isMasterclass) {
-        // If it's a masterclass, use the masterclass details page
         detailPageUrl = `the-masterclass-details.html?courseId=${course._id}`;
     } else {
-        // Otherwise, use the standard course details page
         detailPageUrl = `course-details.html?courseId=${course._id}`;
     }
-    // =================================================================
 
     const isWishlisted = userWishlist.has(course._id);
     const activeClass = isWishlisted ? 'active' : '';
 
     let priceHtml = '';
-    // ... (rest of the price logic is fine) ...
     if (course.isFree || course.price === 0) {
         priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
     } else {
@@ -4336,7 +4328,6 @@ const createCourseCard = (course, userWishlist = new Set()) => {
     }
 
     let discountBadgeHtml = '';
-    // ... (rest of the discount logic is fine) ...
     if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
         const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
         discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
@@ -4350,9 +4341,6 @@ const createCourseCard = (course, userWishlist = new Set()) => {
         <div class="course-grid-3" data-course-id="${course._id}">
             <div class="rbt-card variation-01 rbt-hover">
                 <div class="rbt-card-img">
-                    {/* ================================================== */}
-                    {/* STEP 2: Use the new 'detailPageUrl' variable here */}
-                    {/* ================================================== */}
                     <a href="${detailPageUrl}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
                 </div>
                 <div class="rbt-card-body">
@@ -4365,7 +4353,6 @@ const createCourseCard = (course, userWishlist = new Set()) => {
                             <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
                         </div>
                     </div>
-                    {/* And here */}
                     <h4 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h4>
                     <ul class="rbt-meta">
                         <li><i class="feather-book"></i>${lessonCount} Lessons</li>
@@ -4378,7 +4365,6 @@ const createCourseCard = (course, userWishlist = new Set()) => {
                     </div>
                     <div class="rbt-card-bottom">
                         ${priceHtml}
-                        {/* And finally, here */}
                         <a class="rbt-btn-link" href="${detailPageUrl}">Learn More<i class="feather-arrow-right"></i></a>
                     </div>
                 </div>
