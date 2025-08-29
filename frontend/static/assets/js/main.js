@@ -2039,7 +2039,7 @@ const renderCourseBuilder = (episodes) => {
         const items = [
             ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
             ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
-            ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
+//             ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
         ];
 
         const itemsHtml = items.map(item => {
@@ -2109,7 +2109,7 @@ const renderCourseBuilder = (episodes) => {
                                 <span class="icon-reverse-wrapper"><span class="btn-text">Lesson</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
                             </button>
                             <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Quiz" data-episode-id="${episode._id}">
-                                <span class="icon-reverse-wrapper"><span class="btn-text">Quiz</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
+                                <span class="icon-reverse-wrapper"><span class="btn-text">Assessment</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
                             </button>
                             <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Assignment" data-episode-id="${episode._id}">
                                 <span class="icon-reverse-wrapper"><span class="btn-text">Assignments</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
@@ -4955,6 +4955,7 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 // main.js
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
+    console.log("--- MASTERCLASS SCRIPT: START ---");
 
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -5028,28 +5029,12 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
                 }
             });
     };
-    
+
     // ===== MAIN FUNCTION to populate all page content =====
     const populatePage = (course) => {
-        // Banner
         document.getElementById('masterclass-title').textContent = course.title || '';
         document.getElementById('masterclass-description').textContent = course.description || '';
-
-        // "What you'll learn" & Requirements
-        const renderList = (items) => items && items.length ? `<ul class="rbt-list-style-1">${items.map(item => `<li><i class="feather-check"></i>${item}</li>`).join('')}</ul>` : '';
-        document.querySelector('#overview .rbt-course-feature-inner').innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3">What you'll learn</h4></div>${renderList(course.whatYoullLearn)}`;
-        document.querySelector('#details .row .col-lg-6:first-child').innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3 mb--20">Requirements</h4></div>${renderList(course.requirements)}`;
         
-        // Curriculum
-        const curriculumContainer = document.querySelector('#coursecontent .accordion');
-        if (curriculumContainer) {
-             curriculumContainer.innerHTML = (course.episodes || []).map((episode, index) => {
-                const lessonsHtml = (episode.lessons || []).map(lesson => `<li><a href="#"><div class="course-content-left"><i class="feather-play-circle"></i><span class="text">${lesson.title}</span></div><div class="course-content-right"><span class="min-lable">${lesson.duration || ''}</span></div></a></li>`).join('');
-                return `<div class="accordion-item card"><h2 class="accordion-header card-header"><button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${episode.title}</button></h2><div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}"><div class="accordion-body card-body pr--0"><ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul></div></div></div>`;
-            }).join('');
-        }
-        
-        // Instructor
         const instructor = course.instructor;
         const instructorContainer = document.getElementById('instructor');
         if (instructorContainer && instructor) {
@@ -5089,13 +5074,18 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
             if (result.success && result.course) {
                 populatePage(result.course);
                 fetchAndRenderReviews(result.course._id);
+
                 const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
                 if (user && user.role === 'student') {
                     document.getElementById('add-review-form-wrapper').style.display = 'block';
                 }
             } else {
-                document.body.innerHTML = `<h1>Error: ${result.message}</h1>`;
+                throw new Error(result.message || 'Could not load course data.');
             }
+        })
+        .catch(error => {
+            console.error('Error fetching MasterClass details:', error);
+            document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
         });
 
     // ===== EVENT LISTENER FOR REVIEW FORM =====
