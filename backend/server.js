@@ -59,6 +59,34 @@ const pdfUpload = multer({
     }),
 });
 
+// 3. Uploader for User Avatars (Add this new block)
+const avatarUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            const uploadPath = path.join(__dirname, '../frontend/static/uploads/avatars');
+            fs.mkdirSync(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+        }
+    }),
+});
+
+// 4. Uploader for User Cover Photos (Add this new block)
+const coverPhotoUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            const uploadPath = path.join(__dirname, '../frontend/static/uploads/covers');
+            fs.mkdirSync(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+            cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+        }
+    }),
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -192,7 +220,7 @@ app.put('/api/user/social', auth, async (req, res) => {
 });
 
 
-app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => {
+app.post('/api/user/avatar', auth, avatarUpload.single('avatar'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
         const user = await User.findById(req.user.id);
@@ -203,15 +231,26 @@ app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => 
     } catch (err) { res.status(500).send('Server Error'); }
 });
 
-app.post('/api/user/cover', auth, upload.single('coverPhoto'), async (req, res) => {
+// UPDATE USER COVER PHOTO
+app.post('/api/user/cover', auth, coverPhotoUpload.single('coverPhoto'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded.' });
+        }
+        
         const user = await User.findById(req.user.id);
-        // FIX: The path should point to the actual upload location
-        user.coverPhoto = `uploads/courses/${req.file.filename}`;
+        
+        // Use the correct path that matches the coverPhotoUpload destination
+        user.coverPhoto = `uploads/covers/${req.file.filename}`; 
+        
         await user.save();
+        
         res.json({ success: true, msg: 'Cover photo updated successfully', filePath: user.coverPhoto });
-    } catch (err) { res.status(500).send('Server Error'); }
+
+    } catch (err) { 
+        console.error("Cover Photo Upload Error:", err);
+        res.status(500).send('Server Error'); 
+    }
 });
 
 // INSTRUCTOR API ROUTES
