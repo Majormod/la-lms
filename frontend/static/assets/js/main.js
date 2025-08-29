@@ -4876,9 +4876,6 @@ modalElement.addEventListener('hidden.bs.modal', event => {
     const sendBtn = document.getElementById('send-announcement-btn');
     const announcementTableBody = document.getElementById('announcements-table-body');
 
-    // --- 5. Add Event Listeners for Filters ---
-const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
-
 if (courseFilterSelect) {
     courseFilterSelect.addEventListener('change', () => {
         const selectedCourseId = courseFilterSelect.value;
