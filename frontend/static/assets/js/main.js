@@ -4956,6 +4956,170 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
 
+    // --- DYNAMIC REVIEW SECTION ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. CONFIGURATION & ELEMENT SELECTION ---
+    const reviewsListContainer = document.getElementById('reviews-list-container');
+    const paginationContainer = document.getElementById('reviews-pagination-container');
+    const reviewForm = document.getElementById('review-form');
+
+    // Get the course ID from the URL (e.g., .../details.html?id=COURSE_ID)
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id');
+
+    if (!courseId) {
+        reviewsListContainer.innerHTML = '<p>Error: Course ID not found in URL.</p>';
+        return;
+    }
+
+    // --- 2. CORE FUNCTIONS ---
+
+    /**
+     * Fetches reviews for a specific page and triggers rendering.
+     * @param {number} page - The page number to fetch.
+     */
+    const fetchAndDisplayReviews = async (page = 1) => {
+        try {
+            const response = await fetch(`/api/courses/${courseId}/reviews?page=${page}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch reviews.');
+            }
+            const data = await response.json(); // Assumes API returns { reviews: [], currentPage: 1, totalPages: 5 }
+
+            renderReviews(data.reviews);
+            renderPagination(data.currentPage, data.totalPages);
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+            reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews at this time.</p>`;
+        }
+    };
+
+    /**
+     * Renders the list of reviews into the DOM.
+     * @param {Array} reviews - An array of review objects.
+     */
+    const renderReviews = (reviews) => {
+        reviewsListContainer.innerHTML = ''; // Clear existing reviews
+        if (reviews.length === 0) {
+            reviewsListContainer.innerHTML = '<p>Be the first to leave a review!</p>';
+            return;
+        }
+
+        const reviewsHtml = reviews.map(review => {
+            // Helper to generate star ratings
+            const getStarRating = (rating) => {
+                let stars = '';
+                for (let i = 1; i <= 5; i++) {
+                    stars += i <= rating ? '★' : '☆';
+                }
+                return stars;
+            };
+
+            return `
+                <div class="review-item mb-4">
+                    <div class="review-header d-flex justify-content-between align-items-center">
+                        <strong>${review.student.name || 'Anonymous'}</strong>
+                        <span class="review-stars text-warning">${getStarRating(review.rating)}</span>
+                    </div>
+                    <p class="review-comment text-muted mt-2">${review.comment}</p>
+                    <small class="review-date">${new Date(review.createdAt).toLocaleDateString()}</small>
+                </div>
+                <hr>
+            `;
+        }).join('');
+
+        reviewsListContainer.innerHTML = reviewsHtml;
+    };
+
+    /**
+     * Renders pagination controls.
+     * @param {number} currentPage - The current active page.
+     * @param {number} totalPages - The total number of pages available.
+     */
+    const renderPagination = (currentPage, totalPages) => {
+        paginationContainer.innerHTML = ''; // Clear existing pagination
+        if (totalPages <= 1) return;
+
+        let paginationHtml = '<nav><ul class="pagination justify-content-center">';
+
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHtml += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `;
+        }
+
+        paginationHtml += '</ul></nav>';
+        paginationContainer.innerHTML = paginationHtml;
+    };
+
+    /**
+     * Handles the submission of a new review.
+     * @param {Event} event - The form submission event.
+     */
+    const handleReviewSubmit = async (event) => {
+        event.preventDefault();
+        const token = localStorage.getItem('jwtToken'); // **IMPORTANT**: Assumes JWT is stored under this key
+
+        if (!token) {
+            alert('You must be logged in to submit a review.');
+            return;
+        }
+
+        const rating = reviewForm.querySelector('#rating').value;
+        const comment = reviewForm.querySelector('#comment').value;
+
+        try {
+            const response = await fetch(`/api/courses/${courseId}/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating, comment })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to submit review.');
+            }
+
+            // Success!
+            reviewForm.reset();
+            fetchAndDisplayReviews(1); // Refresh reviews, showing the new one on the first page
+            alert('Review submitted successfully!');
+
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            alert(`Error: ${error.message}`);
+        }
+    };
+
+
+    // --- 3. EVENT LISTENERS & INITIALIZATION ---
+
+    // Listener for pagination clicks (using event delegation)
+    paginationContainer.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (event.target.matches('a.page-link')) {
+            const page = event.target.dataset.page;
+            if (page) {
+                fetchAndDisplayReviews(Number(page));
+            }
+        }
+    });
+
+    // Listener for the review form submission
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', handleReviewSubmit);
+    }
+
+    // Initial fetch of reviews when the page loads
+    fetchAndDisplayReviews();
+});
+
     document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('lmsToken');
         const urlParams = new URLSearchParams(window.location.search);
