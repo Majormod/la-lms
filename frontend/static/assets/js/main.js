@@ -1937,7 +1937,7 @@ const updatePreviewButton = (isMasterclass, courseId) => {
     if (!previewBtn) return;
 
     if (isMasterclass) {
-        previewBtn.setAttribute('data-href', `masterclass-details.html?courseId=${courseId}`);
+        previewBtn.setAttribute('data-href', `the-masterclass-details.html?courseId=${courseId}`); // Corrected filename
     } else {
         previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
     }
