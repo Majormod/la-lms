@@ -2685,6 +2685,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
             if (priceInput) course.originalPrice ? priceInput.value = course.originalPrice : '';
             if (discountedPriceInput) course.price ? discountedPriceInput.value = course.price : '';
             if (videoUrlInput) videoUrlInput.value = course.previewVideoUrl || '';
+            if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
             if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
             
             // Additional Information fields - FIXED
@@ -2698,8 +2699,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
                     console.error('Error parsing startDate:', e);
                 }
             }
-            // --- ADD THIS ---
-updatePreviewButton(course.isMasterclass, course._id); 
+            
             // Language - handle both array and string
             if (course.language && course.language.length > 0) {
                 const languageSelect = document.getElementById('language');
@@ -2779,12 +2779,8 @@ updatePreviewButton(course.isMasterclass, course._id);
                 }
                 
             }
-            const thumbnailPreview = document.getElementById('createfileImage');
-if (thumbnailPreview && course.thumbnail) {
-    thumbnailPreview.src = `/${course.thumbnail}`;
-}
+            
             renderCourseBuilder(course.episodes);
-        
         }
     })
     .catch(error => {
@@ -3194,7 +3190,7 @@ if (editCourseForm) {
     });
 }
     }; // End of window.onload
-} //// End edit course.html
+}
 
 // =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
