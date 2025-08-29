@@ -344,7 +344,7 @@ const { title, slug, description, price, originalPrice, difficultyLevel, maxStud
             difficultyLevel: difficultyLevel,
             maxStudents: parseInt(maxStudents, 10),
             isPublic: isPublic === 'true', // Convert string from form to boolean
-            isQAEnabled: isQAEnabled === 'true' // Convert string from form to boolean
+            isQAEnabled: isQAEnabled === 'true', // Convert string from form to boolean
             isMasterclass: isMasterclass === 'true' // ADD THIS LINE
         });
 
