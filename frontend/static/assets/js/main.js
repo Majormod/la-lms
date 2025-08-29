@@ -2692,6 +2692,11 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
             if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
             if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
             
+            // Masterclass Check
+    document.getElementById('is-masterclass-switch').checked = course.isMasterclass;
+
+    // ADD THIS LINE TO UPDATE THE BUTTON'S LINK
+updatePreviewButton(course.isMasterclass, course._id);
             // Additional Information fields - FIXED
             if (course.startDate) {
                 try {
@@ -3165,6 +3170,8 @@ if (editCourseForm) {
         if (thumbnailInput.files.length > 0) {
             formData.append('thumbnail', thumbnailInput.files[0]);
         }
+        // MC Switch State
+formData.append('isMasterclass', document.getElementById('is-masterclass-switch').checked);
 
         // Debug log
         console.log('FormData being sent:');
