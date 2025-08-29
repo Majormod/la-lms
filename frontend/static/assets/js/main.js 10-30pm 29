@@ -5007,55 +5007,38 @@ document.addEventListener('DOMContentLoaded', () => {
      * Renders the list of reviews into the DOM.
      * @param {Array} reviews - An array of review objects.
      */
-
-    // REPLACE your old 'renderReviews' function with this new, improved version
-
-const renderReviews = (reviews) => {
-    const reviewsListContainer = document.getElementById('reviews-list-container');
-    reviewsListContainer.innerHTML = ''; // Clear existing reviews
-
-    if (!reviews || reviews.length === 0) {
-        reviewsListContainer.innerHTML = '<p>Be the first to leave a review!</p>';
-        return;
-    }
-
-    // This uses the rich HTML structure from your course-details.html page
-    const reviewsHtml = reviews.map(review => {
-        // Use default values to prevent errors if student data is missing
-        const student = review.student || {};
-        const studentName = `${student.firstName || ''} ${student.lastName || 'Anonymous'}`.trim();
-        const studentAvatar = student.avatar ? `/${student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
-        const reviewDate = new Date(review.createdAt).toLocaleDateString();
-
-        // Generate star rating HTML
-        let ratingHTML = '';
-        for (let i = 0; i < 5; i++) {
-            // Use solid stars for the rating, regular stars for the remainder
-            ratingHTML += `<a href="#"><i class="fa ${i < review.rating ? 'fa-star' : 'fa-regular fa-star'}"></i></a>`;
+    const renderReviews = (reviews) => {
+        reviewsListContainer.innerHTML = ''; // Clear existing reviews
+        if (reviews.length === 0) {
+            reviewsListContainer.innerHTML = '<p>Be the first to leave a review!</p>';
+            return;
         }
 
-        return `
-        <div class="rbt-course-review about-author">
-            <div class="media">
-                <div class="thumbnail">
-                    <a href="#"><img src="${studentAvatar}" alt="${studentName}"></a>
-                </div>
-                <div class="media-body">
-                    <div class="author-info">
-                        <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5>
-                        <div class="rating">${ratingHTML}</div>
-                    </div>
-                    <div class="content">
-                        <p class="description">${review.comment || ''}</p>
-                        <span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
+        const reviewsHtml = reviews.map(review => {
+            // Helper to generate star ratings
+            const getStarRating = (rating) => {
+                let stars = '';
+                for (let i = 1; i <= 5; i++) {
+                    stars += i <= rating ? '★' : '☆';
+                }
+                return stars;
+            };
 
-    reviewsListContainer.innerHTML = reviewsHtml;
-};
+            return `
+                <div class="review-item mb-4">
+                    <div class="review-header d-flex justify-content-between align-items-center">
+                        <strong>${review.student.name || 'Anonymous'}</strong>
+                        <span class="review-stars text-warning">${getStarRating(review.rating)}</span>
+                    </div>
+                    <p class="review-comment text-muted mt-2">${review.comment}</p>
+                    <small class="review-date">${new Date(review.createdAt).toLocaleDateString()}</small>
+                </div>
+                <hr>
+            `;
+        }).join('');
+
+        reviewsListContainer.innerHTML = reviewsHtml;
+    };
 
     /**
      * Renders pagination controls.
