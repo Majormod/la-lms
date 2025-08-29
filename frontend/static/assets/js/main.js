@@ -4892,28 +4892,45 @@ if (courseFilterSelect) {
     });
 }
     // --- 1. Fetch Instructor's Courses and Populate Dropdown ---
-    const populateCoursesDropdown = () => {
-        if (!user || user.role !== 'instructor') return;
-        
-        fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                courseSelect.innerHTML = '<option disabled selected value="">Select a course</option>';
-courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>'; // Add an "All" option
+ // main.js
 
-data.courses.forEach(course => {
-    const option = `<option value="${course._id}">${course.title}</option>`;
-    courseSelect.innerHTML += option;
-    courseFilterSelect.innerHTML += option;
-});
-            } else {
-                courseSelect.innerHTML = '<option disabled selected value="">Could not load courses</option>';
-            }
-        });
-    };
+const populateCoursesDropdown = () => {
+    console.log('Attempting to populate courses dropdown...'); // Log 1: Check if function is called
+
+    if (!user || user.role !== 'instructor') {
+        console.error('User is not an instructor or not logged in.'); // Log 2: Check for user role issue
+        return;
+    }
+    
+    fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Received data from API:', data); // Log 3: See what the API returned
+
+        if (data.success && data.courses) {
+            const courseSelect = document.getElementById('announcement-course');
+            const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
+            
+            courseSelect.innerHTML = '<option disabled selected value="">Select a course</option>';
+            courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
+
+            data.courses.forEach(course => {
+                const option = `<option value="${course._id}">${course.title}</option>`;
+                courseSelect.innerHTML += option;
+                courseFilterSelect.innerHTML += option;
+            });
+
+            console.log('Dropdowns populated successfully.'); // Log 4: Confirm success
+        } else {
+            console.error('API call was not successful or no courses found.', data.message); // Log 5: Check for API error
+        }
+    })
+    .catch(error => {
+        console.error('A critical error occurred during fetch:', error); // Log 6: Check for network/other errors
+    });
+};
 
     // --- 2. Fetch and Display Existing Announcements ---
     const fetchAndDisplayAnnouncements = () => {
