@@ -1,3 +1,4 @@
+console.log("--- RUNNING LATEST VERSION OF main.js ---");
 (function (window, document, $, undefined) {
     "use strict";
 

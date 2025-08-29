@@ -1547,6 +1547,18 @@ app.delete('/api/announcements/:id', isAuthenticated, isInstructor, async (req, 
     }
 });
 
+// Add this route to your server.js file
+
+app.get('/api/instructors/:instructorId/courses', isAuthenticated, async (req, res) => {
+    try {
+        // Find courses where the instructor field matches the ID from the URL
+        const courses = await Course.find({ instructor: req.params.instructorId });
+        res.json({ success: true, courses });
+    } catch (error) {
+        console.error('Error fetching instructor courses:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 
 app.use(express.static(staticPath));
