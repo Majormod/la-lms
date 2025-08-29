@@ -2677,10 +2677,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
                 duration: course.duration,
                 requirements: course.requirements
             });
-const thumbnailPreview = document.getElementById('createfileImage');
-if (thumbnailPreview && course.thumbnail) {
-    thumbnailPreview.src = `/${course.thumbnail}`;
-}
+
             // Basic fields
             if (courseTitleInput) courseTitleInput.value = course.title || '';
             if (slugInput) slugInput.value = course.slug || '';
@@ -2782,8 +2779,12 @@ updatePreviewButton(course.isMasterclass, course._id);
                 }
                 
             }
-            
+            const thumbnailPreview = document.getElementById('createfileImage');
+if (thumbnailPreview && course.thumbnail) {
+    thumbnailPreview.src = `/${course.thumbnail}`;
+}
             renderCourseBuilder(course.episodes);
+        
         }
     })
     .catch(error => {
@@ -3193,7 +3194,7 @@ if (editCourseForm) {
     });
 }
     }; // End of window.onload
-}
+} //// End edit course.html
 
 // =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
