@@ -2671,6 +2671,8 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
     .then(result => {
         if (result.success) {
             const course = result.course;
+             // ADD THIS LINE
+            console.log('Server response for course data:', course);
             courseData = course;
             
             console.log('Loading course data from server:', {
