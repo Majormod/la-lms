@@ -4956,179 +4956,167 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
-    const token = localStorage.getItem('lmsToken');
-    const API_BASE_URL = 'http://34.195.233.179';
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('lmsToken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const API_BASE_URL = 'http://34.195.233.179';
 
-    if (!courseId) {
-        document.body.innerHTML = '<h1>Error: No Course ID provided.</h1>';
-        return;
-    }
-
-    // ===== HELPER: Renders star icons from a rating number =====
-    const renderStars = (rating) => {
-        let starsHTML = '';
-        for (let i = 1; i <= 5; i++) {
-            starsHTML += `<i class="fa fa-star ${i <= rating ? 'active' : ''}"></i>`;
-        }
-        return `<div class="rating">${starsHTML}</div>`;
-    };
-
-    // ===== HELPER: Renders pagination buttons for reviews =====
-    const renderPagination = (pagination, courseId) => {
-        const container = document.getElementById('reviews-pagination-container');
-        if (!container || pagination.totalPages <= 1) {
-            if (container) container.innerHTML = '';
+        if (!courseId) {
+            document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
             return;
         }
-        let paginationHTML = '';
-        for (let i = 1; i <= pagination.totalPages; i++) {
-            paginationHTML += `<li><a href="#" data-page="${i}" class="${i === pagination.currentPage ? 'active' : ''}">${i}</a></li>`;
-        }
-        container.innerHTML = `<ul>${paginationHTML}</ul>`;
-        container.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                fetchAndRenderReviews(courseId, link.dataset.page);
-            });
-        });
-    };
 
-    // ===== HELPER: Fetches and displays a page of reviews =====
-    const fetchAndRenderReviews = (courseId, page = 1) => {
-        const reviewsContainer = document.getElementById('reviews-list-container');
-        if (!reviewsContainer) return;
+        // =================================================================
+        // ===== HELPER FUNCTIONS TO POPULATE THE PAGE =====
+        // =================================================================
 
-        fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    reviewsContainer.innerHTML = '';
-                    if (result.reviews.length > 0) {
-                        result.reviews.forEach(review => {
-                            reviewsContainer.innerHTML += `
-                                <div class="rbt-course-review">
-                                    <div class="media">
-                                        <div class="thumbnail"><a href="#"><img src="/${review.student.avatar}" alt="User Avatar"></a></div>
-                                        <div class="media-body">
-                                            <div class="author-info">
-                                                <h5 class="title">${review.student.firstName} ${review.student.lastName}</h5>
-                                                ${renderStars(review.rating)}
-                                            </div>
-                                            <div class="content"><p class="description">${review.comment}</p></div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                        });
-                        renderPagination(result.pagination, courseId);
-                    } else {
-                        reviewsContainer.innerHTML = '<p>Be the first to leave a review!</p>';
-                    }
-                }
-            });
-    };
-    
-    // ===== MAIN FUNCTION to populate all page content =====
-    const populatePage = (course) => {
-        // Banner
-        document.getElementById('masterclass-title').textContent = course.title || '';
-        document.getElementById('masterclass-description').textContent = course.description || '';
+        const populateBanner = (course) => {
+            document.getElementById('masterclass-title').textContent = course.title || 'MasterClass Title';
+            document.getElementById('masterclass-description').textContent = course.description || '';
+        };
 
-        // "What you'll learn" & Requirements
-        const renderList = (items) => items && items.length ? `<ul class="rbt-list-style-1">${items.map(item => `<li><i class="feather-check"></i>${item}</li>`).join('')}</ul>` : '';
-        document.querySelector('#overview .rbt-course-feature-inner').innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3">What you'll learn</h4></div>${renderList(course.whatYoullLearn)}`;
-        document.querySelector('#details .row .col-lg-6:first-child').innerHTML = `<div class="section-title"><h4 class="rbt-title-style-3 mb--20">Requirements</h4></div>${renderList(course.requirements)}`;
-        
-        // Curriculum
-        const curriculumContainer = document.querySelector('#coursecontent .accordion');
-        if (curriculumContainer) {
-             curriculumContainer.innerHTML = (course.episodes || []).map((episode, index) => {
-                const lessonsHtml = (episode.lessons || []).map(lesson => `<li><a href="#"><div class="course-content-left"><i class="feather-play-circle"></i><span class="text">${lesson.title}</span></div><div class="course-content-right"><span class="min-lable">${lesson.duration || ''}</span></div></a></li>`).join('');
-                return `<div class="accordion-item card"><h2 class="accordion-header card-header"><button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${episode.title}</button></h2><div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}"><div class="accordion-body card-body pr--0"><ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul></div></div></div>`;
-            }).join('');
-        }
-        
-        // Instructor
-        const instructor = course.instructor;
-        const instructorContainer = document.getElementById('intructor');
-        if (instructorContainer && instructor) {
-            instructorContainer.innerHTML = `
-                <div class="about-author border-0 pb--0 pt--0">
-                    <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
-                    <div class="media align-items-center">
-                        <div class="thumbnail"><a href="#"><img src="/${instructor.avatar}" alt="Author Images"></a></div>
-                        <div class="media-body">
-                            <div class="author-info">
-                                <h5 class="title">${instructor.firstName} ${instructor.lastName}</h5>
-                                <span class="b3 subtitle">${instructor.occupation || ''}</span>
+        const renderList = (items) => {
+            if (!items || items.length === 0) return '<p>No items listed.</p>';
+            return `
+                <ul class="rbt-list-style-1">
+                    ${items.map(item => `<li><i class="feather-check"></i>${item}</li>`).join('')}
+                </ul>`;
+        };
+
+        const renderCourseCurriculum = (episodes) => {
+            const container = document.querySelector('#coursecontent .accordion');
+            if (!container) return;
+            container.innerHTML = episodes.map((episode, index) => {
+                const lessonsHtml = episode.lessons.map(lesson => `
+                    <li>
+                        <a href="#">
+                            <div class="course-content-left">
+                                <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
                             </div>
-                            <div class="content">
-                                <p class="description">${instructor.bio || ''}</p>
-                                <ul id="instructor-socials" class="social-icon social-default icon-naked justify-content-start"></ul>
+                            <div class="course-content-right">
+                                <span class="min-lable">${lesson.duration || ''}</span>
+                            </div>
+                        </a>
+                    </li>`).join('');
+                return `
+                    <div class="accordion-item card">
+                        <h2 class="accordion-header card-header" id="heading-${index}">
+                            <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                                ${episode.title}
+                            </button>
+                        </h2>
+                        <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                            <div class="accordion-body card-body pr--0">
+                                <ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul>
                             </div>
                         </div>
-                    </div>
-                </div>`;
-            const socialContainer = document.getElementById('instructor-socials');
-            if (socialContainer && instructor.social) {
-                if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
-                if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
-                if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+                    </div>`;
+            }).join('');
+        };
+        
+        const populateMainContent = (course) => {
+            const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
+            if(overviewContainer) {
+                overviewContainer.innerHTML = `
+                    <div class="section-title"><h4 class="rbt-title-style-3">What you'll learn</h4></div>
+                    ${renderList(course.whatYoullLearn)}`;
             }
-        }
-    };
 
-    // ===== MAIN FETCH CALL =====
-    const fetchUrl = token ? `${API_BASE_URL}/api/courses/preview/${courseId}` : `${API_BASE_URL}/api/courses/${courseId}`;
-    const headers = token ? { 'x-auth-token': token } : {};
+            const detailsContainer = document.querySelector('#details .row');
+             if(detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="col-lg-6">
+                        <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Requirements</h4></div>
+                        ${renderList(course.requirements)}
+                    </div>
+                    <div class="col-lg-6">
+                         <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Description</h4></div>
+                        <p>${course.description || ''}</p>
+                    </div>`;
+            }
+        };
 
-    fetch(fetchUrl, { headers })
+// REPLACE your existing populateInstructor function with this one
+
+const populateInstructor = (instructor) => {
+    const container = document.getElementById('intructor');
+    if (!container || !instructor) return;
+
+    // NOTE: The student/review/course counts are static for now, as that data isn't on the instructor object yet.
+    container.innerHTML = `
+        <div class="about-author border-0 pb--0 pt--0">
+            <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
+            <div class="media align-items-center">
+                <div class="thumbnail">
+                    <a href="#"><img id="instructor-bio-avatar" src="/${instructor.avatar}" alt="Author Images"></a>
+                </div>
+                <div class="media-body">
+                    <div class="author-info">
+                        <h5 class="title"><a id="instructor-name" class="hover-flip-item-wrapper" href="#">${instructor.firstName} ${instructor.lastName}</a></h5>
+                        <span id="instructor-occupation" class="b3 subtitle">${instructor.occupation || ''}</span>
+                        <ul class="rbt-meta mb--20 mt--10">
+                            <li><i class="fa fa-star color-warning"></i>4.9 Rating</li>
+                            <li><i class="feather-users"></i>500 Students</li>
+                            <li><a href="#"><i class="feather-video"></i>5 Courses</a></li>
+                        </ul>
+                    </div>
+                    <div class="content">
+                        <p id="instructor-bio" class="description">${instructor.bio || ''}</p>
+                        <ul id="instructor-socials" class="social-icon social-default icon-naked justify-content-start"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    // This part adds the social media icons dynamically
+    const socialContainer = document.getElementById('instructor-socials');
+    if (socialContainer && instructor.social) {
+        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+    }
+};
+
+        // =================================================================
+        // ===== MAIN FETCH AND EXECUTION LOGIC =====
+        // =================================================================
+
+        fetch(`${API_BASE_URL}/api/courses/preview/${courseId}`, {
+            headers: { 'x-auth-token': token }
+        })
         .then(res => res.json())
         .then(result => {
-            if (result.success && result.course) {
-                populatePage(result.course);
-                fetchAndRenderReviews(result.course._id);
-                const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-                if (user && user.role === 'student') {
-                    document.getElementById('add-review-form-wrapper').style.display = 'block';
-                }
-            } else {
-                document.body.innerHTML = `<h1>Error: ${result.message}</h1>`;
+            if (!result.success || !result.course) {
+                throw new Error(result.message || 'Could not load MasterClass data.');
             }
-        });
 
-    // ===== EVENT LISTENER FOR REVIEW FORM =====
-    const reviewForm = document.getElementById('review-form');
-    if (reviewForm) {
-        reviewForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!token) return alert("Please log in to submit a review.");
+            const course = result.course;
 
-            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-            const comment = document.getElementById('review-comment').value;
-
-            if (!rating) return alert('Please select a star rating.');
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                    body: JSON.stringify({ rating: parseInt(rating), comment })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Thank you for your review!');
-                    reviewForm.reset();
-                    fetchAndRenderReviews(courseId);
-                } else {
-                    alert(`Error: ${result.message}`);
+            // Populate all sections of the page
+            populateBanner(course);
+            populateMainContent(course);
+            renderCourseCurriculum(course.episodes || []);
+            populateInstructor(course.instructor);
+            // You can add a populateSidebar(course) function here as well if needed
+            // --- ADD THIS NEW LOGIC ---
+            const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+            if (user && user.role === 'student') {
+                // Later, you can add a check here to see if the student is enrolled.
+                // For now, we'll just show the form if they are a student.
+                const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+                if (reviewFormWrapper) {
+                    reviewFormWrapper.style.display = 'block';
                 }
-            } catch (error) {
-                console.error("Failed to submit review:", error);
             }
+            // --- END OF NEW LOGIC ---
+        })
+        
+        .catch(error => {
+            console.error('Error fetching MasterClass details:', error);
+            document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
         });
-    }
+    });
 }
 
 
