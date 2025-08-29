@@ -40858,3 +40858,11 @@ padding: 0 10px 0 10px;
 #add-review-form-wrapper .review-form-rating > label:hover ~ label {
     color: #d1d1d1 !important;
 }
+
+/* Add this to your stylesheet */
+.user-logged-out:hover .rbt-user-menu-list-wrapper {
+    /* These properties hide the menu smoothly without breaking the layout */
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}

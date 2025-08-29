@@ -5401,9 +5401,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    /**
-     * Manages the entire user navigation based on login status and role.
-     */
     const setupUserNavigation = () => {
         // --- Get User Data ---
         const token = localStorage.getItem('lmsToken');
@@ -5411,29 +5408,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = userString ? JSON.parse(userString) : null;
 
         // --- Get Navigation Elements ---
-        const desktopNavWrapper = document.querySelector('.account-access.rbt-user-wrapper');
-        const mobileNavWrapper = document.querySelector('.access-icon.rbt-user-wrapper');
+        const desktopNav = document.querySelector('.account-access.rbt-user-wrapper');
+        const mobileNav = document.querySelector('.access-icon.rbt-user-wrapper');
         const loginLink = document.getElementById('nav-login-link');
         const userLink = document.getElementById('nav-user-link');
-        const userNameSpans = document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown');
-        const avatarImages = document.querySelectorAll('.nav-user-avatar-img');
 
         // --- Handle Logged-Out State ---
         if (!token || !user) {
             if (loginLink) loginLink.classList.remove('d-none');
             if (userLink) userLink.classList.add('d-none');
             
-            // Disable dropdown functionality by removing the trigger class
-            if (desktopNavWrapper) desktopNavWrapper.classList.remove('rbt-user-wrapper');
-            
+            // Add our new class to disable the hover dropdown via CSS
+            if (desktopNav) desktopNav.classList.add('user-logged-out');
+
             // For mobile, make the icon a direct link to the login page
-            if (mobileNavWrapper) {
-                const mobileLoginLink = mobileNavWrapper.querySelector('a');
-                if (mobileLoginLink) mobileLoginLink.href = 'login.html';
-                // Also remove the dropdown wrapper to be safe
-                const mobileDropdown = mobileNavWrapper.querySelector('.rbt-user-menu-list-wrapper');
-                if (mobileDropdown) mobileDropdown.remove();
-            }
+            const mobileLoginLink = mobileNav?.querySelector('a');
+            if (mobileLoginLink) mobileLoginLink.href = 'login.html';
+            
             return; // Stop here if user is not logged in
         }
 
@@ -5443,24 +5434,25 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Populate user details
         const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-        userNameSpans.forEach(span => span.textContent = user.firstName || 'User');
+        document.getElementById('nav-user-name').textContent = user.firstName || 'User';
         document.getElementById('nav-user-name-dropdown').textContent = fullName;
-        avatarImages.forEach(img => {
-            img.src = user.avatar ? `/${user.avatar}` : 'assets/images/team/avatar.jpg'; // Default avatar
+        document.querySelectorAll('.nav-user-avatar-img').forEach(img => {
+            img.src = user.avatar ? `/${user.avatar}` : 'assets/images/team/avatar.jpg';
         });
 
         // Show/hide links based on role
         if (user.role === 'student') {
             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
         } else if (user.role === 'instructor') {
             document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
+             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
         }
 
         // Add functionality to logout buttons
         document.querySelectorAll('.logout-btn, a[href="index.html"] > i.feather-log-out').forEach(btn => {
-            // Find the parent anchor tag if the icon was targeted
             const logoutLink = btn.closest('a');
-            if(logoutLink) {
+            if (logoutLink) {
                  logoutLink.addEventListener('click', (e) => {
                     e.preventDefault();
                     localStorage.removeItem('lmsToken');
@@ -5473,7 +5465,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Run the function on page load
     setupUserNavigation();
-
 });
 
 
