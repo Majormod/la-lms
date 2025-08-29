@@ -5069,7 +5069,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const handleReviewSubmit = async (event) => {
         event.preventDefault();
-        const token = localStorage.getItem('jwtToken'); // **IMPORTANT**: Assumes JWT is stored under this key
+        const token = localStorage.getItem('lmsToken'); // **IMPORTANT**: Assumes JWT is stored under this key
 
         if (!token) {
             alert('You must be logged in to submit a review.');
