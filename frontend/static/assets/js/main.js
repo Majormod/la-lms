@@ -4954,7 +4954,7 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 
 // main.js
 
-if (window.location.pathname.includes('masterclass-details.html')) {
+if (window.location.pathname.includes('the-masterclass-details.html')) {
     
     // 1. Get the course ID from the URL
     const urlParams = new URLSearchParams(window.location.search);
