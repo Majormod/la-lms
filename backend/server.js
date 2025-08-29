@@ -1522,6 +1522,33 @@ app.get('/api/instructors/:instructorId/announcements', isAuthenticated, async (
     }
 });
 
+// server.js
+
+// --- DELETE AN ANNOUNCEMENT ---
+app.delete('/api/announcements/:id', isAuthenticated, isInstructor, async (req, res) => {
+    try {
+        const announcement = await Announcement.findById(req.params.id);
+
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        }
+
+        // Ensure the person deleting is the instructor who created it
+        if (announcement.instructor.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized to delete this announcement.' });
+        }
+
+        await announcement.deleteOne(); // Use this Mongoose method
+        res.json({ success: true, message: 'Announcement deleted successfully.' });
+
+    } catch (error) {
+        console.error('Error deleting announcement:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+
+
 app.use(express.static(staticPath));
 
 // ADD THIS LINE:

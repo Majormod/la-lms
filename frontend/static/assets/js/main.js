@@ -1564,7 +1564,7 @@ if (window.location.pathname.includes('/instructor-')) {
                                     <td>
                                         <div class="rbt-button-group justify-content-end">
                                             <a class="rbt-btn-link left-icon" href="#"><i class="feather-edit"></i> Edit</a>
-                                            <a class="rbt-btn-link left-icon" href="#"><i class="feather-trash-2"></i> Delete</a>
+                                            <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -4872,9 +4872,28 @@ modalElement.addEventListener('hidden.bs.modal', event => {
   document.body.style.paddingRight = '';
 });
     const courseSelect = document.getElementById('announcement-course');
+    const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
     const sendBtn = document.getElementById('send-announcement-btn');
     const announcementTableBody = document.getElementById('announcements-table-body');
 
+    // --- 5. Add Event Listeners for Filters ---
+const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
+
+if (courseFilterSelect) {
+    courseFilterSelect.addEventListener('change', () => {
+        const selectedCourseId = courseFilterSelect.value;
+        const allRows = announcementTableBody.querySelectorAll('tr');
+
+        allRows.forEach(row => {
+            // If "All" is selected or if the row's course ID matches, show it. Otherwise, hide it.
+            if (!selectedCourseId || selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
+                row.style.display = ''; // Show row
+            } else {
+                row.style.display = 'none'; // Hide row
+            }
+        });
+    });
+}
     // --- 1. Fetch Instructor's Courses and Populate Dropdown ---
     const populateCoursesDropdown = () => {
         if (!user || user.role !== 'instructor') return;
@@ -4886,9 +4905,13 @@ modalElement.addEventListener('hidden.bs.modal', event => {
         .then(data => {
             if (data.success) {
                 courseSelect.innerHTML = '<option disabled selected value="">Select a course</option>';
-                data.courses.forEach(course => {
-                    courseSelect.innerHTML += `<option value="${course._id}">${course.title}</option>`;
-                });
+courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>'; // Add an "All" option
+
+data.courses.forEach(course => {
+    const option = `<option value="${course._id}">${course.title}</option>`;
+    courseSelect.innerHTML += option;
+    courseFilterSelect.innerHTML += option;
+});
             } else {
                 courseSelect.innerHTML = '<option disabled selected value="">Could not load courses</option>';
             }
@@ -4912,21 +4935,21 @@ modalElement.addEventListener('hidden.bs.modal', event => {
                     const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
                     const row = `
-                        <tr>
-                            <th>
-                                <span class="h6 mb--5">${formattedDate}</span>
-                                <p class="b3">${formattedTime}</p>
-                            </th>
-                            <td>
-                                <span class="h6 mb--5">${ann.course.title}</span>
-                                <p class="b3">${ann.message.substring(0, 100)}...</p>
-                            </td>
-                            <td>
-                                <div class="rbt-button-group justify-content-end">
-                                    <a class="rbt-btn-link left-icon" href="#"><i class="feather-trash-2"></i> Delete</a>
-                                </div>
-                            </td>
-                        </tr>`;
+    <tr data-course-id="${ann.course._id}">
+        <th>
+            <span class="h6 mb--5">${formattedDate}</span>
+            <p class="b3">${formattedTime}</p>
+        </th>
+        <td>
+            <span class="h6 mb--5">${ann.course.title}</span>
+            <p class="b3">${ann.message.substring(0, 100)}...</p>
+        </td>
+        <td>
+            <div class="rbt-button-group justify-content-end">
+                <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
+            </div>
+        </td>
+    </tr>`;
                     announcementTableBody.innerHTML += row;
                 });
             } else {
@@ -4977,7 +5000,33 @@ modalElement.addEventListener('hidden.bs.modal', event => {
             sendBtn.disabled = false;
         });
     });
-
+    // --- 6. Handle Delete Button Clicks ---
+announcementTableBody.addEventListener('click', (e) => {
+    // Check if a delete button or its icon was clicked
+    const deleteButton = e.target.closest('.delete-announcement-btn');
+    
+    if (deleteButton) {
+        e.preventDefault();
+        const announcementId = deleteButton.dataset.id;
+        
+        if (confirm('Are you sure you want to delete this announcement?')) {
+            fetch(`${API_BASE_URL}/api/announcements/${announcementId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Announcement deleted.');
+                    // Remove the row from the table for instant feedback
+                    deleteButton.closest('tr').remove();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            });
+        }
+    }
+});
     // --- 4. Open Modal ---
     if (addAnnouncementBtn) {
         addAnnouncementBtn.addEventListener('click', (e) => {
