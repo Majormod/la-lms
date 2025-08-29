@@ -4307,9 +4307,8 @@ if (window.location.pathname.includes('explore-courses.html')) {
 
         // --- Function to Create a Single Course Card ---
         // CHANGED: Now accepts a 'userWishlist' set to determine the icon state
-// --- Function to Create a Single Course Card ---
-const createCourseCard = (course, userWishlist = new Set()) => {
-    // =================================================================
+        const createCourseCard = (course, userWishlist = new Set()) => {
+            // =================================================================
     // STEP 1: Add this logic at the top of the function
     // =================================================================
     let detailPageUrl;
@@ -4321,70 +4320,61 @@ const createCourseCard = (course, userWishlist = new Set()) => {
         detailPageUrl = `course-details.html?courseId=${course._id}`;
     }
     // =================================================================
+            const isWishlisted = userWishlist.has(course._id);
+            const activeClass = isWishlisted ? 'active' : ''; // Add 'active' class if wishlisted
 
-    const isWishlisted = userWishlist.has(course._id);
-    const activeClass = isWishlisted ? 'active' : '';
-
-    let priceHtml = '';
-    // ... (rest of the price logic is fine) ...
-    if (course.isFree || course.price === 0) {
-        priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
-    } else {
-        const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
-        const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
-        priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
-    }
-
-    let discountBadgeHtml = '';
-    // ... (rest of the discount logic is fine) ...
-    if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
-        const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
-        discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
-    }
-    
-    const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
-    const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
-    const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-    
-    return `
-        <div class="course-grid-3" data-course-id="${course._id}">
-            <div class="rbt-card variation-01 rbt-hover">
-                <div class="rbt-card-img">
-                    {/* ================================================== */}
-                    {/* STEP 2: Use the new 'detailPageUrl' variable here */}
-                    {/* ================================================== */}
-                    <a href="${detailPageUrl}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
-                </div>
-                <div class="rbt-card-body">
-                    <div class="rbt-card-top">
-                        <div class="rbt-review">
-                            <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <span class="rating-count">(15 Reviews)</span>
+            let priceHtml = '';
+            if (course.isFree || course.price === 0) {
+                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+            } else {
+                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+            }
+            let discountBadgeHtml = '';
+            if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
+                const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
+                discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
+            }
+            const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
+            const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
+            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+            
+            // BUG FIX: Correctly added the data-course-id attribute here
+            return `
+                <div class="course-grid-3" data-course-id="${course._id}">
+                    <div class="rbt-card variation-01 rbt-hover">
+                        <div class="rbt-card-img">
+                            <a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
                         </div>
-                        <div class="rbt-bookmark-btn">
-                            <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                        <div class="rbt-card-body">
+                            <div class="rbt-card-top">
+                                <div class="rbt-review">
+                                    <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    <span class="rating-count">(15 Reviews)</span>
+                                </div>
+                                <div class="rbt-bookmark-btn">
+                                    <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                                </div>
+                            </div>
+                            <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                            <ul class="rbt-meta">
+                                <li><i class="feather-book"></i>${lessonCount} Lessons</li>
+                                <li><i class="feather-users"></i>50 Students</li>
+                            </ul>
+                            <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
+                            <div class="rbt-author-meta mb--10">
+                                <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
+                                <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
+                            </div>
+                            <div class="rbt-card-bottom">
+                                ${priceHtml}
+                                <a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a>
+                            </div>
                         </div>
                     </div>
-                    {/* And here */}
-                    <h4 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h4>
-                    <ul class="rbt-meta">
-                        <li><i class="feather-book"></i>${lessonCount} Lessons</li>
-                        <li><i class="feather-users"></i>50 Students</li>
-                    </ul>
-                    <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
-                    <div class="rbt-author-meta mb--10">
-                        <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
-                        <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
-                    </div>
-                    <div class="rbt-card-bottom">
-                        ${priceHtml}
-                        {/* And finally, here */}
-                        <a class="rbt-btn-link" href="${detailPageUrl}">Learn More<i class="feather-arrow-right"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-};
+                </div>`;
+        };
 
         // --- Main Function to Fetch and Display Courses ---
         // CHANGED: Now fetches user wishlist first to set the initial state of bookmark icons
