@@ -226,7 +226,7 @@ app.post('/api/user/avatar', auth, avatarUpload.single('avatar'), async (req, re
         if (!req.file) return res.status(400).json({ msg: 'No file uploaded.' });
         const user = await User.findById(req.user.id);
         // FIX: The path should point to the actual upload location
-        user.avatar = `uploads/courses/${req.file.filename}`; 
+        user.avatar = `uploads/avatars/${req.file.filename}`;
         await user.save();
         res.json({ success: true, msg: 'Avatar updated successfully', filePath: user.avatar });
     } catch (err) { res.status(500).send('Server Error'); }
