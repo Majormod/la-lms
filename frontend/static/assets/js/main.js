@@ -4960,7 +4960,7 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
         const token = localStorage.getItem('lmsToken');
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
-        const API_BASE_URL = 'http://54.221.189.159';
+        const API_BASE_URL = 'http://34.195.233.179';
 
         if (!courseId) {
             document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
