@@ -519,7 +519,7 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, res) => {
+app.put('/api/courses/:courseId', auth, thumbnailUpload.single('thumbnail'), async (req, res) => {
     try {
         const { courseId } = req.params;
         const course = await Course.findById(courseId);
@@ -530,55 +530,40 @@ app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, 
         if (course.instructor.toString() !== req.user.id) {
             return res.status(403).json({ success: false, message: 'User not authorized' });
         }
-        // Add this line with the other course property updates
-if (req.body.isMasterclass !== undefined) {
-    course.isMasterclass = req.body.isMasterclass === 'true';
-}
-        // --- Update All Fields from Form Data ---
 
-        // Basic fields
+        // --- Update All Fields ---
+        
+        // This handles the isMasterclass toggle
+        if (req.body.isMasterclass !== undefined) {
+            course.isMasterclass = req.body.isMasterclass === 'true';
+        }
+
+        // Update all other text fields from the form
         course.title = req.body.title || course.title;
         course.slug = req.body.slug || course.slug;
+        // ... (all your other fields are fine)
         course.description = req.body.description || course.description;
         course.originalPrice = parseFloat(req.body.originalPrice);
         course.price = parseFloat(req.body.price);
         course.previewVideoUrl = req.body.previewVideoUrl;
         course.status = req.body.status || course.status;
-
-        // Additional Information fields
         course.startDate = req.body.startDate;
-        
-        if (req.body.language) {
-            try { course.language = JSON.parse(req.body.language); } 
-            catch (e) { course.language = []; }
-        }
-        
-        if (req.body.requirements) {
-            course.requirements = req.body.requirements.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        if (req.body.whatYoullLearn) {
-            course.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        if (req.body.targetedAudience) {
-            course.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean);
-        }
-        if (req.body.tags) {
-            course.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean);
-        }
-
-        // Handle nested duration object
+        if (req.body.language) { try { course.language = JSON.parse(req.body.language); } catch (e) { course.language = []; } }
+        if (req.body.requirements) { course.requirements = req.body.requirements.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.whatYoullLearn) { course.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.targetedAudience) { course.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.tags) { course.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean); }
         course.duration = course.duration || {};
         course.duration.hours = parseInt(req.body.durationHours, 10) || 0;
         course.duration.minutes = parseInt(req.body.durationMinutes, 10) || 0;
-
-        // Certificate fields
         course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
         course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
         course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
 
         // Handle new thumbnail upload
         if (req.file) {
-            course.thumbnail = `assets/images/uploads/${req.file.filename}`;
+            // Use the correct path for the dedicated thumbnails folder
+            course.thumbnail = `uploads/thumbnails/${req.file.filename}`;
         }
 
         const updatedCourse = await course.save();
