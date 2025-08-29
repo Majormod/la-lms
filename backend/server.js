@@ -345,6 +345,7 @@ const { title, slug, description, price, originalPrice, difficultyLevel, maxStud
             maxStudents: parseInt(maxStudents, 10),
             isPublic: isPublic === 'true', // Convert string from form to boolean
             isQAEnabled: isQAEnabled === 'true' // Convert string from form to boolean
+            isMasterclass: isMasterclass === 'true' // ADD THIS LINE
         });
 
         await newCourse.save();
@@ -474,7 +475,10 @@ app.put('/api/courses/:courseId', auth, upload.single('thumbnail'), async (req, 
         if (course.instructor.toString() !== req.user.id) {
             return res.status(403).json({ success: false, message: 'User not authorized' });
         }
-
+        // Add this line with the other course property updates
+if (req.body.isMasterclass !== undefined) {
+    course.isMasterclass = req.body.isMasterclass === 'true';
+}
         // --- Update All Fields from Form Data ---
 
         // Basic fields

@@ -1,5 +1,3 @@
-// Course.js
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -77,8 +75,8 @@ const EpisodeSchema = new mongoose.Schema({
     title: { type: String, required: true },
     summary: { type: String },
     lessons: [LessonSchema],
-    quizzes: [QuizSchema],
-    assignments: [AssignmentSchema]
+    quizzes: [QuizSchema],         // <-- ADD THIS LINE
+    assignments: [AssignmentSchema] // <-- ADD THIS LINE
 });
 
 // Your main Course Schema, with the 'episodes' field
@@ -102,13 +100,6 @@ const CourseSchema = new Schema({
     maxStudents: { type: Number, default: 0 },
     isPublic: { type: Boolean, default: false },
     isQAEnabled: { type: Boolean, default: true },
-    
-    // --- ADD THIS FIELD FOR THE MASTERCLASS FEATURE ---
-    isMasterclass: { 
-        type: Boolean, 
-        default: false 
-    },
-
     previewVideoUrl: String,
     createdAt: { type: Date, default: Date.now },
     startDate: { type: Date }, // New field for start date
