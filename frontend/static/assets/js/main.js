@@ -5290,7 +5290,38 @@ const populateInstructor = (instructor) => {
         });
     });
 }
+// --- INTERACTIVE STAR RATING LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+    const ratingContainer = document.querySelector('.review-form-rating');
 
+    // Ensure the rating container exists before adding listeners
+    if (ratingContainer) {
+        const stars = ratingContainer.querySelectorAll('label');
+
+        // Use event delegation on the container
+        ratingContainer.addEventListener('click', (event) => {
+            // Check if a star label was clicked
+            if (event.target.tagName === 'LABEL') {
+                const clickedStarId = event.target.htmlFor; // e.g., "star3"
+                const radioInput = document.getElementById(clickedStarId);
+                const ratingValue = parseInt(radioInput.value);
+
+                // 1. Remove 'selected' from all stars first
+                stars.forEach(star => {
+                    star.classList.remove('selected');
+                });
+
+                // 2. Add 'selected' to the clicked star and all previous ones
+                for (let i = 0; i < ratingValue; i++) {
+                    stars[i].classList.add('selected');
+                }
+
+                // 3. Ensure the underlying radio button is checked
+                radioInput.checked = true;
+            }
+        });
+    }
+});
 
 // FINAL FIX: Paste this entire block at the very bottom of your main.js file.
 document.addEventListener('DOMContentLoaded', () => {
