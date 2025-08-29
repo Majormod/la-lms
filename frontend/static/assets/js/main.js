@@ -4956,21 +4956,87 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('lmsToken');
-        const urlParams = new URLSearchParams(window.location.search);
-        const courseId = urlParams.get('courseId');
-        const API_BASE_URL = 'http://34.195.233.179';
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    const token = localStorage.getItem('lmsToken');
+    const API_BASE_URL = 'http://54.221.189.159';
 
-        if (!courseId) {
-            document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
+    if (!courseId) {
+        document.body.innerHTML = '<h1>Error: No Course ID provided.</h1>';
+        return;
+    }
+
+    // =================================================================
+    // ===== REVIEW HELPER FUNCTIONS =====
+    // =================================================================
+
+    const renderStars = (rating) => {
+        let starsHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHTML += `<i class="fa fa-star ${i <= rating ? 'active' : ''}"></i>`;
+        }
+        return `<div class="rating">${starsHTML}</div>`;
+    };
+
+    const renderPagination = (pagination, courseId) => {
+        const container = document.getElementById('reviews-pagination-container');
+        if (!container || pagination.totalPages <= 1) {
+            if (container) container.innerHTML = '';
             return;
         }
+        
+        let paginationHTML = '';
+        for (let i = 1; i <= pagination.totalPages; i++) {
+            paginationHTML += `
+                <li>
+                    <a href="#" data-page="${i}" class="${i === pagination.currentPage ? 'active' : ''}">${i}</a>
+                </li>`;
+        }
+        container.innerHTML = `<ul>${paginationHTML}</ul>`;
+        
+        container.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                fetchAndRenderReviews(courseId, link.dataset.page);
+            });
+        });
+    };
+    
+    const fetchAndRenderReviews = (courseId, page = 1) => {
+        const reviewsContainer = document.getElementById('reviews-list-container');
+        if (!reviewsContainer) return;
 
-        // =================================================================
-        // ===== HELPER FUNCTIONS TO POPULATE THE PAGE =====
-        // =================================================================
-
+        fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=5`)
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    reviewsContainer.innerHTML = '';
+                    if (result.reviews.length > 0) {
+                        result.reviews.forEach(review => {
+                            reviewsContainer.innerHTML += `
+                                <div class="rbt-course-review">
+                                    <div class="media">
+                                        <div class="thumbnail">
+                                            <a href="#"><img src="/${review.student.avatar}" alt="User Avatar"></a>
+                                        </div>
+                                        <div class="media-body">
+                                            <div class="author-info">
+                                                <h5 class="title">${review.student.firstName} ${review.student.lastName}</h5>
+                                                ${renderStars(review.rating)}
+                                            </div>
+                                            <div class="content"><p class="description">${review.comment}</p></div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                        renderPagination(result.pagination, courseId);
+                    } else {
+                        reviewsContainer.innerHTML = '<p>Be the first to leave a review!</p>';
+                    }
+                }
+            });
+    };
+    
         const populateBanner = (course) => {
             document.getElementById('masterclass-title').textContent = course.title || 'MasterClass Title';
             document.getElementById('masterclass-description').textContent = course.description || '';
@@ -5037,13 +5103,11 @@ if (window.location.pathname.includes('the-masterclass-details.html')) {
             }
         };
 
-// REPLACE your existing populateInstructor function with this one
 
 const populateInstructor = (instructor) => {
     const container = document.getElementById('intructor');
     if (!container || !instructor) return;
 
-    // NOTE: The student/review/course counts are static for now, as that data isn't on the instructor object yet.
     container.innerHTML = `
         <div class="about-author border-0 pb--0 pt--0">
             <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
@@ -5076,47 +5140,80 @@ const populateInstructor = (instructor) => {
         if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
         if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
     }
-};
+};    
+    // =================================================================
+    // ===== MAIN FETCH AND PAGE SETUP =====
+    // =================================================================
+    
+    const fetchUrl = token ? `${API_BASE_URL}/api/courses/preview/${courseId}` : `${API_BASE_URL}/api/courses/${courseId}`;
+    const headers = token ? { 'x-auth-token': token } : {};
 
-        // =================================================================
-        // ===== MAIN FETCH AND EXECUTION LOGIC =====
-        // =================================================================
-
-        fetch(`${API_BASE_URL}/api/courses/preview/${courseId}`, {
-            headers: { 'x-auth-token': token }
-        })
+    fetch(fetchUrl, { headers })
         .then(res => res.json())
         .then(result => {
-            if (!result.success || !result.course) {
-                throw new Error(result.message || 'Could not load MasterClass data.');
-            }
+            if (result.success && result.course) {
+                // populatePage(result.course); // Call your function to populate the rest of the page
+const profile = result.data;
+                    const fullName = `${profile.firstName} ${profile.lastName}`;
 
-            const course = result.course;
+                    // Update Name
+                    document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown').forEach(el => {
+                        if (el) el.textContent = fullName;
+                    });
+                    
+                    // Update Avatar
+                    if (profile.avatar) {
+                        const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
+                        const navAvatars = document.querySelectorAll('.nav-user-avatar-img');
+                        navAvatars.forEach(img => {
+                            if (img) img.src = avatarUrl;
+                        });
+                    }
+                // Fetch and render the reviews
+                fetchAndRenderReviews(result.course._id);
 
-            // Populate all sections of the page
-            populateBanner(course);
-            populateMainContent(course);
-            renderCourseCurriculum(course.episodes || []);
-            populateInstructor(course.instructor);
-            // You can add a populateSidebar(course) function here as well if needed
-            // --- ADD THIS NEW LOGIC ---
-            const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-            if (user && user.role === 'student') {
-                // Later, you can add a check here to see if the student is enrolled.
-                // For now, we'll just show the form if they are a student.
-                const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
-                if (reviewFormWrapper) {
-                    reviewFormWrapper.style.display = 'block';
+                // Show the "Add a Review" form if the user is a student
+                const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+                if (user && user.role === 'student') {
+                    document.getElementById('add-review-form-wrapper').style.display = 'block';
                 }
+            } else {
+                document.body.innerHTML = `<h1>Error: ${result.message}</h1>`;
             }
-            // --- END OF NEW LOGIC ---
-        })
-        
-        .catch(error => {
-            console.error('Error fetching MasterClass details:', error);
-            document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
         });
-    });
+
+    // --- EVENT LISTENER for review form submission ---
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!token) { return alert("Please log in to submit a review."); }
+
+            const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
+            const comment = document.getElementById('review-comment').value;
+
+            if (!rating) { return alert('Please select a star rating.'); }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ rating: parseInt(rating), comment })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Thank you for your review!');
+                    reviewForm.reset();
+                    fetchAndRenderReviews(courseId); // Refresh review list
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error("Failed to submit review:", error);
+            }
+        });
+    }
 }
 
 
