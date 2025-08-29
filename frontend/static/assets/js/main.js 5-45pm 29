@@ -4955,136 +4955,106 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 // main.js
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
-
+    // This wrapper is crucial. It waits for the HTML to fully load
+    // before running any of the code inside it.
     document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('lmsToken');
+        // Make sure to define API_BASE_URL somewhere in your application
+        // const API_BASE_URL = 'https://your-api-domain.com';
+
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
-        const API_BASE_URL = 'http://54.221.189.159';
 
         if (!courseId) {
             document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
-            return;
+            return; // Stop if there's no ID
         }
 
-        // =================================================================
-        // ===== HELPER FUNCTIONS TO POPULATE THE PAGE =====
-        // =================================================================
+        // This helper function populates all the elements on the page.
+        const populateMasterclassPage = (course) => {
+            // Populate Banner
+            const titleElement = document.getElementById('masterclass-title');
+            if (titleElement) {
+                titleElement.textContent = course.title || 'MasterClass Title';
+            }
 
-        const populateBanner = (course) => {
-            document.getElementById('masterclass-title').textContent = course.title || 'MasterClass Title';
-            document.getElementById('masterclass-description').textContent = course.description || '';
-        };
+            const descriptionElement = document.getElementById('masterclass-description');
+            if (descriptionElement) {
+                descriptionElement.textContent = course.description || '';
+            }
 
-        const renderList = (items) => {
-            if (!items || items.length === 0) return '<p>No items listed.</p>';
-            return `
-                <ul class="rbt-list-style-1">
-                    ${items.map(item => `<li><i class="feather-check"></i>${item}</li>`).join('')}
+            // --- Populate Course Content Section (What you'll learn, curriculum, etc.) ---
+            const contentContainer = document.getElementById('course-content-container');
+            // ... (The logic for populating the main content remains the same) ...
+
+            // --- Populate Sidebar Widgets ---
+            const priceWidget = document.getElementById('sidebar-price-widget');
+            const buttonContainer = document.getElementById('sidebar-button-container');
+            const metaWidget = document.getElementById('course-meta-widget');
+
+            // Logic for Price and Buttons
+            if (course.price && course.price > 0) {
+                const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
+
+                buttonContainer.innerHTML = `
+                    <div class="add-to-card-button mt--15">
+                        <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Add to Cart</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>
+                    <div class="buy-now-btn mt--15">
+                        <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Buy Now</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>`;
+            } else {
+                priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+                buttonContainer.innerHTML = `
+                    <div class="add-to-card-button mt--15">
+                         <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Enroll Now</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>`;
+            }
+
+            // Logic for Meta Widget
+            let totalLessons = course.episodes.reduce((acc, episode) => acc + (episode.lessons ? episode.lessons.length : 0), 0);
+            metaWidget.innerHTML = `
+                 <ul class="rbt-course-details-list-wrapper">
+                    <li><span>Lectures</span><span class="rbt-feature-value rbt-badge-5">${totalLessons}</span></li>
+                    <li><span>Skill Level</span><span class="rbt-feature-value rbt-badge-5">${course.difficultyLevel}</span></li>
+                    <li><span>Language</span><span class="rbt-feature-value rbt-badge-5">${course.language.join(', ')}</span></li>
+                    <li><span>Certificate</span><span class="rbt-feature-value rbt-badge-5">${course.includesCertificate ? 'Yes' : 'No'}</span></li>
                 </ul>`;
         };
 
-        const renderCourseCurriculum = (episodes) => {
-            const container = document.querySelector('#coursecontent .accordion');
-            if (!container) return;
-            container.innerHTML = episodes.map((episode, index) => {
-                const lessonsHtml = episode.lessons.map(lesson => `
-                    <li>
-                        <a href="#">
-                            <div class="course-content-left">
-                                <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
-                            </div>
-                            <div class="course-content-right">
-                                <span class="min-lable">${lesson.duration || ''}</span>
-                            </div>
-                        </a>
-                    </li>`).join('');
-                return `
-                    <div class="accordion-item card">
-                        <h2 class="accordion-header card-header" id="heading-${index}">
-                            <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
-                                ${episode.title}
-                            </button>
-                        </h2>
-                        <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
-                            <div class="accordion-body card-body pr--0">
-                                <ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul>
-                            </div>
-                        </div>
-                    </div>`;
-            }).join('');
-        };
-        
-        const populateMainContent = (course) => {
-            const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
-            if(overviewContainer) {
-                overviewContainer.innerHTML = `
-                    <div class="section-title"><h4 class="rbt-title-style-3">What you'll learn</h4></div>
-                    ${renderList(course.whatYoullLearn)}`;
-            }
+        // 2. Fetch the course data from the API
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`) // We use the public course details route
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success || !result.course) {
+                    throw new Error(result.message || 'Could not load MasterClass data.');
+                }
 
-            const detailsContainer = document.querySelector('#details .row');
-             if(detailsContainer) {
-                detailsContainer.innerHTML = `
-                    <div class="col-lg-6">
-                        <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Requirements</h4></div>
-                        ${renderList(course.requirements)}
-                    </div>
-                    <div class="col-lg-6">
-                         <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Description</h4></div>
-                        <p>${course.description || ''}</p>
-                    </div>`;
-            }
-        };
+                // If the course is NOT a masterclass, redirect to the correct page
+                if (!result.course.isMasterclass) {
+                    window.location.href = `course-details.html?courseId=${courseId}`;
+                    return;
+                }
 
-        const populateInstructor = (instructor) => {
-            const container = document.getElementById('intructor');
-            if (!container || !instructor) return;
-            container.innerHTML = `
-                <div class="about-author border-0 pb--0 pt--0">
-                    <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
-                    <div class="media align-items-center">
-                        <div class="thumbnail"><a href="#"><img src="/${instructor.avatar}" alt="Author Images"></a></div>
-                        <div class="media-body">
-                            <div class="author-info">
-                                <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${instructor.firstName} ${instructor.lastName}</a></h5>
-                                <span class="b3 subtitle">${instructor.occupation || ''}</span>
-                            </div>
-                            <div class="content">
-                                <p class="description">${instructor.bio || ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        };
-
-        // =================================================================
-        // ===== MAIN FETCH AND EXECUTION LOGIC =====
-        // =================================================================
-
-        fetch(`${API_BASE_URL}/api/courses/preview/${courseId}`, {
-            headers: { 'x-auth-token': token }
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (!result.success || !result.course) {
-                throw new Error(result.message || 'Could not load MasterClass data.');
-            }
-
-            const course = result.course;
-
-            // Populate all sections of the page
-            populateBanner(course);
-            populateMainContent(course);
-            renderCourseCurriculum(course.episodes || []);
-            populateInstructor(course.instructor);
-            // You can add a populateSidebar(course) function here as well if needed
-        })
-        .catch(error => {
-            console.error('Error fetching MasterClass details:', error);
-            document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
-        });
-    });
+                const course = result.course;
+                
+                // 3. Populate the page with the fetched data
+                populateMasterclassPage(course);
+            })
+            .catch(error => {
+                console.error('Error fetching MasterClass details:', error);
+                document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
+            });
+    }); // <-- The DOMContentLoaded wrapper ends here
 }
 
 

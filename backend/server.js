@@ -1574,6 +1574,32 @@ app.get('/api/instructors/:instructorId/courses', isAuthenticated, async (req, r
     }
 });
 
+// In server.js
+
+// PRIVATE: For previewing a course from the edit page
+app.get('/api/courses/preview/:id', auth, async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id)
+            .populate('instructor', 'firstName lastName avatar occupation bio social'); // Populate instructor details
+
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
+        // Security Check: Only the course owner can preview
+        if (course.instructor._id.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized to preview this course' });
+        }
+        
+        // If checks pass, send the course data regardless of its status
+        res.json({ success: true, course: course });
+
+    } catch (error) {
+        console.error('Error fetching course for preview:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 app.use(express.static(staticPath));
 
