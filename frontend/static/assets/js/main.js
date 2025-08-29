@@ -5034,7 +5034,9 @@ announcementTableBody.addEventListener('click', (e) => {
     }
     
     // --- Initial Load ---
-    fetchAndDisplayAnnouncements();
+    // --- Initial Load ---
+populateCoursesDropdown();
+fetchAndDisplayAnnouncements();
 }
 
 // FINAL FIX: Paste this entire block at the very bottom of your main.js file.
