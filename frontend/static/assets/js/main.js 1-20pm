@@ -1975,23 +1975,11 @@ $(document).ready(function () {
                             <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                         </span>
                     `;
-
                     // START: Add this new code block
 const existingFilesContainer = document.getElementById('existing-exercise-files');
 const newFilesListContainer = document.getElementById('new-files-list');
 const fileInput = document.getElementById('lesson-exercise-files');
-// main.js -> edit-course.html block
 
-const updatePreviewButton = (isMasterclass, courseId) => {
-    const previewBtn = document.getElementById('preview-course-btn');
-    if (!previewBtn) return;
-
-    if (isMasterclass) {
-        previewBtn.setAttribute('data-href', `masterclass-details.html?courseId=${courseId}`);
-    } else {
-        previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
-    }
-};
 // Clear any previous state
 existingFilesContainer.innerHTML = '';
 newFilesListContainer.innerHTML = '';
@@ -2699,8 +2687,7 @@ fetch(`${API_BASE_URL}/api/courses/edit/${courseId}`, { headers: { 'x-auth-token
                     console.error('Error parsing startDate:', e);
                 }
             }
-            // --- ADD THIS ---
-updatePreviewButton(course.isMasterclass, course._id); 
+            
             // Language - handle both array and string
             if (course.language && course.language.length > 0) {
                 const languageSelect = document.getElementById('language');
@@ -2792,17 +2779,13 @@ updatePreviewButton(course.isMasterclass, course._id);
 
         // --- EVENT LISTENERS ---
 
-// Preview Button
-
-if (previewButton) {
-    previewButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        const destination = previewButton.getAttribute('data-href');
-        if (destination) {
-            window.open(destination, '_blank');
+        // Preview Button
+        if (previewButton) {
+            previewButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.open(`course-details.html?courseId=${courseId}`, '_blank');
+            });
         }
-    });
-}
 
 // Lesson Modal Setup
 // --- CORRECTED: Lesson Modal Setup Listener ---
@@ -3192,6 +3175,7 @@ if (editCourseForm) {
 }
     }; // End of window.onload
 }
+
 // =================================================================
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
 // =================================================================
