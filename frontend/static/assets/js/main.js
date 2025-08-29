@@ -4955,96 +4955,108 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 // main.js
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
-    
-    // 1. Get the course ID from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
+    // This wrapper is crucial. It waits for the HTML to fully load
+    // before running any of the code inside it.
+    document.addEventListener('DOMContentLoaded', () => {
+        // Make sure to define API_BASE_URL somewhere in your application
+        // const API_BASE_URL = 'https://your-api-domain.com';
 
-    if (!courseId) {
-        document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
-    }
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
 
-    // 2. Fetch the course data from the API
-    fetch(`${API_BASE_URL}/api/courses/${courseId}`) // We use the public course details route
-        .then(res => res.json())
-        .then(result => {
-            if (!result.success || !result.course) {
-                throw new Error(result.message || 'Could not load MasterClass data.');
+        if (!courseId) {
+            document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
+            return; // Stop if there's no ID
+        }
+
+        // This helper function populates all the elements on the page.
+        const populateMasterclassPage = (course) => {
+            // Populate Banner
+            const titleElement = document.getElementById('masterclass-title');
+            if (titleElement) {
+                titleElement.textContent = course.title || 'MasterClass Title';
             }
 
-            // If the course is NOT a masterclass, redirect to the correct page
-            if (!result.course.isMasterclass) {
-                window.location.href = `course-details.html?courseId=${courseId}`;
-                return;
+            const descriptionElement = document.getElementById('masterclass-description');
+            if (descriptionElement) {
+                descriptionElement.textContent = course.description || '';
             }
 
-            const course = result.course;
-            
-            // 3. Populate the page with the fetched data
-            populateMasterclassPage(course);
-        })
-        .catch(error => {
-            console.error('Error fetching MasterClass details:', error);
-            document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
-        });
+            // --- Populate Course Content Section (What you'll learn, curriculum, etc.) ---
+            const contentContainer = document.getElementById('course-content-container');
+            // ... (The logic for populating the main content remains the same) ...
 
-    // 4. Helper function to populate all dynamic elements
-// main.js - inside the masterclass-details.html block
+            // --- Populate Sidebar Widgets ---
+            const priceWidget = document.getElementById('sidebar-price-widget');
+            const buttonContainer = document.getElementById('sidebar-button-container');
+            const metaWidget = document.getElementById('course-meta-widget');
 
-const populateMasterclassPage = (course) => {
-    // --- Populate Banner ---
-    document.getElementById('masterclass-title').textContent = course.title || 'MasterClass Title';
-    document.getElementById('masterclass-description').textContent = course.description ? course.description.substring(0, 150) + '...' : 'An exclusive MasterClass.';
+            // Logic for Price and Buttons
+            if (course.price && course.price > 0) {
+                const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
 
-    // --- Populate Course Content Section (What you'll learn, curriculum, etc.) ---
-    const contentContainer = document.getElementById('course-content-container');
-    // ... (The logic for populating the main content remains the same) ...
+                buttonContainer.innerHTML = `
+                    <div class="add-to-card-button mt--15">
+                        <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Add to Cart</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>
+                    <div class="buy-now-btn mt--15">
+                        <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Buy Now</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>`;
+            } else {
+                priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+                buttonContainer.innerHTML = `
+                    <div class="add-to-card-button mt--15">
+                         <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
+                            <span class="btn-text">Enroll Now</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </a>
+                    </div>`;
+            }
 
-    // --- Populate Sidebar Widgets ---
-    const priceWidget = document.getElementById('sidebar-price-widget');
-    const buttonContainer = document.getElementById('sidebar-button-container');
-    const metaWidget = document.getElementById('course-meta-widget');
+            // Logic for Meta Widget
+            let totalLessons = course.episodes.reduce((acc, episode) => acc + (episode.lessons ? episode.lessons.length : 0), 0);
+            metaWidget.innerHTML = `
+                 <ul class="rbt-course-details-list-wrapper">
+                    <li><span>Lectures</span><span class="rbt-feature-value rbt-badge-5">${totalLessons}</span></li>
+                    <li><span>Skill Level</span><span class="rbt-feature-value rbt-badge-5">${course.difficultyLevel}</span></li>
+                    <li><span>Language</span><span class="rbt-feature-value rbt-badge-5">${course.language.join(', ')}</span></li>
+                    <li><span>Certificate</span><span class="rbt-feature-value rbt-badge-5">${course.includesCertificate ? 'Yes' : 'No'}</span></li>
+                </ul>`;
+        };
 
-    // Logic for Price and Buttons
-    if (course.price && course.price > 0) {
-        const originalPriceHtml = (course.originalPrice && course.originalPrice > course.price) ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
-        priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>${originalPriceHtml}</div>`;
+        // 2. Fetch the course data from the API
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`) // We use the public course details route
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success || !result.course) {
+                    throw new Error(result.message || 'Could not load MasterClass data.');
+                }
 
-        buttonContainer.innerHTML = `
-            <div class="add-to-card-button mt--15">
-                <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
-                    <span class="btn-text">Add to Cart</span>
-                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                </a>
-            </div>
-            <div class="buy-now-btn mt--15">
-                <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
-                    <span class="btn-text">Buy Now</span>
-                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                </a>
-            </div>`;
-    } else {
-        priceWidget.innerHTML = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
-        buttonContainer.innerHTML = `
-            <div class="add-to-card-button mt--15">
-                 <a class="rbt-btn btn-border-gradient hover-icon-reverse radius-round w-100 d-block text-center" href="#">
-                    <span class="btn-text">Enroll Now</span>
-                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                </a>
-            </div>`;
-    }
+                // If the course is NOT a masterclass, redirect to the correct page
+                if (!result.course.isMasterclass) {
+                    window.location.href = `course-details.html?courseId=${courseId}`;
+                    return;
+                }
 
-    // Logic for Meta Widget
-    let totalLessons = course.episodes.reduce((acc, episode) => acc + (episode.lessons ? episode.lessons.length : 0), 0);
-    metaWidget.innerHTML = `
-         <ul class="rbt-course-details-list-wrapper">
-            <li><span>Lectures</span><span class="rbt-feature-value rbt-badge-5">${totalLessons}</span></li>
-            <li><span>Skill Level</span><span class="rbt-feature-value rbt-badge-5">${course.difficultyLevel}</span></li>
-            <li><span>Language</span><span class="rbt-feature-value rbt-badge-5">${course.language.join(', ')}</span></li>
-            <li><span>Certificate</span><span class="rbt-feature-value rbt-badge-5">${course.includesCertificate ? 'Yes' : 'No'}</span></li>
-        </ul>`;
-};
+                const course = result.course;
+                
+                // 3. Populate the page with the fetched data
+                populateMasterclassPage(course);
+            })
+            .catch(error => {
+                console.error('Error fetching MasterClass details:', error);
+                document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
+            });
+    }); // <-- The DOMContentLoaded wrapper ends here
 }
+
 
 // FINAL FIX: Paste this entire block at the very bottom of your main.js file.
 document.addEventListener('DOMContentLoaded', () => {
