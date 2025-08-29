@@ -1070,7 +1070,7 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
-        const API_BASE_URL = 'http://54.221.189.159';
+        const API_BASE_URL = 'http://34.195.233.179';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 
@@ -1205,7 +1205,7 @@ const handlePageLogic = () => {
     const path = window.location.pathname;
     const token = localStorage.getItem('lmsToken');
     const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
-    const API_BASE_URL = 'http://54.221.189.159';
+    const API_BASE_URL = 'http://34.195.233.179';
 
     // This is the universal update that runs on every page for logged-in users.
     if (token) {
@@ -5067,7 +5067,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Exit if user is not logged in
         }
 
-        const API_BASE_URL = 'http://54.221.189.159';
+        const API_BASE_URL = 'http://34.195.233.179';
 
         fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
             .then(res => res.json())
