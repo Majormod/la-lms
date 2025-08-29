@@ -1461,128 +1461,7 @@ const renderCourses = (containerSelector, courseList) => {
                 };
                 fetchAndDisplayCoursesByStatus();
             }
-if (window.location.pathname.includes('instructor-announcements.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        // Use the correct keys to get data from localStorage
-        const token = localStorage.getItem('lmsToken');
-        const userString = localStorage.getItem('lmsUser');
 
-        if (!token || !userString) {
-            window.location.href = 'login.html';
-            return;
-        }
-// ADD THIS LINE TO FIX THE HEADER
-        updateUserDataOnPage(); 
-
-        const user = JSON.parse(userString);
-
-        // This authorization check will now work correctly
-        if (user.role !== 'instructor') {
-            alert('Access Denied: You must be an instructor to view this page.');
-            window.location.href = 'index.html'; // Redirect to homepage
-            return;
-        }
-
-       function populateInstructorHeader() {
-    const token = localStorage.getItem('lmsToken');
-    const userString = localStorage.getItem('lmsUser');
-
-    if (!token || !userString) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const localUser = JSON.parse(userString);
-    
-    // --- Find the HTML elements ---
-    const bannerImageEl = document.getElementById('dashboard-banner-image');
-    const profileAvatarEl = document.getElementById('dashboard-profile-avatar');
-    const instructorNameEl = document.getElementById('dashboard-instructor-name');
-    
-    // 1. Immediately update the name from the basic data we already have
-    if (instructorNameEl) {
-        instructorNameEl.textContent = localUser.name || 'Instructor';
-    }
-
-    // 2. Fetch the full user profile from the server to get the image URLs
-    fetch(`${API_BASE_URL}/api/user/profile`, {
-        headers: {
-            'x-auth-token': token
-        }
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success && result.data) {
-            const fullProfile = result.data;
-            
-            // 3. Update the images with the data from the API
-            if (profileAvatarEl && fullProfile.avatar) {
-                profileAvatarEl.src = `/${fullProfile.avatar}`;
-            }
-            
-            if (bannerImageEl && fullProfile.coverPhoto) {
-                bannerImageEl.style.backgroundImage = `url('/${fullProfile.coverPhoto}')`;
-            }
-        }
-    })
-    .catch(error => console.error('Error fetching full user profile:', error));
-}
-// This block tells the browser to run the function on the correct pages
-if (window.location.pathname.includes('/instructor-')) {
-    document.addEventListener('DOMContentLoaded', populateInstructorHeader);
-}
-        const fetchAnnouncements = () => {
-            const tableBody = document.getElementById('announcements-table-body');
-            if (!tableBody) return;
-
-            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Loading announcements...</td></tr>';
-
-            fetch(`${API_BASE_URL}/api/instructor/announcements`, {
-                headers: { 'x-auth-token': token }
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    tableBody.innerHTML = '';
-                    if (result.announcements.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No announcements found.</td></tr>';
-                    } else {
-                        result.announcements.forEach(announcement => {
-                            const announcementDate = new Date(announcement.date);
-                            const formattedDate = announcementDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                            const formattedTime = announcementDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-                            tableBody.innerHTML += `
-                                <tr>
-                                    <th>
-                                        <span class="h6 mb--5">${formattedDate}</span>
-                                        <p class="b3">${formattedTime}</p>
-                                    </th>
-                                    <td>
-                                        <span class="h6 mb--5">${announcement.title}</span>
-                                        <p class="b3">Course: ${announcement.course}</p>
-                                    </td>
-                                    <td>
-                                        <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn-link left-icon" href="#"><i class="feather-edit"></i> Edit</a>
-                                            <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching announcements:', error);
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Failed to load announcements.</td></tr>';
-            });
-        };
-
-        fetchAnnouncements();
-    });
-}
             if (path.includes('instructor-quiz-attempts.html')) {
                 if (!token || user.role !== 'instructor') {
                     alert("Access Denied: You are not an instructor.");
@@ -4854,95 +4733,62 @@ if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
     }
 }
 
-if (window.location.pathname.includes('instructor-announcements.html')) {
-    const user = JSON.parse(localStorage.getItem('lmsUser'));
-    const token = localStorage.getItem('lmsToken');
 
+// main.js
+
+if (window.location.pathname.includes('instructor-announcements.html')) {
+    
+    // --- 1. SETUP & SECURITY CHECK ---
+    const token = localStorage.getItem('lmsToken');
+    const userString = localStorage.getItem('lmsUser');
+
+    if (!token || !userString) {
+        window.location.href = 'login.html';
+    }
+    const user = JSON.parse(userString);
+    if (user.role !== 'instructor') {
+        alert('Access Denied: You must be an instructor to view this page.');
+        window.location.href = 'index.html';
+    }
+
+    // --- 2. GET ELEMENT REFERENCES ---
     const addAnnouncementBtn = document.querySelector('.rbt-callto-action .rbt-btn');
     const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
-    // --- ADD THIS CODE BLOCK BELOW IT ---
-const modalElement = document.getElementById('addAnnouncementModal');
-modalElement.addEventListener('hidden.bs.modal', event => {
-  const backdrop = document.querySelector('.modal-backdrop');
-  if (backdrop) {
-    backdrop.remove();
-  }
-  // Also ensure the body is scrollable again
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-  document.body.style.paddingRight = '';
-});
-    const courseSelect = document.getElementById('announcement-course');
+    const modalElement = document.getElementById('addAnnouncementModal');
+    const courseSelectInModal = document.getElementById('announcement-course');
     const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
     const sendBtn = document.getElementById('send-announcement-btn');
     const announcementTableBody = document.getElementById('announcements-table-body');
+    
+    // --- 3. DEFINE FUNCTIONS ---
 
-if (courseFilterSelect) {
-    courseFilterSelect.addEventListener('change', () => {
-        const selectedCourseId = courseFilterSelect.value;
-        const allRows = announcementTableBody.querySelectorAll('tr');
-
-        allRows.forEach(row => {
-            // If "All" is selected or if the row's course ID matches, show it. Otherwise, hide it.
-            if (!selectedCourseId || selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
-                row.style.display = ''; // Show row
+    const populateCoursesDropdown = () => {
+        fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.courses) {
+                courseSelectInModal.innerHTML = '<option disabled selected value="">Select a course</option>';
+                courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
+                data.courses.forEach(course => {
+                    const option = `<option value="${course._id}">${course.title}</option>`;
+                    courseSelectInModal.innerHTML += option;
+                    courseFilterSelect.innerHTML += option;
+                });
             } else {
-                row.style.display = 'none'; // Hide row
+                 console.error('API call was not successful or no courses found.', data.message);
             }
         });
-    });
-}
-    // --- 1. Fetch Instructor's Courses and Populate Dropdown ---
- // main.js
+    };
 
-const populateCoursesDropdown = () => {
-    console.log('Attempting to populate courses dropdown...'); // Log 1: Check if function is called
-
-    if (!user || user.role !== 'instructor') {
-        console.error('User is not an instructor or not logged in.'); // Log 2: Check for user role issue
-        return;
-    }
-    
-    fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log('Received data from API:', data); // Log 3: See what the API returned
-
-        if (data.success && data.courses) {
-            const courseSelect = document.getElementById('announcement-course');
-            const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
-            
-            courseSelect.innerHTML = '<option disabled selected value="">Select a course</option>';
-            courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
-
-            data.courses.forEach(course => {
-                const option = `<option value="${course._id}">${course.title}</option>`;
-                courseSelect.innerHTML += option;
-                courseFilterSelect.innerHTML += option;
-            });
-
-            console.log('Dropdowns populated successfully.'); // Log 4: Confirm success
-        } else {
-            console.error('API call was not successful or no courses found.', data.message); // Log 5: Check for API error
-        }
-    })
-    .catch(error => {
-        console.error('A critical error occurred during fetch:', error); // Log 6: Check for network/other errors
-    });
-};
-
-    // --- 2. Fetch and Display Existing Announcements ---
     const fetchAndDisplayAnnouncements = () => {
-        if (!user || user.role !== 'instructor') return;
-        
         fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => res.json())
         .then(data => {
-            announcementTableBody.innerHTML = ''; // Clear table
+            announcementTableBody.innerHTML = '';
             if (data.success && data.announcements.length > 0) {
                 data.announcements.forEach(ann => {
                     const date = new Date(ann.createdAt);
@@ -4950,21 +4796,21 @@ const populateCoursesDropdown = () => {
                     const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
                     const row = `
-    <tr data-course-id="${ann.course._id}">
-        <th>
-            <span class="h6 mb--5">${formattedDate}</span>
-            <p class="b3">${formattedTime}</p>
-        </th>
-        <td>
-            <span class="h6 mb--5">${ann.course.title}</span>
-            <p class="b3">${ann.message.substring(0, 100)}...</p>
-        </td>
-        <td>
-            <div class="rbt-button-group justify-content-end">
-                <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
-            </div>
-        </td>
-    </tr>`;
+                        <tr data-course-id="${ann.course._id}">
+                            <th>
+                                <span class="h6 mb--5">${formattedDate}</span>
+                                <p class="b3">${formattedTime}</p>
+                            </th>
+                            <td>
+                                <span class="h6 mb--5">${ann.course.title}</span>
+                                <p class="b3">${ann.message.substring(0, 100)}...</p>
+                            </td>
+                            <td>
+                                <div class="rbt-button-group justify-content-end">
+                                    <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
+                                </div>
+                            </td>
+                        </tr>`;
                     announcementTableBody.innerHTML += row;
                 });
             } else {
@@ -4973,15 +4819,25 @@ const populateCoursesDropdown = () => {
         });
     };
 
-    // --- 3. Handle Form Submission ---
+    // --- 4. SET UP EVENT LISTENERS ---
+
+    // Listener to open the modal
+    if (addAnnouncementBtn) {
+        addAnnouncementBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            populateCoursesDropdown(); // Refresh courses list each time
+            announcementModal.show();
+        });
+    }
+
+    // Listener to send the announcement
     sendBtn.addEventListener('click', () => {
-        const courseId = courseSelect.value;
+        const courseId = courseSelectInModal.value;
         const message = document.getElementById('announcement-message').value;
         const attachment = document.getElementById('announcement-attachment').files[0];
 
         if (!courseId || !message) {
-            alert('Please select a course and write a message.');
-            return;
+            return alert('Please select a course and write a message.');
         }
 
         sendBtn.textContent = 'Sending...';
@@ -4990,9 +4846,7 @@ const populateCoursesDropdown = () => {
         const formData = new FormData();
         formData.append('courseId', courseId);
         formData.append('message', message);
-        if (attachment) {
-            formData.append('attachment', attachment);
-        }
+        if (attachment) formData.append('attachment', attachment);
 
         fetch(`${API_BASE_URL}/api/announcements`, {
             method: 'POST',
@@ -5005,7 +4859,7 @@ const populateCoursesDropdown = () => {
                 alert('Announcement sent successfully!');
                 announcementModal.hide();
                 document.getElementById('announcement-form').reset();
-                fetchAndDisplayAnnouncements(); // Refresh the list
+                fetchAndDisplayAnnouncements();
             } else {
                 alert(`Error: ${data.message}`);
             }
@@ -5015,46 +4869,60 @@ const populateCoursesDropdown = () => {
             sendBtn.disabled = false;
         });
     });
-    // --- 6. Handle Delete Button Clicks ---
-announcementTableBody.addEventListener('click', (e) => {
-    // Check if a delete button or its icon was clicked
-    const deleteButton = e.target.closest('.delete-announcement-btn');
-    
-    if (deleteButton) {
-        e.preventDefault();
-        const announcementId = deleteButton.dataset.id;
-        
-        if (confirm('Are you sure you want to delete this announcement?')) {
-            fetch(`${API_BASE_URL}/api/announcements/${announcementId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Announcement deleted.');
-                    // Remove the row from the table for instant feedback
-                    deleteButton.closest('tr').remove();
+
+    // Listener for the course filter dropdown
+    if (courseFilterSelect) {
+        courseFilterSelect.addEventListener('change', () => {
+            const selectedCourseId = courseFilterSelect.value;
+            const allRows = announcementTableBody.querySelectorAll('tr');
+            allRows.forEach(row => {
+                if (!selectedCourseId || selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
+                    row.style.display = '';
                 } else {
-                    alert(`Error: ${data.message}`);
+                    row.style.display = 'none';
                 }
             });
-        }
-    }
-});
-    // --- 4. Open Modal ---
-    if (addAnnouncementBtn) {
-        addAnnouncementBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            populateCoursesDropdown(); // Refresh courses list each time
-            announcementModal.show();
         });
     }
-    
-    // --- Initial Load ---
-    // --- Initial Load ---
-populateCoursesDropdown();
-fetchAndDisplayAnnouncements();
+
+    // Listener for deleting announcements
+    announcementTableBody.addEventListener('click', (e) => {
+        const deleteButton = e.target.closest('.delete-announcement-btn');
+        if (deleteButton) {
+            e.preventDefault();
+            const announcementId = deleteButton.dataset.id;
+            if (confirm('Are you sure you want to delete this announcement?')) {
+                fetch(`${API_BASE_URL}/api/announcements/${announcementId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Announcement deleted.');
+                        deleteButton.closest('tr').remove();
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                });
+            }
+        }
+    });
+
+    // Listener to fix the modal backdrop issue
+    modalElement.addEventListener('hidden.bs.modal', event => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    });
+
+
+    // --- 5. INITIAL PAGE LOAD ---
+    populateCoursesDropdown();
+    fetchAndDisplayAnnouncements();
+    updateUserDataOnPage(); // For updating header/nav user info
 }
 
 // FINAL FIX: Paste this entire block at the very bottom of your main.js file.
