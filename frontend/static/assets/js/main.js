@@ -1720,13 +1720,17 @@ const renderCourses = (containerSelector, courseList) => {
                             displayName: document.querySelector('#displayname').value,
                             bio: document.querySelector('#bio').value,
                         };
+                        console.log('STEP 2: Data collected from form:', updatedData);
                         fetch(`${API_BASE_URL}/api/user/profile`, {
+                            console.log('STEP 3: Preparing to send data to:', fetchUrl);
+
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                             body: JSON.stringify(updatedData),
                         })
                             .then(res => res.json())
                             .then(result => {
+                                console.log('STEP 4: Received response from server:', result);
                                 if (result.success) {
                                     alert('Profile updated successfully!');
                                     updateUserDataOnPage();
@@ -1948,13 +1952,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             displayName: document.querySelector('#displayname').value,
                             bio: document.querySelector('#bio').value,
                         };
+                        console.log('STEP 2: Data collected from form:', updatedData);
                         fetch(`${API_BASE_URL}/api/user/profile`, {
+                        console.log('STEP 3: Preparing to send data to:', fetchUrl);
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                             body: JSON.stringify(updatedData),
                         })
                             .then(res => res.json())
                             .then(result => {
+                            console.log('STEP 4: Received response from server:', result);
                                 if (result.success) {
                                     alert('Profile updated successfully!');
                                     updateUserDataOnPage();
