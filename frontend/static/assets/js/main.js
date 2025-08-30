@@ -5065,7 +5065,8 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
     // --- 3. DEFINE FUNCTIONS ---
 
     const populateCoursesDropdown = () => {
-        fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
+    // THIS IS THE FIX: A timestamp is added to the URL to prevent caching
+    fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses?t=${new Date().getTime()}`, {
     headers: { 'x-auth-token': token }
 })
         .then(res => res.json())

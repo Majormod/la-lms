@@ -1516,39 +1516,44 @@ const announcementUpload = multer({ dest: 'uploads/' });
 
 // --- ADD THIS NEW ANNOUNCEMENT ROUTE ---
 // It uses 'upload.single('attachment')' to handle the file
-app.post('/api/announcements', isAuthenticated, isInstructor, announcementUpload.single('attachment'), async (req, res) => {
+// In server.js - Replace your existing POST /api/announcements route
+
+app.post('/api/announcements', auth, isInstructor, announcementUpload.single('attachment'), async (req, res) => {
     try {
         const { courseId, message } = req.body;
-        const instructorId = req.user.id; // From isAuthenticated middleware
+        const instructorId = req.user.id;
 
-        // 1. Find the course and all enrolled students
-        const course = await Course.findById(courseId).populate('students');
+        // 1. Find the course (we still need this to validate the instructor)
+        const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== instructorId) {
             return res.status(403).json({ success: false, message: 'You are not the instructor of this course.' });
         }
         
-        // 2. Save the announcement to the database
+        // 2. Save the announcement to the database (this part is unchanged)
         const announcement = new Announcement({
             course: courseId,
             instructor: instructorId,
             message: message,
-            // You could save attachment path here if needed:
-            // attachmentPath: req.file ? req.file.path : null 
+            attachmentPath: req.file ? req.file.path : null 
         });
         await announcement.save();
 
-        // 3. Send emails to all students
-        if (course.students && course.students.length > 0) {
-            const studentEmails = course.students.map(student => student.email);
+        // --- START OF FIX ---
+        // 3. Instead of getting students from the course, get ALL students from the User collection
+        const allStudents = await User.find({ role: 'student' });
+        
+        // 4. Send emails to all students
+        if (allStudents && allStudents.length > 0) {
+            const studentEmails = allStudents.map(student => student.email);
             const instructor = await User.findById(instructorId);
             const instructorName = `${instructor.firstName} ${instructor.lastName}`;
-                    sendAnnouncementEmail(studentEmails, instructorName, course.title, message, req.file);
-
+            
             // Send email in the background
             sendAnnouncementEmail(studentEmails, instructorName, course.title, message, req.file);
         }
+        // --- END OF FIX ---
 
-        res.json({ success: true, message: 'Announcement sent successfully.' });
+        res.json({ success: true, message: 'Announcement sent successfully to all students.' });
 
     } catch (error) {
         console.error('Error sending announcement:', error);
