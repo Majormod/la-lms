@@ -1518,30 +1518,28 @@ const announcementUpload = multer({ dest: 'uploads/' });
 // It uses 'upload.single('attachment')' to handle the file
 // In server.js - Replace your existing POST /api/announcements route
 
-app.post('/api/announcements', auth, isInstructor, announcementUpload.single('attachment'), async (req, res) => {
+app.post('/api/announcements', isAuthenticated, isInstructor, announcementUpload.single('attachment'), async (req, res) => {
     try {
         const { courseId, message } = req.body;
-        const instructorId = req.user.id;
+        const instructorId = req.user.id; // From isAuthenticated middleware
 
-        // 1. Find the course (we still need this to validate the instructor)
+        // 1. Find the course to verify ownership and for email context
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== instructorId) {
             return res.status(403).json({ success: false, message: 'You are not the instructor of this course.' });
         }
         
-        // 2. Save the announcement to the database (this part is unchanged)
+        // 2. Save the announcement to the database
         const announcement = new Announcement({
             course: courseId,
             instructor: instructorId,
             message: message,
-            attachmentPath: req.file ? req.file.path : null 
         });
         await announcement.save();
 
-        // --- START OF FIX ---
-        // 3. Instead of getting students from the course, get ALL students from the User collection
+        // 3. Find ALL students in the system
         const allStudents = await User.find({ role: 'student' });
-        
+
         // 4. Send emails to all students
         if (allStudents && allStudents.length > 0) {
             const studentEmails = allStudents.map(student => student.email);
@@ -1551,7 +1549,6 @@ app.post('/api/announcements', auth, isInstructor, announcementUpload.single('at
             // Send email in the background
             sendAnnouncementEmail(studentEmails, instructorName, course.title, message, req.file);
         }
-        // --- END OF FIX ---
 
         res.json({ success: true, message: 'Announcement sent successfully to all students.' });
 

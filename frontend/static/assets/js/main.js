@@ -5151,11 +5151,14 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
         formData.append('message', message);
         if (attachment) formData.append('attachment', attachment);
 
-        fetch(`${API_BASE_URL}/api/announcements`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        })
+        // --- START OF FIX ---
+    fetch(`${API_BASE_URL}/api/announcements`, {
+        method: 'POST',
+        // CORRECTED: Use the 'x-auth-token' header to match your other API calls
+        headers: { 'x-auth-token': token },
+        body: formData
+    })
+    // --- END OF FIX ---
         .then(res => res.json())
         .then(data => {
             if (data.success) {
