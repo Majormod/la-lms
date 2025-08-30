@@ -23,6 +23,7 @@ const Course = require('./models/Course');
 const auth = require('./authMiddleware');
 const QuizResult = require('./models/QuizResult');
 const Review = require('./models/Review');
+const Announcement = require('./models/Announcement'); 
 const { sendAnnouncementEmail } = require('./emailService'); 
 
 // Using multer's .fields() method to accept up to two different files
