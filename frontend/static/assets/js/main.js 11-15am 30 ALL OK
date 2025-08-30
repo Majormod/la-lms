@@ -3741,66 +3741,36 @@ if (window.location.pathname.includes('lesson.html')) {
     /**
      * CORRECTED: Rebuilds the content to exactly match your UI theme's HTML structure.
      */
- /**
- * This function displays the lesson video, description, and resources.
- */
-function updateLessonContent(lessonId) {
-    let selectedLesson = null;
-    for (const episode of currentCourseData.episodes) {
-        const found = episode.lessons.find(l => l._id === lessonId);
-        if (found) {
-            selectedLesson = found;
-            break;
+    function updateLessonContent(lessonId) {
+        let selectedLesson = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.lessons.find(l => l._id === lessonId);
+            if (found) { selectedLesson = found; break; }
         }
+        if (!selectedLesson) return;
+
+        document.getElementById('lesson-title').textContent = selectedLesson.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
+
+        let videoHTML = '';
+        if (selectedLesson.vimeoUrl) {
+            const videoId = selectedLesson.vimeoUrl.split('/').pop();
+            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+        } else {
+            videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+        }
+
+        const descriptionHTML = `
+            <div class="content">
+                <div class="section-title">
+                    <h4>About Lesson</h4>
+                    <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+                </div>
+            </div>`;
+
+        contentContainer.innerHTML = videoHTML + descriptionHTML;
     }
-    if (!selectedLesson) return;
-
-    // --- Selectors for the content areas ---
-    document.getElementById('lesson-title').textContent = selectedLesson.title;
-    const contentContainer = document.getElementById('lesson-inner-content');
-
-    // --- Build Video HTML ---
-    let videoHTML = '';
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
-    } else {
-        videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
-    }
-
-    // --- Build Resources HTML (if files exist) ---
-    let resourcesHTML = '';
-    if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-        resourcesHTML = `
-            <div class="rbt-lesson-attachments mt--30">
-                <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                <ul class="rbt-list-style-1">
-                    ${selectedLesson.exerciseFiles.map(file => `
-                        <li>
-                            <a href="/${file.path}" target="_blank" download>
-                                <i class="feather-paperclip"></i> ${file.filename}
-                            </a>
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }
-
-    // --- Build Description and Final Content HTML ---
-    const descriptionHTML = `
-        <div class="content">
-            <div class="section-title">
-                <h4>About Lesson</h4>
-                <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
-            </div>
-            ${resourcesHTML}
-        </div>`;
-
-    // --- Render everything to the page ---
-    contentContainer.innerHTML = videoHTML + descriptionHTML;
-}
 
     // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
     function renderQuizStartScreen(quizId) {
