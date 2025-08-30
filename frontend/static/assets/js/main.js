@@ -5089,8 +5089,10 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
                         if (courseSelectInModal) courseSelectInModal.innerHTML = optionsHtml;
                         if (courseFilterSelect) courseFilterSelect.innerHTML = filterOptionsHtml;
+
                     } else {
                         if (courseSelectInModal) courseSelectInModal.innerHTML = '<option disabled selected value="">No courses found</option>';
+                        if (courseFilterSelect) courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
                     }
                 })
                 .catch(error => console.error("Error fetching courses for dropdown:", error));
@@ -5103,29 +5105,18 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
                 .then(res => res.json())
                 .then(data => {
                     if (!announcementTableBody) return;
-                    announcementTableBody.innerHTML = ''; // Clear previous entries
+                    announcementTableBody.innerHTML = '';
                     if (data.success && data.announcements.length > 0) {
                         data.announcements.forEach(ann => {
                             const date = new Date(ann.createdAt);
                             const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                             const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-                            // Use optional chaining (?.) in case a course was deleted but announcement remains
                             const row = `
                                 <tr data-course-id="${ann.course?._id || ''}">
-                                    <th>
-                                        <span class="h6 mb--5">${formattedDate}</span>
-                                        <p class="b3">${formattedTime}</p>
-                                    </th>
-                                    <td>
-                                        <span class="h6 mb--5">${ann.course?.title || 'For a deleted course'}</span>
-                                        <p class="b3">${ann.message.substring(0, 100)}...</p>
-                                    </td>
-                                    <td>
-                                        <div class="rbt-button-group justify-content-end">
-                                            <a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a>
-                                        </div>
-                                    </td>
+                                    <th><span class="h6 mb--5">${formattedDate}</span><p class="b3">${formattedTime}</p></th>
+                                    <td><span class="h6 mb--5">${ann.course?.title || 'General'}</span><p class="b3">${ann.message.substring(0, 100)}...</p></td>
+                                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a></div></td>
                                 </tr>`;
                             announcementTableBody.innerHTML += row;
                         });
@@ -5135,19 +5126,15 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
                 })
                 .catch(error => console.error("Error fetching announcements list:", error));
         };
-
+        
         // --- 4. SET UP ALL EVENT LISTENERS ---
-
-        // Listener to open the modal
         if (addAnnouncementBtn) {
             addAnnouncementBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                // We already populate dropdown on page load, no need to do it again unless the course list changes frequently.
                 announcementModal.show();
             });
         }
 
-        // Listener to send the announcement
         if (sendBtn) {
             sendBtn.addEventListener('click', () => {
                 const courseId = courseSelectInModal.value;
@@ -5177,7 +5164,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
                             alert('Announcement sent successfully!');
                             announcementModal.hide();
                             document.getElementById('announcement-form').reset();
-                            fetchAndDisplayAnnouncements(); // Refresh the list
+                            fetchAndDisplayAnnouncements();
                         } else {
                             alert(`Error: ${data.message}`);
                         }
@@ -5189,7 +5176,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
             });
         }
 
-        // Listener for the course filter dropdown
         if (courseFilterSelect) {
             courseFilterSelect.addEventListener('change', () => {
                 const selectedCourseId = courseFilterSelect.value;
@@ -5204,7 +5190,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
             });
         }
 
-        // Listener for deleting announcements
         if (announcementTableBody) {
             announcementTableBody.addEventListener('click', (e) => {
                 const deleteButton = e.target.closest('.delete-announcement-btn');
@@ -5230,7 +5215,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
             });
         }
 
-        // Listener to fix the modal backdrop issue
         if (modalElement) {
             modalElement.addEventListener('hidden.bs.modal', () => {
                 const backdrop = document.querySelector('.modal-backdrop');
@@ -5245,7 +5229,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         populateCoursesDropdown();
         fetchAndDisplayAnnouncements();
         updateUserDataOnPage();
-
+        
     }); // End of DOMContentLoaded listener
 }
 
