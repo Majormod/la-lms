@@ -1087,24 +1087,34 @@ function loadCoursePage(pageType) {
         return;
     }
 
-    // This function builds the curriculum with working links
     const renderCurriculumWithLinks = (episodes) => {
         const container = document.querySelector('#coursecontent .accordion');
         if (!container) return;
 
         container.innerHTML = (episodes || []).map((episode, index) => {
-            const itemsHtml = (episode.lessons || []).map(lesson => `
-                <li>
-                    <a href="lesson.html?courseId=${courseId}&lessonId=${lesson._id}">
-                        <div class="course-content-left">
-                            <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
-                        </div>
-                        <div class="course-content-right">
-                            <span class="min-lable">${lesson.duration || ''}</span>
-                        </div>
-                    </a>
-                </li>`
-            ).join('');
+            // Combine lessons and quizzes
+            const lessons = episode.lessons ? episode.lessons.map(item => ({ ...item, type: 'lesson' })) : [];
+            const quizzes = episode.quizzes ? episode.quizzes.map(item => ({ ...item, type: 'quiz' })) : [];
+            const contents = [...lessons, ...quizzes];
+
+            const itemsHtml = contents.map(content => {
+                const isLesson = content.type === 'lesson';
+                const icon = isLesson ? (content.vimeoUrl ? 'play-circle' : 'file-text') : 'help-circle';
+                const link = `lesson.html?courseId=${courseId}&${isLesson ? 'lessonId' : 'quizId'}=${content._id}`;
+                const duration = isLesson ? (content.duration || '') : `${content.questions.length} Questions`;
+
+                return `
+                    <li>
+                        <a href="${link}" class="curriculum-content-link">
+                            <div class="course-content-left">
+                                <i class="feather-${icon}"></i> <span class="text">${content.title}</span>
+                            </div>
+                            <div class="course-content-right">
+                                <span class="min-lable">${duration}</span>
+                            </div>
+                        </a>
+                    </li>`;
+            }).join('');
 
             return `
                 <div class="accordion-item card">
@@ -1122,26 +1132,25 @@ function loadCoursePage(pageType) {
         }).join('');
     };
 
-    // Fetch the course data
     fetch(`${API_BASE_URL}/api/courses/${courseId}`)
         .then(res => res.json())
         .then(result => {
             if (result.success) {
                 const course = result.course;
-                // Dynamically build the curriculum for this page
                 renderCurriculumWithLinks(course.episodes || []);
-                
-                // You can add other shared population logic here if needed
-                // e.g., populating instructor bio, reviews, etc.
-            } else {
-                throw new Error(result.message);
-            }
+                // ... (your other functions to populate the page can go here)
+            } else { throw new Error(result.message); }
         })
-        .catch(error => {
-            console.error(`Error fetching details for ${pageType}:`, error);
-            document.body.innerHTML = `<h1>Error loading course.</h1>`;
-        });
+        .catch(error => { console.error(`Error fetching details for ${pageType}:`, error); });
 }
+// This listener will find our links and ensure they work correctly
+document.addEventListener('click', function (e) {
+    const contentLink = e.target.closest('.curriculum-content-link');
+    if (contentLink) {
+        e.preventDefault();
+        window.location.href = contentLink.href;
+    }
+});
 // Helper function to display the chosen file's name
 window.displayExerciseFileName = function(fileInput) {
     const fileNameDisplay = document.getElementById('exercise-file-name');
