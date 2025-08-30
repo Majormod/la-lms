@@ -10,16 +10,11 @@ const LessonSchema = new Schema({
         required: true 
     },
     summary: String,
-videoSource: {
-        type: String,
-        enum: ['YouTube', 'Vimeo', 'External URL', null],
-        default: null
-    },
-    videoUrl: {
-        type: String,
-        trim: true,
-        default: ''
-    },
+// --- ORIGINAL CODE ---
+vimeoUrl: {
+    type: String,
+    trim: true
+},
     duration: {
         type: String, // e.g., "10 min"
         default: "0 min"

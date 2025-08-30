@@ -706,11 +706,11 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 
 // 2. Replace your existing 'PUT /api/courses/.../lessons/:lessonId' route with this one
 // PUT /api/courses/:courseId/episodes/:episodeId/lessons/:lessonId
+// --- ORIGINAL PUT ROUTE ---
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pdfUpload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        // CHANGED: Destructure videoSource and videoUrl
-        const { title, summary, videoSource, videoUrl, duration, isPreview } = req.body;
+        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -723,9 +723,7 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pd
 
         lesson.title = title || lesson.title;
         lesson.summary = summary;
-        // CHANGED: Update the new fields
-        lesson.videoSource = videoSource;
-        lesson.videoUrl = videoUrl;
+        lesson.vimeoUrl = vimeoUrl;
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
@@ -748,11 +746,11 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pd
 
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
 // POST /api/courses/:courseId/episodes/:episodeId/lessons
+// --- ORIGINAL POST ROUTE ---
 app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, pdfUpload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
-        // CHANGED: Destructure videoSource and videoUrl
-        const { title, summary, videoSource, videoUrl, duration, isPreview } = req.body;
+        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -764,9 +762,7 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, pdfUpload.a
         const newLesson = {
             title,
             summary,
-            // CHANGED: Use the new fields
-            videoSource,
-            videoUrl,
+            vimeoUrl,
             duration,
             isPreview: isPreview === 'true',
             exerciseFiles: []
