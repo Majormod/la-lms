@@ -1221,7 +1221,7 @@ const updateUserDataOnPage = () => {
         return;
     }
 
-    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+    fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
         .then(res => {
             if (!res.ok) {
                 // If token is invalid or expired, the server will send an error
@@ -1441,7 +1441,7 @@ const handlePageLogic = () => {
                     return;
                 }
                 updateUserDataOnPage();
-                fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
                     .then(res => res.json())
                     .then(result => {
                         if (result.success) {
@@ -1666,7 +1666,7 @@ const renderCourses = (containerSelector, courseList) => {
                 }
                 updateUserDataOnPage();
                 const populateSettingsForms = () => {
-                    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                    fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
                         .then(res => res.json())
                         .then(result => {
                             if (result.success) {
@@ -1886,7 +1886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 updateUserDataOnPage();
                 const populateSettingsForms = () => {
-                    fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+                    fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
                         .then(res => res.json())
                         .then(result => {
                             if (result.success) {
@@ -5617,7 +5617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const API_BASE_URL = 'http://34.195.233.179';
 
-        fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
+        fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
             .then(res => res.json())
             .then(result => {
                 if (result.success && result.data) {
