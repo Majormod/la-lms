@@ -1780,6 +1780,7 @@ const renderCourses = (containerSelector, courseList) => {
                 }
                 const avatarUploadButton = document.querySelector('#avatar-upload-button');
                 const coverUploadButton = document.querySelector('#cover-upload-button');
+                const token = localStorage.getItem('lmsToken'); // Make sure token is defined
                 if (avatarUploadButton) {
                     const fileInput = document.createElement('input');
                     fileInput.type = 'file'; fileInput.style.display = 'none';
@@ -1790,16 +1791,62 @@ const renderCourses = (containerSelector, courseList) => {
                             .then(res => res.json()).then(result => { if (result.success) { alert('Avatar updated!'); updateUserDataOnPage(); } });
                     });
                 }
-                if (coverUploadButton) {
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file'; fileInput.style.display = 'none';
-                    coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
-                    fileInput.addEventListener('change', (e) => {
-                        const formData = new FormData(); formData.append('coverPhoto', e.target.files[0]);
-                        fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Cover photo updated!'); updateUserDataOnPage(); } });
-                    });
+if (coverUploadButton) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*'; // Good practice to accept only images
+    fileInput.style.display = 'none';
+    
+    // Append to body to ensure it's part of the DOM
+    document.body.appendChild(fileInput);
+
+    coverUploadButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // ===============================================
+        // --- START OF SURGICAL FIX ---
+        // 1. Immediately update the preview on the page
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const settingsCoverBanner = document.getElementById('cover-photo-banner');
+            if (settingsCoverBanner) {
+                settingsCoverBanner.style.backgroundImage = `url('${event.target.result}')`;
+            }
+        }
+        reader.readAsDataURL(file);
+        // --- END OF SURGICAL FIX ---
+        // ===============================================
+
+        // 2. Send the file to the server (your existing code)
+        const formData = new FormData();
+        formData.append('coverPhoto', file);
+        
+        fetch(`${API_BASE_URL}/api/user/cover`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    // This second update ensures the main banner and other pages get the new URL from the server
+                    updateUserDataOnPage();
+                } else {
+                    alert('Upload failed: ' + result.message);
                 }
+            })
+            .catch(err => {
+                console.error('Cover photo upload error:', err);
+                alert('An error occurred during upload.');
+            });
+    });
+}
                 populateSettingsForms();
             }
                         if (path.includes('student-settings.html')) {
@@ -1924,6 +1971,7 @@ const renderCourses = (containerSelector, courseList) => {
                 }
                 const avatarUploadButton = document.querySelector('#avatar-upload-button');
                 const coverUploadButton = document.querySelector('#cover-upload-button');
+                const token = localStorage.getItem('lmsToken'); // Make sure token is defined
                 if (avatarUploadButton) {
                     const fileInput = document.createElement('input');
                     fileInput.type = 'file'; fileInput.style.display = 'none';
@@ -1934,16 +1982,62 @@ const renderCourses = (containerSelector, courseList) => {
                             .then(res => res.json()).then(result => { if (result.success) { alert('Avatar updated!'); updateUserDataOnPage(); } });
                     });
                 }
-                if (coverUploadButton) {
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file'; fileInput.style.display = 'none';
-                    coverUploadButton.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
-                    fileInput.addEventListener('change', (e) => {
-                        const formData = new FormData(); formData.append('coverPhoto', e.target.files[0]);
-                        fetch(`${API_BASE_URL}/api/user/cover`, { method: 'POST', headers: { 'x-auth-token': token }, body: formData })
-                            .then(res => res.json()).then(result => { if (result.success) { alert('Cover photo updated!'); updateUserDataOnPage(); } });
-                    });
+if (coverUploadButton) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*'; // Good practice to accept only images
+    fileInput.style.display = 'none';
+    
+    // Append to body to ensure it's part of the DOM
+    document.body.appendChild(fileInput);
+
+    coverUploadButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // ===============================================
+        // --- START OF SURGICAL FIX ---
+        // 1. Immediately update the preview on the page
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const settingsCoverBanner = document.getElementById('cover-photo-banner');
+            if (settingsCoverBanner) {
+                settingsCoverBanner.style.backgroundImage = `url('${event.target.result}')`;
+            }
+        }
+        reader.readAsDataURL(file);
+        // --- END OF SURGICAL FIX ---
+        // ===============================================
+
+        // 2. Send the file to the server (your existing code)
+        const formData = new FormData();
+        formData.append('coverPhoto', file);
+        
+        fetch(`${API_BASE_URL}/api/user/cover`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    // This second update ensures the main banner and other pages get the new URL from the server
+                    updateUserDataOnPage();
+                } else {
+                    alert('Upload failed: ' + result.message);
                 }
+            })
+            .catch(err => {
+                console.error('Cover photo upload error:', err);
+                alert('An error occurred during upload.');
+            });
+    });
+}
                 populateSettingsForms();
             }
 if (window.location.pathname.includes('create-course.html')) {
