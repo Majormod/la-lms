@@ -1713,6 +1713,7 @@ const renderCourses = (containerSelector, courseList) => {
                         const updatedData = {
                             firstName: document.querySelector('#firstname').value,
                             lastName: document.querySelector('#lastname').value,
+                            email: document.querySelector('#username').value,
                             phone: document.querySelector('#phonenumber').value,
                             occupation: document.querySelector('#skill').value,
                             displayName: document.querySelector('#displayname').value,
@@ -1939,6 +1940,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const updatedData = {
                             firstName: document.querySelector('#firstname').value,
                             lastName: document.querySelector('#lastname').value,
+                            email: document.querySelector('#username').value,
                             phone: document.querySelector('#phonenumber').value,
                             occupation: document.querySelector('#skill').value,
                             displayName: document.querySelector('#displayname').value,
