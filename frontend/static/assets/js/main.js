@@ -1079,7 +1079,69 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
 window.triggerExerciseFileUpload = function() {
     document.getElementById('lesson-exercise-file').click();
 }
+function loadCoursePage(pageType) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    if (!courseId) {
+        document.body.innerHTML = '<h1>Error: Course ID not found.</h1>';
+        return;
+    }
 
+    // This function builds the curriculum with working links
+    const renderCurriculumWithLinks = (episodes) => {
+        const container = document.querySelector('#coursecontent .accordion');
+        if (!container) return;
+
+        container.innerHTML = (episodes || []).map((episode, index) => {
+            const itemsHtml = (episode.lessons || []).map(lesson => `
+                <li>
+                    <a href="lesson.html?courseId=${courseId}&lessonId=${lesson._id}">
+                        <div class="course-content-left">
+                            <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
+                        </div>
+                        <div class="course-content-right">
+                            <span class="min-lable">${lesson.duration || ''}</span>
+                        </div>
+                    </a>
+                </li>`
+            ).join('');
+
+            return `
+                <div class="accordion-item card">
+                    <h2 class="accordion-header card-header" id="heading-${index}">
+                        <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                            ${episode.title}
+                        </button>
+                    </h2>
+                    <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                        <div class="accordion-body card-body pr--0">
+                            <ul class="rbt-course-main-content liststyle">${itemsHtml}</ul>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+    };
+
+    // Fetch the course data
+    fetch(`${API_BASE_URL}/api/courses/${courseId}`)
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const course = result.course;
+                // Dynamically build the curriculum for this page
+                renderCurriculumWithLinks(course.episodes || []);
+                
+                // You can add other shared population logic here if needed
+                // e.g., populating instructor bio, reviews, etc.
+            } else {
+                throw new Error(result.message);
+            }
+        })
+        .catch(error => {
+            console.error(`Error fetching details for ${pageType}:`, error);
+            document.body.innerHTML = `<h1>Error loading course.</h1>`;
+        });
+}
 // Helper function to display the chosen file's name
 window.displayExerciseFileName = function(fileInput) {
     const fileNameDisplay = document.getElementById('exercise-file-name');
@@ -3250,7 +3312,7 @@ if (window.location.pathname.includes('edit-course.html')) {
 // FINAL SCRIPT FOR course-details.html (Restores all dynamic content)
 // =================================================================
 if (window.location.pathname.includes('course-details.html')) {
-
+    loadCoursePage('Course'); // Call the master function
     /**
      * NEW HELPER FUNCTION: Renders all contents of an episode (lessons AND quizzes).
      * This replaces your old 'renderLessons' function.
@@ -4292,107 +4354,6 @@ if (window.location.pathname.includes('student-reviews.html')) {
         });
     });
 }
-
-
-// In main.js
-/*
-if (window.location.pathname.includes('course-details.html')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        // Get the courseId from the URL's query parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const courseId = urlParams.get('courseId');
-
-        if (!courseId) return; // Stop if there's no courseId
-
-        const reviewsListContainer = document.getElementById('reviews-list-container');
-        const paginationContainer = document.getElementById('reviews-pagination-container');
-        const limit = 5; // Reviews per page
-
-        const renderReview = (review) => {
-            const reviewDate = new Date(review.createdAt).toLocaleDateString();
-            const studentAvatar = review.student.avatar ? `/${review.student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
-            const stars = '⭐'.repeat(review.rating); // Simple star representation
-
-            return `
-                <div class="rbt-course-review">
-                    <div class="media">
-                        <div class="thumbnail">
-                            <a href="#"><img src="${studentAvatar}" alt="Student Avatar"></a>
-                        </div>
-                        <div class="media-body">
-                            <div class="author-info">
-                                <h5 class="title">${review.student.firstName} ${review.student.lastName}</h5>
-                                <div class="rating">${stars}</div>
-                            </div>
-                            <div class="content">
-                                <p class="description">${review.comment || ''}</p>
-                                <span class="review-date">${reviewDate}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderPaginationControls = (pagination) => {
-            paginationContainer.innerHTML = '';
-            if (pagination.totalPages <= 1) return;
-
-            // Previous Button
-            paginationContainer.innerHTML += `<li><a href="#" aria-label="Previous" data-page="${pagination.currentPage - 1}" class="${pagination.currentPage === 1 ? 'disabled' : ''}"><i class="feather-chevron-left"></i></a></li>`;
-
-            // Page Number Buttons
-            for (let i = 1; i <= pagination.totalPages; i++) {
-                paginationContainer.innerHTML += `<li class="${i === pagination.currentPage ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
-            }
-
-            // Next Button
-            paginationContainer.innerHTML += `<li><a href="#" aria-label="Next" data-page="${pagination.currentPage + 1}" class="${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}"><i class="feather-chevron-right"></i></a></li>`;
-        };
-
-        const fetchAndDisplayReviews = (page = 1) => {
-            reviewsListContainer.innerHTML = `<p>Loading reviews...</p>`;
-            
-            fetch(`${API_BASE_URL}/api/courses/${courseId}/reviews?page=${page}&limit=${limit}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        reviewsListContainer.innerHTML = '';
-                        if (data.reviews.length > 0) {
-                            data.reviews.forEach(review => {
-                                reviewsListContainer.innerHTML += renderReview(review);
-                            });
-                            renderPaginationControls(data.pagination);
-                        } else {
-                            reviewsListContainer.innerHTML = '<p>No reviews have been submitted for this course yet.</p>';
-                        }
-                    } else { throw new Error(data.message); }
-                })
-                .catch(error => {
-                    console.error('Error fetching course reviews:', error);
-                    reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews.</p>`;
-                });
-        };
-        
-        // Event listener for pagination clicks
-        paginationContainer.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = e.target.closest('a');
-            if (!target || target.classList.contains('disabled')) return;
-            
-            const page = target.dataset.page;
-            if (page) {
-                fetchAndDisplayReviews(parseInt(page));
-            }
-        });
-
-        // Initial fetch for the first page of reviews
-        fetchAndDisplayReviews(1);
-    });
-}
-*/
-
-
 }; // This is the end of the handlePageLogic function
 
 // In main.js
@@ -5086,7 +5047,7 @@ fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
 // main.js
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
-
+loadCoursePage('MasterClass');
     // --- DYNAMIC REVIEW SECTION ---
 
 document.addEventListener('DOMContentLoaded', () => {
