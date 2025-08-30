@@ -709,7 +709,8 @@ app.put('/api/courses/:courseId/episodes/:episodeId', auth, async (req, res) => 
 app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pdfUpload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId, lessonId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
+        // CHANGED: Destructure videoSource and videoUrl
+        const { title, summary, videoSource, videoUrl, duration, isPreview } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -722,14 +723,15 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pd
 
         lesson.title = title || lesson.title;
         lesson.summary = summary;
-        lesson.vimeoUrl = vimeoUrl;
+        // CHANGED: Update the new fields
+        lesson.videoSource = videoSource;
+        lesson.videoUrl = videoUrl;
         lesson.duration = duration || lesson.duration;
         lesson.isPreview = isPreview === 'true';
 
         if (req.files && req.files.length > 0) {
             const newFiles = req.files.map(file => ({
                 filename: file.originalname,
-                // CHANGE 2: Use the correct path
                 path: `uploads/pdfs/${file.filename}`
             }));
             lesson.exerciseFiles.push(...newFiles);
@@ -749,7 +751,8 @@ app.put('/api/courses/:courseId/episodes/:episodeId/lessons/:lessonId', auth, pd
 app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, pdfUpload.array('exerciseFiles'), async (req, res) => {
     try {
         const { courseId, episodeId } = req.params;
-        const { title, summary, vimeoUrl, duration, isPreview } = req.body;
+        // CHANGED: Destructure videoSource and videoUrl
+        const { title, summary, videoSource, videoUrl, duration, isPreview } = req.body;
 
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== req.user.id) {
@@ -761,7 +764,9 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, pdfUpload.a
         const newLesson = {
             title,
             summary,
-            vimeoUrl,
+            // CHANGED: Use the new fields
+            videoSource,
+            videoUrl,
             duration,
             isPreview: isPreview === 'true',
             exerciseFiles: []
@@ -770,7 +775,6 @@ app.post('/api/courses/:courseId/episodes/:episodeId/lessons', auth, pdfUpload.a
         if (req.files && req.files.length > 0) {
             newLesson.exerciseFiles = req.files.map(file => ({
                 filename: file.originalname,
-                // CHANGE 1: Use the correct path
                 path: `uploads/pdfs/${file.filename}`
             }));
         }

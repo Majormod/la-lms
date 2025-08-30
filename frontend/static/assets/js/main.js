@@ -2241,8 +2241,9 @@ if (window.location.pathname.includes('edit-course.html')) {
                 if (lesson) {
                     document.getElementById('lesson-title').value = lesson.title || '';
                     document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                    // --- REPLACEMENT CODE ---
+document.getElementById('lesson-video-source').value = lesson.videoSource || 'Select Video Source';
+document.getElementById('lesson-video-url').value = lesson.videoUrl || '';
                     const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
                     document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
                     document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
@@ -3143,8 +3144,9 @@ if (window.location.pathname.includes('edit-course.html')) {
             saveLessonBtn.addEventListener('click', async () => {
                 const title = document.getElementById('lesson-title').value;
                 const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
+                // --- REPLACEMENT CODE ---
+const videoSource = document.getElementById('lesson-video-source').value;
+const videoUrl = document.getElementById('lesson-video-url').value;
                 const hr = document.getElementById('lesson-duration-hr').value || '0';
                 const min = document.getElementById('lesson-duration-min').value || '0';
                 const sec = document.getElementById('lesson-duration-sec').value || '0';
@@ -3163,7 +3165,11 @@ if (window.location.pathname.includes('edit-course.html')) {
                     const formData = new FormData();
                     formData.append('title', title);
                     formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
+                    // --- REPLACEMENT CODE ---
+if (videoSource !== 'Select Video Source' && videoSource) {
+    formData.append('videoSource', videoSource);
+    formData.append('videoUrl', videoUrl);
+}
                     formData.append('duration', duration);
                     formData.append('isPreview', isPreview);
 
@@ -4044,6 +4050,7 @@ if (window.location.pathname.includes('lesson.html')) {
 /**
  * This function displays the lesson video, description, and resources.
  */
+// --- REPLACEMENT FUNCTION ---
 function updateLessonContent(lessonId) {
     let selectedLesson = null;
     for (const episode of currentCourseData.episodes) {
@@ -4055,21 +4062,34 @@ function updateLessonContent(lessonId) {
     }
     if (!selectedLesson) return;
 
-    // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
-    // --- Build Video HTML ---
     let videoHTML = '';
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+    let embedUrl = '';
+
+    if (selectedLesson.videoSource && selectedLesson.videoUrl) {
+        switch (selectedLesson.videoSource) {
+            case 'Vimeo':
+                const vimeoId = selectedLesson.videoUrl.split('/').pop().split('?')[0];
+                embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
+                break;
+
+            case 'Youtube':
+                const youtubeId = getYoutubeVideoId(selectedLesson.videoUrl);
+                if (youtubeId) {
+                    embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+                }
+                break;
+        }
+    }
+
+    if (embedUrl) {
         videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
         videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
-    // --- Build Resources HTML (if files exist) ---
     let resourcesHTML = '';
     if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
         resourcesHTML = `
@@ -4088,7 +4108,6 @@ function updateLessonContent(lessonId) {
         `;
     }
 
-    // --- Build Description and Final Content HTML ---
     const descriptionHTML = `
         <div class="content">
             <div class="section-title">
@@ -4098,7 +4117,6 @@ function updateLessonContent(lessonId) {
             ${resourcesHTML}
         </div>`;
 
-    // --- Render everything to the page ---
     contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
