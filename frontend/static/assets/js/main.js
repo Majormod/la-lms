@@ -3754,7 +3754,8 @@ function updateLessonContent(lessonId) {
         }
     }
     if (!selectedLesson) return;
-
+// ADD THIS LINE to see the lesson data
+    console.log("Data for the selected lesson:", selectedLesson);
     // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
