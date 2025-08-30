@@ -182,6 +182,8 @@ app.get('/api/user/profile', auth, async (req, res) => {
 
 app.put('/api/user/profile', auth, async (req, res) => {
     try {
+        // --- ADD THIS LINE FOR DEBUGGING ---
+        console.log('Data received for profile update:', req.body);
         const { firstName, lastName, phone, occupation, bio } = req.body;
         const user = await User.findByIdAndUpdate(req.user.id, { firstName, lastName, phone, occupation, bio }, { new: true });
         res.json({ success: true, msg: 'Profile updated successfully' });
