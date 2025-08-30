@@ -40884,30 +40884,3 @@ padding: 0 10px 0 10px;
 }
 
 /* Custom Styles for PDF Viewer Header and Close Button */
-
-/* Make the header slightly wider and add padding */
-.pdf-viewer-wrapper .pdf-viewer-header {
-    padding: 15px 25px; /* Adjust horizontal padding to give more space */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Optional: add a subtle separator */
-}
-
-/* Style the close button within the PDF viewer */
-.pdf-viewer-wrapper .close-pdf-viewer {
-    /* Ensure text doesn't wrap and has some spacing */
-    white-space: nowrap; /* Prevent "Close" text from wrapping */
-    padding: 6px 15px;   /* Add more padding horizontally to the button */
-    margin-right: -10px; /* Adjust this value if you need to pull it further left */
-    /* You might also need to adjust the font size if it's too big */
-    /* font-size: 14px; */
-}
-
-/* Ensure the icon also scales with the button and has space */
-.pdf-viewer-wrapper .close-pdf-viewer i {
-    margin-right: 5px; /* Space between icon and text */
-}
-
-/* If the text is still cut off, ensure the button container has enough space */
-.pdf-viewer-wrapper .pdf-viewer-header h5 {
-    margin-right: 15px; /* Add some space between title and button */
-    flex-shrink: 1; /* Allow title to shrink if needed */
-}
