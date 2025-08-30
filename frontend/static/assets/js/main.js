@@ -3744,6 +3744,9 @@ if (window.location.pathname.includes('lesson.html')) {
  /**
  * This function displays the lesson video, description, and resources.
  */
+/**
+ * This function displays the lesson video, description, and resources.
+ */
 function updateLessonContent(lessonId) {
     let selectedLesson = null;
     for (const episode of currentCourseData.episodes) {
@@ -3754,8 +3757,7 @@ function updateLessonContent(lessonId) {
         }
     }
     if (!selectedLesson) return;
-// ADD THIS LINE to see the lesson data
-    console.log("Data for the selected lesson:", selectedLesson);
+
     // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
