@@ -1671,6 +1671,15 @@ const renderCourses = (containerSelector, courseList) => {
                         .then(result => {
                             if (result.success) {
                                 const profile = result.data;
+                                // ========================================================
+                // --- START OF FIX ---
+                // Add this block to update the settings page's cover preview
+                const settingsCoverBanner = document.getElementById('cover-photo-banner');
+                if (settingsCoverBanner && profile.coverPhoto) {
+                    settingsCoverBanner.style.backgroundImage = `url('/${profile.coverPhoto}')`;
+                }
+                // --- END OF FIX ---
+                // ========================================================
                                 const firstNameInput = document.querySelector('#firstname');
                                 const lastNameInput = document.querySelector('#lastname');
                                 const usernameInput = document.querySelector('#username');
