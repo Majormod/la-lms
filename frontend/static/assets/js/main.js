@@ -2241,9 +2241,8 @@ if (window.location.pathname.includes('edit-course.html')) {
                 if (lesson) {
                     document.getElementById('lesson-title').value = lesson.title || '';
                     document.getElementById('lesson-summary').value = lesson.summary || '';
-                    // --- REPLACEMENT CODE ---
-document.getElementById('lesson-video-source').value = lesson.videoSource || 'Select Video Source';
-document.getElementById('lesson-video-url').value = lesson.videoUrl || '';
+                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
                     const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
                     document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
                     document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
@@ -3144,9 +3143,8 @@ document.getElementById('lesson-video-url').value = lesson.videoUrl || '';
             saveLessonBtn.addEventListener('click', async () => {
                 const title = document.getElementById('lesson-title').value;
                 const summary = document.getElementById('lesson-summary').value;
-                // --- REPLACEMENT CODE ---
-const videoSource = document.getElementById('lesson-video-source').value;
-const videoUrl = document.getElementById('lesson-video-url').value;
+                const videoSource = document.getElementById('lesson-video-source').value;
+                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
                 const hr = document.getElementById('lesson-duration-hr').value || '0';
                 const min = document.getElementById('lesson-duration-min').value || '0';
                 const sec = document.getElementById('lesson-duration-sec').value || '0';
@@ -3165,11 +3163,7 @@ const videoUrl = document.getElementById('lesson-video-url').value;
                     const formData = new FormData();
                     formData.append('title', title);
                     formData.append('summary', summary);
-                    // --- REPLACEMENT CODE ---
-if (videoSource !== 'Select Video Source' && videoSource) {
-    formData.append('videoSource', videoSource);
-    formData.append('videoUrl', videoUrl);
-}
+                    formData.append('vimeoUrl', vimeoUrl);
                     formData.append('duration', duration);
                     formData.append('isPreview', isPreview);
 
@@ -4050,18 +4044,6 @@ if (window.location.pathname.includes('lesson.html')) {
 /**
  * This function displays the lesson video, description, and resources.
  */
-// --- REPLACEMENT FUNCTION ---
-// --- PASTE THIS ENTIRE BLOCK INTO YOUR lesson.html JAVASCRIPT ---
-
-// 1. The Helper Function (must come first)
-function getYoutubeVideoId(url) {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-}
-
-// 2. The Main Function (uses the helper function)
 function updateLessonContent(lessonId) {
     let selectedLesson = null;
     for (const episode of currentCourseData.episodes) {
@@ -4073,34 +4055,21 @@ function updateLessonContent(lessonId) {
     }
     if (!selectedLesson) return;
 
+    // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
+    // --- Build Video HTML ---
     let videoHTML = '';
-    let embedUrl = '';
-
-    if (selectedLesson.videoSource && selectedLesson.videoUrl) {
-        switch (selectedLesson.videoSource) {
-            case 'Vimeo':
-                const vimeoId = selectedLesson.videoUrl.split('/').pop().split('?')[0];
-                embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
-                break;
-
-            case 'YouTube':
-                const youtubeId = getYoutubeVideoId(selectedLesson.videoUrl);
-                if (youtubeId) {
-                    embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
-                }
-                break;
-        }
-    }
-
-    if (embedUrl) {
+    if (selectedLesson.vimeoUrl) {
+        const videoId = selectedLesson.vimeoUrl.split('/').pop();
+        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
         videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
         videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
+    // --- Build Resources HTML (if files exist) ---
     let resourcesHTML = '';
     if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
         resourcesHTML = `
@@ -4119,6 +4088,7 @@ function updateLessonContent(lessonId) {
         `;
     }
 
+    // --- Build Description and Final Content HTML ---
     const descriptionHTML = `
         <div class="content">
             <div class="section-title">
@@ -4128,9 +4098,451 @@ function updateLessonContent(lessonId) {
             ${resourcesHTML}
         </div>`;
 
+    // --- Render everything to the page ---
     contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
+    // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
+    function renderQuizStartScreen(quizId) {
+        let selectedQuiz = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.quizzes.find(q => q._id === quizId);
+            if (found) { selectedQuiz = found; break; }
+        }
+        if (!selectedQuiz) return;
+        
+        document.getElementById('lesson-title').textContent = selectedQuiz.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
+
+        contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
+        document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
+    }
+    
+function renderQuizQuestions(quiz, container) {
+    const questionsHTML = quiz.questions.map((question, index) => {
+        const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
+        const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
+        const optionsHTML = question.options.map((option, optIndex) => `
+            <div class="col-lg-6">
+                <div class="${inputClass}">
+                    <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
+                    <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
+                </div>
+            </div>`).join('');
+        const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
+
+        return `
+            <div class="rbt-single-quiz mb-5">
+                <h4>${index + 1}. ${question.questionText}</h4>
+                <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
+                <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="content p-4 p-lg-5">
+            <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
+            <form id="quiz-form-submission">${questionsHTML}
+                <div class="submit-btn mt-2">
+                    <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
+                        <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('quiz-form-submission').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.querySelector('.btn-text').textContent = 'Submitting...';
+
+        const formData = new FormData(e.target);
+        const answers = {};
+        for (let [name, value] of formData.entries()) {
+            const questionId = name.replace('question-', '');
+            if (!answers[questionId]) {
+                answers[questionId] = [];
+            }
+            answers[questionId].push(value);
+        }
+
+        try {
+            const courseId = new URLSearchParams(window.location.search).get('courseId');
+            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/quizzes/${quiz._id}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // --- THIS IS THE CORRECTED LINE ---
+                    'x-auth-token': localStorage.getItem('lmsToken') 
+                },
+                body: JSON.stringify({ answers })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                sessionStorage.setItem('quizResult', JSON.stringify(data.result));
+                window.location.href = `lesson-quiz-result.html?courseId=${courseId}&quizId=${quiz._id}`;
+            } else {
+                throw new Error(data.message);
+            }
+
+        } catch (error) {
+            alert(`Error submitting quiz: ${error.message}`);
+            submitButton.disabled = false;
+            submitButton.querySelector('.btn-text').textContent = 'Submit Quiz';
+        }
+    });
+}
+
+    function setupNavigation(currentItemId, currentItemType) {
+        const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
+        const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
+        const prevButton = document.getElementById('prev-content-btn');
+        const nextButton = document.getElementById('next-content-btn');
+
+        if (currentIndex > 0) {
+            const prevItem = allContents[currentIndex - 1];
+            prevButton.style.display = 'block';
+            prevButton.dataset.id = prevItem._id;
+            prevButton.dataset.type = prevItem.type;
+        } else {
+            prevButton.style.display = 'none';
+        }
+        if (currentIndex < allContents.length - 1) {
+            const nextItem = allContents[currentIndex + 1];
+            nextButton.style.display = 'block';
+            nextButton.dataset.id = nextItem._id;
+            nextButton.dataset.type = nextItem.type;
+        } else {
+            nextButton.style.display = 'none';
+        }
+    }
+
+    function setupSidebarClickHandler() {
+        document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
+            const link = event.target.closest('.content-link, .content-nav-link');
+            if (!link) return;
+            event.preventDefault();
+            const id = link.dataset.id;
+            const type = link.dataset.type;
+            const url = new URL(window.location);
+            url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
+            if (type === 'lesson') url.searchParams.delete('quizId');
+            else url.searchParams.delete('lessonId');
+            history.pushState({}, '', url);
+            if (type === 'lesson') { updateLessonContent(id); } else if (type === 'quiz') { renderQuizStartScreen(id); }
+            document.querySelector('.content-link.active')?.classList.remove('active');
+            document.querySelector(`.content-link[data-id="${id}"]`)?.classList.add('active');
+            setupNavigation(id, type);
+        });
+    }
+
+    function setupSidebarToggle() {
+        const toggleButton = document.querySelector('.rbt-lesson-toggle button');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                document.querySelector('.rbt-lesson-leftsidebar').classList.toggle('collapsed');
+                const icon = this.querySelector('i');
+                icon.className = icon.className.includes('left') ? 'feather-arrow-right' : 'feather-arrow-left';
+            });
+        }
+    }
+}
+    
+    // Logic for Student Dashboard Page
+    if (path.includes('student-dashboard.html')) {
+        if (!token || !user || user.role !== 'student') {
+            alert("Access Denied.");
+            window.location.href = '/login';
+            return;
+        }
+        
+        fetch(`${API_BASE_URL}/api/student/dashboard`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const data = result.data;
+                const enrolledEl = document.querySelector('.bg-primary-opacity .odometer');
+                const activeEl = document.querySelector('.bg-secondary-opacity .odometer');
+                const completedEl = document.querySelector('.bg-violet-opacity .odometer');
+                
+                if (enrolledEl) enrolledEl.setAttribute('data-count', data.enrolledCourses);
+                if (activeEl) activeEl.setAttribute('data-count', data.activeCourses);
+                if (completedEl) completedEl.setAttribute('data-count', data.completedCourses);
+                
+                if (window.eduJs && window.eduJs.counterUp) {
+                    window.eduJs.counterUp();
+                }
+            }
+        });
+    }
+
+    if (path.includes('student-profile.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+    // Security guard for the page
+    if (!token || !user) {
+        alert("Access Denied. Please log in to view your profile.");
+        window.location.href = '/login';
+        return; // Stop further execution
+    }
+    
+    // Fetch the user's profile data
+    fetch(`${API_BASE_URL}/api/user/profile`, {
+        headers: { 'x-auth-token': token }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            const profile = result.data;
+            
+            // This object maps the labels in your HTML to the data we received
+            const profileDataMap = {
+                'Registration Date': profile.registrationDate,
+                'First Name': profile.firstName,
+                'Last Name': profile.lastName,
+                'Username': profile.username,
+                'Email': profile.email,
+                'Phone Number': profile.phone || 'Not Provided',
+                'Skill/Occupation': profile.occupation || 'Not Provided',
+                'Biography': profile.bio || 'Not Provided'
+            };
+
+            // This code smartly finds each row, reads the label, and fills in the value
+            document.querySelectorAll('.rbt-profile-row').forEach(row => {
+                const labelEl = row.querySelector('.col-lg-4 .rbt-profile-content');
+                const valueEl = row.querySelector('.col-lg-8 .rbt-profile-content');
+
+                if (labelEl && valueEl) {
+                    const labelText = labelEl.textContent.trim();
+                    if (profileDataMap.hasOwnProperty(labelText)) {
+                        valueEl.textContent = profileDataMap[labelText];
+                    }
+                }
+            });
+        } else {
+            console.error("Failed to fetch profile data:", result.message);
+        }
+    })
+    .catch(error => console.error("Error fetching profile data:", error));
+}
+
+// In main.js, inside the handlePageLogic function
+
+if (path.includes('student-enrolled-courses.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+    if (!token || !user || user.role !== 'student') {
+        alert("Access Denied.");
+        window.location.href = '/login';
+        return;
+    }
+
+    // This helper function builds the HTML for a single course card
+    const createCourseCardHTML = (course) => {
+        const isCompleted = course.status === 'completed';
+        const progressColor = isCompleted ? 'bar-color-success' : 'bar-color-primary';
+
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="${course.title}">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <ul class="rbt-meta">
+                            <li><i class="feather-book"></i>${course.lessonCount} Lessons</li>
+                            <li><i class="feather-users"></i>${course.studentCount} Students</li>
+                        </ul>
+                        <div class="rbt-progress-style-1 mb--20 mt--10">
+                            <div class="single-progress">
+                                <h6 class="rbt-title-style-2 mb--10">${isCompleted ? 'Completed' : 'In Progress'}</h6>
+                                <div class="progress">
+                                    <div class="progress-bar ${progressColor}" style="width: ${course.progress}%" aria-valuenow="${course.progress}"></div>
+                                    <span class="rbt-title-style-2 progress-number">${course.progress}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn btn-sm ${isCompleted ? 'bg-primary-opacity' : 'btn-border-gradient'} w-100 text-center" href="${isCompleted ? '#' : `course-details.html?courseId=${course._id}`}">
+                                ${isCompleted ? 'Download Certificate' : 'Continue Course'}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    // This function takes a list of courses and renders them into a tab container
+    const renderCourses = (courseList, containerSelector) => {
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+        
+        container.innerHTML = ''; // Clear previous content
+        if (courseList.length === 0) {
+            container.innerHTML = '<p class="text-center">No courses in this category.</p>';
+            return;
+        }
+        courseList.forEach(course => {
+            container.innerHTML += createCourseCardHTML(course);
+        });
+    };
+
+    // Main logic to fetch, filter, and set up tabs
+    fetch(`${API_BASE_URL}/api/student/my-courses`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const allCourses = result.courses;
+                const activeCourses = allCourses.filter(c => c.status === 'active');
+                const completedCourses = allCourses.filter(c => c.status === 'completed');
+
+                // Render the initial tab
+                renderCourses(allCourses, '#home-4 .row');
+
+                // Set up click listeners for the other tabs
+                document.getElementById('profile-tab-4').addEventListener('click', () => renderCourses(activeCourses, '#profile-4 .row'));
+                document.getElementById('contact-tab-4').addEventListener('click', () => renderCourses(completedCourses, '#contact-4 .row'));
+                document.getElementById('home-tab-4').addEventListener('click', () => renderCourses(allCourses, '#home-4 .row'));
+            }
+        });
+}
+
+// Student Wishlist Logic
+
+if (window.location.pathname.includes('student-wishlist.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        const wishlistContainer = document.getElementById('wishlist-courses-container');
+        const token = localStorage.getItem('lmsToken');
+
+        if (!token) {
+            // If the user is not logged in, show a message and stop.
+            wishlistContainer.innerHTML = '<div class="col-12"><p>Please log in to see your wishlist.</p></div>';
+            return;
+        }
+
+        // This function creates a course card. We can reuse it from the explore page logic.
+        // Make sure this function is defined in a scope accessible to this block.
+        const createCourseCard = (course) => {
+            let priceHtml = '';
+            if (course.isFree || course.price === 0) {
+                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+            } else {
+                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+            }
+            const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
+            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+            
+            return `
+            <div class="col-lg-4 col-md-6 col-12" data-course-id="${course._id}">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="Course Thumbnail">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <div class="rbt-card-top">
+                            <div class="rbt-review"><div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><span class="rating-count">(15 Reviews)</span></div>
+                            <div class="rbt-bookmark-btn"><a class="rbt-round-btn active" title="Remove from Bookmark" href="#"><i class="feather-bookmark"></i></a></div>
+                        </div>
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <ul class="rbt-meta"><li><i class="feather-book"></i>${lessonCount} Lessons</li><li><i class="feather-users"></i>50 Students</li></ul>
+                        <div class="rbt-card-bottom">${priceHtml}<a class="rbt-btn-link" href="course-details.html?courseId=${course._id}">Learn More<i class="feather-arrow-right"></i></a></div>
+                    </div>
+                </div>
+            </div>`;
+        };
+
+        // Fetch the wishlist from the API
+        fetch(`${API_BASE_URL}/api/student/wishlist`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                wishlistContainer.innerHTML = ''; // Clear any placeholders
+                if (data.courses.length > 0) {
+                    data.courses.forEach(course => {
+                        wishlistContainer.innerHTML += createCourseCard(course);
+                    });
+                } else {
+                    // Show a message if the wishlist is empty
+                    wishlistContainer.innerHTML = '<div class="col-12 text-center"><p>Your wishlist is empty. Browse courses to add them!</p></div>';
+                }
+            } else {
+                throw new Error(data.message || 'Failed to fetch wishlist.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching wishlist:', error);
+            wishlistContainer.innerHTML = '<div class="col-12"><p class="text-danger">Could not load your wishlist. Please try again later.</p></div>';
+        });
+    });
+}
+
+// In main.js
+
+if (window.location.pathname.includes('student-reviews.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.getElementById('reviews-table-body');
+        const token = localStorage.getItem('lmsToken');
+
+        const limit = 20; // <-- ADD THIS LINE HERE
+
+        if (!token) {
+            tableBody.innerHTML = `<tr><td colspan="4">Please log in to see your reviews.</td></tr>`;
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/api/student/reviews`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.reviews.length > 0) {
+                    tableBody.innerHTML = ''; // Clear loading message
+                    data.reviews.forEach(review => {
+                        const stars = '⭐'.repeat(review.rating);
+                        const reviewDate = new Date(review.createdAt).toLocaleDateString();
+
+                        const row = `
+                            <tr>
+                                <th>
+                                    <a href="course-details.html?courseId=${review.course._id}">${review.course.title}</a>
+                                </th>
+                                <td>${stars} (${review.rating})</td>
+                                <td>${review.comment || '<i>No comment</i>'}</td>
+                                <td>${reviewDate}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="4">You haven't written any reviews yet.</td></tr>`;
+                }
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching student reviews:', error);
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-danger">Could not load reviews.</td></tr>`;
+        });
+    });
+}
+}; // This is the end of the handlePageLogic function
 
 // In main.js
 
@@ -4655,7 +5067,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
         const modalElement = document.getElementById('addAnnouncementModal');
         const courseSelectInModal = document.getElementById('announcement-course');
-        const courseFilterSelect = document.getElementById('announcement-filter-course'); // Using the new ID
+        const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
         const sendBtn = document.getElementById('send-announcement-btn');
         const announcementTableBody = document.getElementById('announcements-table-body');
 
@@ -4677,12 +5089,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
                         if (courseSelectInModal) courseSelectInModal.innerHTML = optionsHtml;
                         if (courseFilterSelect) courseFilterSelect.innerHTML = filterOptionsHtml;
-
-                        // --- START OF FIX ---
-                        // Tell the Bootstrap-Select library to refresh the dropdowns
-                        $('#announcement-course').selectpicker('refresh');
-                        $('#announcement-filter-course').selectpicker('refresh');
-                        // --- END OF FIX ---
 
                     } else {
                         if (courseSelectInModal) courseSelectInModal.innerHTML = '<option disabled selected value="">No courses found</option>';
@@ -4772,11 +5178,10 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
         if (courseFilterSelect) {
             courseFilterSelect.addEventListener('change', () => {
-                const selectedCourseId = $(courseFilterSelect).val(); // Use jQuery to get value from multi-select
+                const selectedCourseId = courseFilterSelect.value;
                 const allRows = announcementTableBody.querySelectorAll('tr');
                 allRows.forEach(row => {
-                    // Check if 'all' is selected or if the row's courseId is in the selected array
-                    if (selectedCourseId.includes('all') || selectedCourseId.includes(row.dataset.courseId)) {
+                    if (selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
