@@ -2210,7 +2210,8 @@ if (window.location.pathname.includes('edit-course.html')) {
         if (addQuizBtn) {
             // This is the crucial part that was lost. It saves the topic ID.
             currentEditingEpisodeId = addQuizBtn.dataset.episodeId;
-            
+            // ADD THIS LINE
+    console.log('STEP 1: "Add Quiz" button clicked. The Topic ID is now:', currentEditingEpisodeId);
             // This resets the modal for a new quiz
             window.currentEditingQuizId = null; 
             document.getElementById('quiz-title').value = '';
@@ -2404,6 +2405,8 @@ if (window.location.pathname.includes('edit-course.html')) {
             // --- 4. API CALLS & DATA HANDLING ---
 
             const saveQuizInfo = async () => {
+                // ADD THIS LINE
+    console.log('STEP 2: "Save" button clicked. The Topic ID is:', currentEditingEpisodeId);
                 const selectedFeedbackRadio = Array.from(feedbackModeRadios).find(r => r.checked) || {};
                 const feedbackModeMap = { 'rbt-radio1': 'default', 'rbt-radio2': 'reveal', 'rbt-radio3': 'retry' };
 
