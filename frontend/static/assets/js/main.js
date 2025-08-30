@@ -4062,10 +4062,9 @@ function updateLessonContent(lessonId) {
     }
     if (!selectedLesson) return;
 
-     // --- ADD THIS DEBUGGING LINE ---
+    // You can remove this console.log now if you wish
     console.log('Inspecting selectedLesson:', selectedLesson);
-    // --- END DEBUGGING LINE ---
-    
+
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
@@ -4079,7 +4078,8 @@ function updateLessonContent(lessonId) {
                 embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
                 break;
 
-            case 'Youtube':
+            // --- THIS IS THE FIX ---
+            case 'YouTube': // Changed 'Youtube' to 'YouTube'
                 const youtubeId = getYoutubeVideoId(selectedLesson.videoUrl);
                 if (youtubeId) {
                     embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
