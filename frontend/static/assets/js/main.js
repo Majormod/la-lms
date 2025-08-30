@@ -1951,6 +1951,36 @@ let courseData = null;
 let currentEditingEpisodeId = null;
 let currentEditingLessonId = null;
 
+// Add this inside your if (window.location.pathname.includes('edit-course.html')) block
+
+document.addEventListener('click', (e) => {
+    // Logic for the "Add Quiz" button
+    const addQuizBtn = e.target.closest('.add-content-btn[data-bs-target="#Quiz"]');
+    if (addQuizBtn) {
+        // This is the crucial part that was lost. It saves the topic ID.
+        currentEditingEpisodeId = addQuizBtn.dataset.episodeId;
+        
+        // This resets the modal for a new quiz
+        window.currentEditingQuizId = null; 
+        document.getElementById('quiz-title').value = '';
+        document.getElementById('quiz-summary').value = '';
+        document.getElementById('quiz-questions-list').innerHTML = '<p>Save quiz info to add questions.</p>';
+    }
+
+    // Logic for the "Edit Quiz" button
+    const editQuizBtn = e.target.closest('.edit-item[data-item-type="quiz"]');
+    if (editQuizBtn) {
+        const episodeId = editQuizBtn.dataset.episodeId;
+        const quizId = editQuizBtn.dataset.itemId;
+        
+        // This calls the function (which should already be in your quiz modal code) 
+        // to load the existing quiz data into the modal.
+        if (typeof window.openUpdateQuizModal === 'function') {
+            window.openUpdateQuizModal(episodeId, quizId);
+        }
+    }
+});
+
 const updatePreviewButton = (isMasterclass, courseId) => {
     const previewBtn = document.getElementById('preview-course-btn');
     if (!previewBtn) return;
