@@ -3697,8 +3697,8 @@ if (window.location.pathname.includes('lesson.html')) {
                         <div class="pdf-viewer-header d-flex justify-content-between align-items-center bg-dark p-3 text-white">
                             <h5>${fileName}</h5>
                             <button class="rbt-btn btn-xs btn-round-white-opacity close-pdf-viewer">
-                                <i class="feather-x"></i> Close
-                            </button>
+    <i class="feather-x"></i><span class="close-pdf-text">Close</span>
+</button>
                         </div>
                         <div class="pdf-viewer-body" style="height: calc(100vh - 120px); width: 100%;">
                             <iframe src="${filePath}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="100%" style="border: none;"></iframe>
