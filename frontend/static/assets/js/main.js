@@ -3681,6 +3681,53 @@ if (window.location.pathname.includes('lesson.html')) {
                     }
                     setupSidebarClickHandler();
                     setupSidebarToggle();
+
+// --- NEW: PDF VIEWER LOGIC ---
+    document.addEventListener('click', (e) => {
+        const pdfLink = e.target.closest('.lesson-pdf-link');
+        if (pdfLink) {
+            e.preventDefault();
+            const filePath = pdfLink.dataset.filePath;
+            const fileName = pdfLink.dataset.fileName;
+            const contentContainer = document.getElementById('lesson-inner-content');
+
+            if (filePath) {
+                contentContainer.innerHTML = `
+                    <div class="pdf-viewer-wrapper">
+                        <div class="pdf-viewer-header d-flex justify-content-between align-items-center bg-dark p-3 text-white">
+                            <h5>${fileName}</h5>
+                            <button class="rbt-btn btn-xs btn-round-white-opacity close-pdf-viewer">
+                                <i class="feather-x"></i> Close
+                            </button>
+                        </div>
+                        <div class="pdf-viewer-body" style="height: calc(100vh - 120px); width: 100%;">
+                            <iframe src="${filePath}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="100%" style="border: none;"></iframe>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        const closePdfBtn = e.target.closest('.close-pdf-viewer');
+        if (closePdfBtn) {
+            e.preventDefault();
+            // Re-render the lesson content to go back to the original view
+            const params = new URLSearchParams(window.location.search);
+            const lessonId = params.get('lessonId');
+            if (lessonId) {
+                updateLessonContent(lessonId); // Call the function to rebuild the content
+            } else {
+                // Fallback if lessonId is somehow lost, clear content
+                document.getElementById('lesson-inner-content').innerHTML = `
+                    <div class="content p-5 text-center">
+                        <h4>Please select a lesson from the sidebar.</h4>
+                    </div>
+                `;
+            }
+        }
+    });
+    // --- END NEW PDF VIEWER LOGIC ---
+
                 } else {
                     document.body.innerHTML = `<h1>Error: ${result.message}</h1>`;
                 }
@@ -3781,7 +3828,7 @@ function updateLessonContent(lessonId) {
                 <ul class="rbt-list-style-1">
                     ${selectedLesson.exerciseFiles.map(file => `
                         <li>
-                            <a href="/${file.path}" target="_blank" download>
+                            <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
                                 <i class="feather-paperclip"></i> ${file.filename}
                             </a>
                         </li>

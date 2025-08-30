@@ -40866,3 +40866,19 @@ padding: 0 10px 0 10px;
     opacity: 0;
     pointer-events: none;
 }
+
+/* Custom Styles for Lesson Resources */
+
+.rbt-lesson-attachments .rbt-list-style-1 li a {
+    color: #87CEEB; /* A light sky blue, or choose any light color you prefer */
+    transition: color 0.3s ease;
+}
+
+.rbt-lesson-attachments .rbt-list-style-1 li a:hover {
+    color: #ADD8E6; /* A slightly lighter blue on hover */
+}
+
+/* Ensure the paperclip icon also inherits a visible color */
+.rbt-lesson-attachments .rbt-list-style-1 li a i {
+    color: inherit; /* This makes the icon use the link color */
+}
