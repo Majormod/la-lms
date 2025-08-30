@@ -4062,6 +4062,10 @@ function updateLessonContent(lessonId) {
     }
     if (!selectedLesson) return;
 
+     // --- ADD THIS DEBUGGING LINE ---
+    console.log('Inspecting selectedLesson:', selectedLesson);
+    // --- END DEBUGGING LINE ---
+    
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
