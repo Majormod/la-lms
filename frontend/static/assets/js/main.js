@@ -2241,8 +2241,9 @@ if (window.location.pathname.includes('edit-course.html')) {
                 if (lesson) {
                     document.getElementById('lesson-title').value = lesson.title || '';
                     document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                    // --- REPLACEMENT CODE ---
+document.getElementById('lesson-video-source').value = lesson.videoSource || 'Select Video Source';
+document.getElementById('lesson-video-url').value = lesson.videoUrl || '';
                     const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
                     document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
                     document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
@@ -3143,8 +3144,9 @@ if (window.location.pathname.includes('edit-course.html')) {
             saveLessonBtn.addEventListener('click', async () => {
                 const title = document.getElementById('lesson-title').value;
                 const summary = document.getElementById('lesson-summary').value;
-                const videoSource = document.getElementById('lesson-video-source').value;
-                const vimeoUrl = videoSource === 'Vimeo' ? document.getElementById('lesson-video-url').value : '';
+                // --- REPLACEMENT CODE ---
+const videoSource = document.getElementById('lesson-video-source').value;
+const videoUrl = document.getElementById('lesson-video-url').value;
                 const hr = document.getElementById('lesson-duration-hr').value || '0';
                 const min = document.getElementById('lesson-duration-min').value || '0';
                 const sec = document.getElementById('lesson-duration-sec').value || '0';
@@ -3163,7 +3165,11 @@ if (window.location.pathname.includes('edit-course.html')) {
                     const formData = new FormData();
                     formData.append('title', title);
                     formData.append('summary', summary);
-                    formData.append('vimeoUrl', vimeoUrl);
+                    // --- REPLACEMENT CODE ---
+if (videoSource !== 'Select Video Source' && videoSource) {
+    formData.append('videoSource', videoSource);
+    formData.append('videoUrl', videoUrl);
+}
                     formData.append('duration', duration);
                     formData.append('isPreview', isPreview);
 
@@ -4044,6 +4050,18 @@ if (window.location.pathname.includes('lesson.html')) {
 /**
  * This function displays the lesson video, description, and resources.
  */
+// --- REPLACEMENT FUNCTION ---
+// --- PASTE THIS ENTIRE BLOCK INTO YOUR lesson.html JAVASCRIPT ---
+
+// 1. The Helper Function (must come first)
+function getYoutubeVideoId(url) {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// 2. The Main Function (uses the helper function)
 function updateLessonContent(lessonId) {
     let selectedLesson = null;
     for (const episode of currentCourseData.episodes) {
@@ -4055,21 +4073,34 @@ function updateLessonContent(lessonId) {
     }
     if (!selectedLesson) return;
 
-    // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
-    // --- Build Video HTML ---
     let videoHTML = '';
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+    let embedUrl = '';
+
+    if (selectedLesson.videoSource && selectedLesson.videoUrl) {
+        switch (selectedLesson.videoSource) {
+            case 'Vimeo':
+                const vimeoId = selectedLesson.videoUrl.split('/').pop().split('?')[0];
+                embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
+                break;
+
+            case 'YouTube':
+                const youtubeId = getYoutubeVideoId(selectedLesson.videoUrl);
+                if (youtubeId) {
+                    embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+                }
+                break;
+        }
+    }
+
+    if (embedUrl) {
         videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
         videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
-    // --- Build Resources HTML (if files exist) ---
     let resourcesHTML = '';
     if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
         resourcesHTML = `
@@ -4088,7 +4119,6 @@ function updateLessonContent(lessonId) {
         `;
     }
 
-    // --- Build Description and Final Content HTML ---
     const descriptionHTML = `
         <div class="content">
             <div class="section-title">
@@ -4098,158 +4128,1216 @@ function updateLessonContent(lessonId) {
             ${resourcesHTML}
         </div>`;
 
-    // --- Render everything to the page ---
     contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
-    // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
-    function renderQuizStartScreen(quizId) {
-        let selectedQuiz = null;
-        for (const episode of currentCourseData.episodes) {
-            const found = episode.quizzes.find(q => q._id === quizId);
-            if (found) { selectedQuiz = found; break; }
-        }
-        if (!selectedQuiz) return;
-        
-        document.getElementById('lesson-title').textContent = selectedQuiz.title;
-        const contentContainer = document.getElementById('lesson-inner-content');
 
-        contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
-        document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
-    }
-    
-function renderQuizQuestions(quiz, container) {
-    const questionsHTML = quiz.questions.map((question, index) => {
-        const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
-        const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
-        const optionsHTML = question.options.map((option, optIndex) => `
-            <div class="col-lg-6">
-                <div class="${inputClass}">
-                    <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
-                    <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
-                </div>
-            </div>`).join('');
-        const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
+// In main.js
 
-        return `
-            <div class="rbt-single-quiz mb-5">
-                <h4>${index + 1}. ${question.questionText}</h4>
-                <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
-                <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
-            </div>`;
-    }).join('');
+if (window.location.pathname.includes('explore-courses.html')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Get DOM Elements ---
+        const courseListContainer = document.getElementById('course-list-container');
+        const courseCountBadge = document.getElementById('course-count-badge');
+        const courseResultCount = document.getElementById('course-result-count');
 
-    container.innerHTML = `
-        <div class="content p-4 p-lg-5">
-            <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
-            <form id="quiz-form-submission">${questionsHTML}
-                <div class="submit-btn mt-2">
-                    <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
-                        <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;
-    
-    document.getElementById('quiz-form-submission').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.querySelector('.btn-text').textContent = 'Submitting...';
+        // --- Initialize Price Range Slider ---
+        if (typeof $ !== 'undefined' && $.ui) {
+            const sliderRange = $("#slider-range");
+            const amount = $("#amount");
+            const filterBtn = $("#price-range-filter-btn");
 
-        const formData = new FormData(e.target);
-        const answers = {};
-        for (let [name, value] of formData.entries()) {
-            const questionId = name.replace('question-', '');
-            if (!answers[questionId]) {
-                answers[questionId] = [];
-            }
-            answers[questionId].push(value);
-        }
-
-        try {
-            const courseId = new URLSearchParams(window.location.search).get('courseId');
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/quizzes/${quiz._id}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // --- THIS IS THE CORRECTED LINE ---
-                    'x-auth-token': localStorage.getItem('lmsToken') 
-                },
-                body: JSON.stringify({ answers })
+            sliderRange.slider({
+                range: true,
+                min: 0,
+                max: 5000,
+                values: [0, 5000],
+                slide: function (event, ui) {
+                    amount.val("₹" + ui.values[0] + " - ₹" + ui.values[1]);
+                }
             });
 
-            const data = await response.json();
-            if (data.success) {
-                sessionStorage.setItem('quizResult', JSON.stringify(data.result));
-                window.location.href = `lesson-quiz-result.html?courseId=${courseId}&quizId=${quiz._id}`;
-            } else {
-                throw new Error(data.message);
+            amount.val("₹" + sliderRange.slider("values", 0) + " - ₹" + sliderRange.slider("values", 1));
+
+            filterBtn.on('click', function (e) {
+                e.preventDefault();
+                handleFilterChange(); // Use the main filter handler
+            });
+        }
+
+        // --- Function to Create a Single Course Card ---
+        // CHANGED: Now accepts a 'userWishlist' set to determine the icon state
+const createCourseCard = (course, userWishlist = new Set()) => {
+    let detailPageUrl;
+    if (course.isMasterclass) {
+        detailPageUrl = `the-masterclass-details.html?courseId=${course._id}`;
+    } else {
+        detailPageUrl = `course-details.html?courseId=${course._id}`;
+    }
+
+    const isWishlisted = userWishlist.has(course._id);
+    const activeClass = isWishlisted ? 'active' : '';
+
+    let priceHtml = '';
+    if (course.isFree || course.price === 0) {
+        priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+    } else {
+        const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+        const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+        priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+    }
+
+    let discountBadgeHtml = '';
+    if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
+        const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
+        discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
+    }
+    
+    const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
+    const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
+    const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+    
+    return `
+        <div class="course-grid-3" data-course-id="${course._id}">
+            <div class="rbt-card variation-01 rbt-hover">
+                <div class="rbt-card-img">
+                    <a href="${detailPageUrl}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
+                </div>
+                <div class="rbt-card-body">
+                    <div class="rbt-card-top">
+                        <div class="rbt-review">
+                            <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                            <span class="rating-count">(15 Reviews)</span>
+                        </div>
+                        <div class="rbt-bookmark-btn">
+                            <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                        </div>
+                    </div>
+                    <h4 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h4>
+                    <ul class="rbt-meta">
+                        <li><i class="feather-book"></i>${lessonCount} Lessons</li>
+                        <li><i class="feather-users"></i>50 Students</li>
+                    </ul>
+                    <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
+                    <div class="rbt-author-meta mb--10">
+                        <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
+                        <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
+                    </div>
+                    <div class="rbt-card-bottom">
+                        ${priceHtml}
+                        <a class="rbt-btn-link" href="${detailPageUrl}">Learn More<i class="feather-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+};
+
+        // --- Main Function to Fetch and Display Courses ---
+        // CHANGED: Now fetches user wishlist first to set the initial state of bookmark icons
+        const fetchAndDisplayCourses = async (queryParams = {}) => {
+            let userWishlist = new Set();
+            const token = localStorage.getItem('lmsToken');
+
+            // Step 1: If user is logged in, fetch their wishlist
+            if (token) {
+                try {
+                    const wishlistRes = await fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } });
+                    const wishlistData = await wishlistRes.json();
+                    if (wishlistData.success) {
+                        userWishlist = new Set(wishlistData.courses.map(course => course._id));
+                    }
+                } catch (error) {
+                    console.error("Could not fetch user wishlist for initial state.", error);
+                }
             }
 
-        } catch (error) {
-            alert(`Error submitting quiz: ${error.message}`);
-            submitButton.disabled = false;
-            submitButton.querySelector('.btn-text').textContent = 'Submit Quiz';
-        }
+            // Step 2: Fetch courses with filters
+            Object.keys(queryParams).forEach(key => {
+                if (queryParams[key] === '' || queryParams[key] === null || queryParams[key] === undefined) {
+                    delete queryParams[key];
+                }
+            });
+            const queryString = new URLSearchParams(queryParams).toString();
+            const fetchUrl = `${API_BASE_URL}/api/courses?${queryString}`;
+
+            try {
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+
+                if (data.success) {
+                    courseListContainer.innerHTML = '';
+                    if (data.courses.length > 0) {
+                        // Step 3: Pass the wishlist to the card creation function
+                        data.courses.forEach(course => courseListContainer.innerHTML += createCourseCard(course, userWishlist));
+                    } else {
+                        courseListContainer.innerHTML = '<div class="col-12 text-center"><p>No courses found matching your criteria.</p></div>';
+                    }
+                    courseCountBadge.innerHTML = `<div class="image">🎉</div> ${data.pagination.totalCourses} Courses`;
+                    courseResultCount.textContent = `Showing ${data.courses.length} of ${data.pagination.totalCourses} results`;
+                }
+            } catch (error) {
+                console.error('Error fetching courses:', error);
+                courseListContainer.innerHTML = '<p>There was an error loading the courses.</p>';
+            }
+        };
+
+        // --- Function to Handle All Filter Changes ---
+        const handleFilterChange = () => {
+            const minPrice = $("#slider-range").slider("values", 0);
+            const maxPrice = $("#slider-range").slider("values", 1);
+            
+            const params = {
+                sortBy: document.getElementById('sort-by-select')?.value,
+                search: document.getElementById('course-search-input')?.value,
+                category: document.getElementById('category-select')?.value,
+                price: document.getElementById('offer-select')?.value,
+                minPrice: minPrice,
+                maxPrice: maxPrice
+            };
+            fetchAndDisplayCourses(params);
+        };
+
+        // --- Add Event Listeners ---
+        document.getElementById('course-search-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleFilterChange();
+        });
+
+        // Attach the handler to all filter dropdowns that trigger a reload
+        ['sort-by-select', 'school-select', 'author-select', 'offer-select', 'category-select'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', handleFilterChange);
+        });
+
+        // --- Wishlist Click Handler ---
+        courseListContainer.addEventListener('click', async (e) => {
+            const bookmarkBtn = e.target.closest('.rbt-bookmark-btn a');
+            if (!bookmarkBtn) return;
+
+            e.preventDefault();
+            const token = localStorage.getItem('lmsToken');
+            if (!token) {
+                alert('Please log in to add courses to your wishlist.');
+                window.location.href = '/login';
+                return;
+            }
+            
+            // BUG FIX: Changed to find the closest parent with the data-course-id
+            const courseCard = bookmarkBtn.closest('.course-grid-3');
+            const courseId = courseCard.dataset.courseId;
+
+            if (!courseId) {
+                console.error("Could not find courseId for this card.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/wishlist/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ courseId }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    bookmarkBtn.classList.toggle('active');
+                }
+            } catch (error) {
+                console.error('Error toggling wishlist:', error);
+            }
+        });
+
+        // --- Initial Fetch on Page Load ---
+        fetchAndDisplayCourses();
     });
 }
 
-    function setupNavigation(currentItemId, currentItemType) {
-        const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
-        const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
-        const prevButton = document.getElementById('prev-content-btn');
-        const nextButton = document.getElementById('next-content-btn');
 
-        if (currentIndex > 0) {
-            const prevItem = allContents[currentIndex - 1];
-            prevButton.style.display = 'block';
-            prevButton.dataset.id = prevItem._id;
-            prevButton.dataset.type = prevItem.type;
-        } else {
-            prevButton.style.display = 'none';
-        }
-        if (currentIndex < allContents.length - 1) {
-            const nextItem = allContents[currentIndex + 1];
-            nextButton.style.display = 'block';
-            nextButton.dataset.id = nextItem._id;
-            nextButton.dataset.type = nextItem.type;
-        } else {
-            nextButton.style.display = 'none';
-        }
+// In main.js, add this new block for the results page logic
+// Add this entire block to the end of your main.js file
+
+if (window.location.pathname.includes('lesson-quiz-result.html')) {
+
+    // This function builds the sidebar navigation for the results page.
+    function renderSidebar(courseData, activeQuizId) {
+        const sidebar = document.querySelector('.rbt-lesson-leftsidebar .rbt-accordion-02');
+        if (!sidebar) return;
+
+        const activeEpisode = courseData.episodes.find(ep =>
+            ep.quizzes.some(q => q._id === activeQuizId)
+        );
+
+        sidebar.innerHTML = courseData.episodes.map((episode, index) => {
+            const isExpanded = activeEpisode && episode._id === activeEpisode._id;
+            const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
+            const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
+            const contents = [...lessons, ...quizzes];
+
+            const contentHTML = contents.map(content => {
+                const isActive = (content.type === 'quiz' && content._id === activeQuizId);
+                const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
+                const link = `lesson.html?courseId=${courseData._id}&${content.type}Id=${content._id}`;
+                return `
+                    <li>
+                        <a href="${link}" class="content-link ${isActive ? 'active' : ''}">
+                            <div class="course-content-left">
+                                <i class="feather-${icon}"></i><span class="text">${content.title}</span>
+                            </div>
+                        </a>
+                    </li>`;
+            }).join('');
+
+            return `
+                <div class="accordion-item card">
+                    <h2 class="accordion-header card-header"><button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">${episode.title}</button></h2>
+                    <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}"><div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div></div>
+                </div>`;
+        }).join('');
     }
 
-    function setupSidebarClickHandler() {
-        document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
-            const link = event.target.closest('.content-link, .content-nav-link');
-            if (!link) return;
-            event.preventDefault();
-            const id = link.dataset.id;
-            const type = link.dataset.type;
-            const url = new URL(window.location);
-            url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
-            if (type === 'lesson') url.searchParams.delete('quizId');
-            else url.searchParams.delete('lessonId');
-            history.pushState({}, '', url);
-            if (type === 'lesson') { updateLessonContent(id); } else if (type === 'quiz') { renderQuizStartScreen(id); }
-            document.querySelector('.content-link.active')?.classList.remove('active');
-            document.querySelector(`.content-link[data-id="${id}"]`)?.classList.add('active');
-            setupNavigation(id, type);
+    // This function renders the main results content on the right.
+    function renderResults(result, quizTitle, courseData) {
+        document.getElementById('result-page-title').textContent = quizTitle;
+        document.getElementById('back-button').href = document.referrer || `course-details.html?courseId=${courseData._id}`;
+
+        const summaryContainer = document.getElementById('quiz-summary-results');
+        const passStatus = result.passed ? 'Pass' : 'Fail';
+        const passClass = result.passed ? 'color-success' : 'color-danger';
+        const correctAnswersCount = result.answers.filter(a => a.isCorrect).length;
+
+        summaryContainer.innerHTML = `<div class="text-center"><h3>Your score: ${result.percentage}% <span class="rbt-badge-5 bg-color-primary-opacity ${passClass}">${passStatus}</span></h3><p class="b3 mt-2">You answered ${correctAnswersCount} out of ${result.answers.length} questions correctly.</p></div>`;
+
+        const tableBody = document.getElementById('quiz-results-tbody');
+        tableBody.innerHTML = result.answers.map((answer, index) => {
+            const resultBadge = answer.isCorrect ? '<span class="rbt-badge-5 bg-color-success-opacity color-success">Correct</span>' : '<span class="rbt-badge-5 bg-color-danger-opacity color-danger">Incorrect</span>';
+            return `<tr><td><p class="b3">${index + 1}</p></td><td><p class="b3">${answer.questionText}</p></td><td>${resultBadge}</td></tr>`;
+        }).join('');
+
+        renderSidebar(courseData, result.quiz);
+    }
+
+    // This is the main logic that runs when the results page loads.
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultId = urlParams.get('resultId');
+        const resultFromSession = JSON.parse(sessionStorage.getItem('quizResult'));
+
+        if (resultId) {
+            // This handles loading an old result when you click the "View Details" button
+            const token = localStorage.getItem('lmsToken');
+            fetch(`${API_BASE_URL}/api/quiz-results/${resultId}`, { headers: { 'x-auth-token': token } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderResults(data.result, data.quizTitle, data.result.course);
+                    } else { document.querySelector('.inner').innerHTML = `<h1>Error: ${data.message}</h1>`; }
+                });
+        } else if (resultFromSession) {
+            // This handles showing a result immediately after taking a quiz
+            const courseId = urlParams.get('courseId');
+            fetch(`${API_BASE_URL}/api/courses/${courseId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const quizTitle = data.course.episodes.flatMap(ep => ep.quizzes).find(q => q._id === resultFromSession.quiz)?.title || "Quiz Result";
+                        renderResults(resultFromSession, quizTitle, data.course);
+                        sessionStorage.removeItem('quizResult');
+                    }
+                });
+        } else {
+            // This shows if no data is found
+            document.querySelector('.inner').innerHTML = "<h1>No quiz result found. Please attempt a quiz first.</h1>";
+        }
+    });
+}
+// =================================================================
+// FINAL SCRIPT FOR instructor-quiz-attempts.html (with all fixes)
+// =================================================================
+if (window.location.pathname.includes('instructor-quiz-attempts.html')) {
+    const token = localStorage.getItem('lmsToken');
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+    let allAttempts = []; // Store all attempts for client-side filtering
+
+    if (!token || !user || user.role !== 'instructor') {
+        window.location.href = '/login.html';
+    }
+
+    const renderTable = (attempts) => {
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (!attemptsTableBody) return;
+        
+        if (attempts.length === 0) {
+            attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No results match your filter.</td></tr>';
+            return;
+        }
+
+        attemptsTableBody.innerHTML = attempts.map(attempt => {
+            const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+            return `
+                <tr>
+                    <th><p class="b3 mb--5">${attempt.date}</p><span class="h6 mb--5">${attempt.quizTitle}</span><p class="b3">Student: <a href="#">${attempt.studentName}</a></p></th>
+                    <td><p class="b3">${attempt.totalQuestions}</p></td>
+                    <td><p class="b3">${attempt.totalMarks}</p></td>
+                    <td><p class="b3">${attempt.correctAnswers}</p></td>
+                    <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                    <td>
+                        <div class="rbt-button-group justify-content-end">
+                            <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}" title="View Details">
+                                <i class="feather-eye pl--0"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    };
+
+    const setupCourseFilter = (courses) => {
+        const courseSelect = document.querySelector('.filter-select select[data-live-search="true"]');
+        if (!courseSelect) return;
+
+        courseSelect.innerHTML = courses.map(course => `<option value="${course._id}">${course.title}</option>`).join('');
+        
+        if (typeof $ !== 'undefined' && $.fn.selectpicker) {
+            $(courseSelect).selectpicker('refresh');
+        }
+
+        courseSelect.addEventListener('change', () => {
+            const selectedCourseIds = $(courseSelect).val();
+            if (selectedCourseIds && selectedCourseIds.length > 0) {
+                const filteredAttempts = allAttempts.filter(attempt => selectedCourseIds.includes(attempt.courseId));
+                renderTable(filteredAttempts);
+            } else {
+                renderTable(allAttempts);
+            }
         });
+    };
+
+    const setupViewDetailsClickHandler = () => {
+        const tableBody = document.getElementById('quiz-attempts-table-body');
+        if (!tableBody) return;
+
+        tableBody.addEventListener('click', (e) => {
+            const viewButton = e.target.closest('.view-details-btn');
+            if (viewButton) {
+                e.preventDefault();
+                window.location.href = viewButton.href;
+            }
+        });
+    };
+
+    const initializePage = () => {
+        const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+        if (!attemptsTableBody) return;
+        
+        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading quiz attempts...</td></tr>';
+        
+        fetch(`${API_BASE_URL}/api/instructor/quiz-attempts`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    allAttempts = result.attempts;
+                    renderTable(allAttempts);
+                    setupCourseFilter(result.courses);
+                    setupViewDetailsClickHandler();
+                } else {
+                    attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching instructor data:', error);
+                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load data.</td></tr>';
+            });
+    };
+    
+    document.addEventListener('DOMContentLoaded', initializePage);
+}
+// =================================================================
+// SCRIPT FOR student-my-quiz-attempts.html
+// =================================================================
+if (window.location.pathname.includes('student-my-quiz-attempts.html')) {
+    const token = localStorage.getItem('lmsToken');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
     }
 
-    function setupSidebarToggle() {
-        const toggleButton = document.querySelector('.rbt-lesson-toggle button');
-        if (toggleButton) {
-            toggleButton.addEventListener('click', function() {
-                document.querySelector('.rbt-lesson-leftsidebar').classList.toggle('collapsed');
-                const icon = this.querySelector('i');
-                icon.className = icon.className.includes('left') ? 'feather-arrow-right' : 'feather-arrow-left';
+    // NEW: This function handles the click on the eye icon
+    const setupViewDetailsClickHandler = () => {
+        const tableBody = document.getElementById('quiz-attempts-table-body');
+        if (!tableBody) return;
+
+        tableBody.addEventListener('click', (e) => {
+            const viewButton = e.target.closest('.view-details-btn');
+            if (viewButton) {
+                e.preventDefault(); // Stop any other scripts from blocking the link
+                window.location.href = viewButton.href; // Manually navigate
+            }
+        });
+    };
+
+    // This is your existing code, with the fix integrated
+    const attemptsTableBody = document.getElementById('quiz-attempts-table-body');
+    if (attemptsTableBody) {
+        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading your quiz attempts...</td></tr>';
+        
+        fetch(`${API_BASE_URL}/api/student/my-quiz-attempts`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    if (result.attempts.length === 0) {
+                        attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">You have not attempted any quizzes yet.</td></tr>';
+                        return;
+                    }
+                    
+                    attemptsTableBody.innerHTML = result.attempts.map(attempt => {
+                        const resultClass = attempt.result === 'Pass' ? 'bg-color-success-opacity color-success' : 'bg-color-danger-opacity color-danger';
+                        
+                        // FIX #1: Create the correct link for the button
+                        const detailsLink = `lesson-quiz-result.html?courseId=${attempt.courseId}&resultId=${attempt.id}`;
+
+                        return `
+                            <tr>
+                                <th>
+                                    <p class="b3 mb--5">${attempt.date}</p>
+                                    <span class="h6 mb--5">${attempt.quizTitle}</span>
+                                </th>
+                                <td><p class="b3">${attempt.totalQuestions}</p></td>
+                                <td><p class="b3">${attempt.totalMarks}</p></td>
+                                <td><p class="b3">${attempt.correctAnswers}</p></td>
+                                <td><span class="rbt-badge-5 ${resultClass}">${attempt.result}</span></td>
+                                <td>
+                                    <div class="rbt-button-group justify-content-end">
+                                        <a class="rbt-btn btn-xs bg-primary-opacity radius-round view-details-btn" href="${detailsLink}" title="View Details">
+                                            <i class="feather-eye pl--0"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // FIX #3: Activate the click handler now that the table is built
+                    setupViewDetailsClickHandler();
+
+                } else {
+                    attemptsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${result.message}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching your quiz attempts:', error);
+                attemptsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load your quiz attempts.</td></tr>';
             });
-        }
     }
 }
+
+
+// main.js
+
+if (window.location.pathname.includes('instructor-announcements.html')) {
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- 1. SETUP & SECURITY CHECK ---
+        const token = localStorage.getItem('lmsToken');
+        const userString = localStorage.getItem('lmsUser');
+
+        if (!token || !userString) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const user = JSON.parse(userString);
+        if (user.role !== 'instructor') {
+            alert('Access Denied: You must be an instructor to view this page.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // --- 2. GET ELEMENT REFERENCES ---
+        const addAnnouncementBtn = document.querySelector('.rbt-callto-action .rbt-btn');
+        const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
+        const modalElement = document.getElementById('addAnnouncementModal');
+        const courseSelectInModal = document.getElementById('announcement-course');
+        const courseFilterSelect = document.getElementById('announcement-filter-course'); // Using the new ID
+        const sendBtn = document.getElementById('send-announcement-btn');
+        const announcementTableBody = document.getElementById('announcements-table-body');
+
+        // --- 3. DEFINE CORE FUNCTIONS ---
+        const populateCoursesDropdown = () => {
+            fetch(`${API_BASE_URL}/api/instructors/${user.id}/courses`, {
+                    headers: { 'x-auth-token': token }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.courses && data.courses.length > 0) {
+                        let optionsHtml = '<option disabled selected value="">Select a course</option>';
+                        let filterOptionsHtml = '<option selected value="all">All Courses</option>';
+                        
+                        data.courses.forEach(course => {
+                            optionsHtml += `<option value="${course._id}">${course.title}</option>`;
+                            filterOptionsHtml += `<option value="${course._id}">${course.title}</option>`;
+                        });
+
+                        if (courseSelectInModal) courseSelectInModal.innerHTML = optionsHtml;
+                        if (courseFilterSelect) courseFilterSelect.innerHTML = filterOptionsHtml;
+
+                        // --- START OF FIX ---
+                        // Tell the Bootstrap-Select library to refresh the dropdowns
+                        $('#announcement-course').selectpicker('refresh');
+                        $('#announcement-filter-course').selectpicker('refresh');
+                        // --- END OF FIX ---
+
+                    } else {
+                        if (courseSelectInModal) courseSelectInModal.innerHTML = '<option disabled selected value="">No courses found</option>';
+                        if (courseFilterSelect) courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
+                    }
+                })
+                .catch(error => console.error("Error fetching courses for dropdown:", error));
+        };
+
+        const fetchAndDisplayAnnouncements = () => {
+            fetch(`${API_BASE_URL}/api/instructors/${user.id}/announcements`, {
+                    headers: { 'x-auth-token': token }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!announcementTableBody) return;
+                    announcementTableBody.innerHTML = '';
+                    if (data.success && data.announcements.length > 0) {
+                        data.announcements.forEach(ann => {
+                            const date = new Date(ann.createdAt);
+                            const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                            const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                            const row = `
+                                <tr data-course-id="${ann.course?._id || ''}">
+                                    <th><span class="h6 mb--5">${formattedDate}</span><p class="b3">${formattedTime}</p></th>
+                                    <td><span class="h6 mb--5">${ann.course?.title || 'General'}</span><p class="b3">${ann.message.substring(0, 100)}...</p></td>
+                                    <td><div class="rbt-button-group justify-content-end"><a class="rbt-btn-link left-icon delete-announcement-btn" href="#" data-id="${ann._id}"><i class="feather-trash-2"></i> Delete</a></div></td>
+                                </tr>`;
+                            announcementTableBody.innerHTML += row;
+                        });
+                    } else {
+                        announcementTableBody.innerHTML = '<tr><td colspan="3">You have not sent any announcements yet.</td></tr>';
+                    }
+                })
+                .catch(error => console.error("Error fetching announcements list:", error));
+        };
+        
+        // --- 4. SET UP ALL EVENT LISTENERS ---
+        if (addAnnouncementBtn) {
+            addAnnouncementBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                announcementModal.show();
+            });
+        }
+
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                const courseId = courseSelectInModal.value;
+                const message = document.getElementById('announcement-message').value;
+                const attachment = document.getElementById('announcement-attachment').files[0];
+
+                if (!courseId || !message) {
+                    return alert('Please select a course and write a message.');
+                }
+
+                sendBtn.textContent = 'Sending...';
+                sendBtn.disabled = true;
+
+                const formData = new FormData();
+                formData.append('courseId', courseId);
+                formData.append('message', message);
+                if (attachment) formData.append('attachment', attachment);
+
+                fetch(`${API_BASE_URL}/api/announcements`, {
+                        method: 'POST',
+                        headers: { 'x-auth-token': token },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Announcement sent successfully!');
+                            announcementModal.hide();
+                            document.getElementById('announcement-form').reset();
+                            fetchAndDisplayAnnouncements();
+                        } else {
+                            alert(`Error: ${data.message}`);
+                        }
+                    })
+                    .finally(() => {
+                        sendBtn.textContent = 'Send Announcement';
+                        sendBtn.disabled = false;
+                    });
+            });
+        }
+
+        if (courseFilterSelect) {
+            courseFilterSelect.addEventListener('change', () => {
+                const selectedCourseId = $(courseFilterSelect).val(); // Use jQuery to get value from multi-select
+                const allRows = announcementTableBody.querySelectorAll('tr');
+                allRows.forEach(row => {
+                    // Check if 'all' is selected or if the row's courseId is in the selected array
+                    if (selectedCourseId.includes('all') || selectedCourseId.includes(row.dataset.courseId)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        if (announcementTableBody) {
+            announcementTableBody.addEventListener('click', (e) => {
+                const deleteButton = e.target.closest('.delete-announcement-btn');
+                if (deleteButton) {
+                    e.preventDefault();
+                    const announcementId = deleteButton.dataset.id;
+                    if (confirm('Are you sure you want to delete this announcement?')) {
+                        fetch(`${API_BASE_URL}/api/announcements/${announcementId}`, {
+                                method: 'DELETE',
+                                headers: { 'x-auth-token': token }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Announcement deleted.');
+                                    deleteButton.closest('tr').remove();
+                                } else {
+                                    alert(`Error: ${data.message}`);
+                                }
+                            });
+                    }
+                }
+            });
+        }
+
+        if (modalElement) {
+            modalElement.addEventListener('hidden.bs.modal', () => {
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        }
+
+        // --- 5. INITIAL PAGE LOAD ---
+        populateCoursesDropdown();
+        fetchAndDisplayAnnouncements();
+        updateUserDataOnPage();
+        
+    }); // End of DOMContentLoaded listener
+}
+
+// main.js
+
+if (window.location.pathname.includes('the-masterclass-details.html')) {
+loadCoursePage('MasterClass');
+    // --- DYNAMIC REVIEW SECTION ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. CONFIGURATION & ELEMENT SELECTION ---
+    const reviewsListContainer = document.getElementById('reviews-list-container');
+    const paginationContainer = document.getElementById('reviews-pagination-container');
+    const reviewForm = document.getElementById('review-form');
+
+    // Get the course ID from the URL (e.g., .../details.html?id=COURSE_ID)
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+
+    if (!courseId) {
+        reviewsListContainer.innerHTML = '<p>Error: Course ID not found in URL.</p>';
+        return;
+    }
+
+    // --- 2. CORE FUNCTIONS ---
+
+    /**
+     * Fetches reviews for a specific page and triggers rendering.
+     * @param {number} page - The page number to fetch.
+     */
+    const fetchAndDisplayReviews = async (page = 1) => {
+        try {
+            const response = await fetch(`/api/courses/${courseId}/reviews?page=${page}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch reviews.');
+            }
+            const data = await response.json(); // Assumes API returns { reviews: [], currentPage: 1, totalPages: 5 }
+
+            renderReviews(data.reviews);
+            renderPagination(data.currentPage, data.totalPages);
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+            reviewsListContainer.innerHTML = `<p class="text-danger">Could not load reviews at this time.</p>`;
+        }
+    };
+
+    /**
+     * Renders the list of reviews into the DOM.
+     * @param {Array} reviews - An array of review objects.
+     */
+
+    // REPLACE your old 'renderReviews' function with this new, improved version
+
+const renderReviews = (reviews) => {
+    const reviewsListContainer = document.getElementById('reviews-list-container');
+    reviewsListContainer.innerHTML = ''; // Clear existing reviews
+
+    if (!reviews || reviews.length === 0) {
+        reviewsListContainer.innerHTML = '<p>Be the first to leave a review!</p>';
+        return;
+    }
+
+    // This uses the rich HTML structure from your course-details.html page
+    const reviewsHtml = reviews.map(review => {
+        // Use default values to prevent errors if student data is missing
+        const student = review.student || {};
+        const studentName = `${student.firstName || ''} ${student.lastName || 'Anonymous'}`.trim();
+        const studentAvatar = student.avatar ? `/${student.avatar}` : 'assets/images/testimonial/testimonial-1.jpg';
+        const reviewDate = new Date(review.createdAt).toLocaleDateString();
+
+        // Generate star rating HTML
+        let ratingHTML = '';
+        for (let i = 0; i < 5; i++) {
+            // Use solid stars for the rating, regular stars for the remainder
+            ratingHTML += `<a href="#"><i class="fa ${i < review.rating ? 'fa-star' : 'fa-regular fa-star'}"></i></a>`;
+        }
+
+        return `
+        <div class="rbt-course-review about-author">
+            <div class="media">
+                <div class="thumbnail">
+                    <a href="#"><img src="${studentAvatar}" alt="${studentName}"></a>
+                </div>
+                <div class="media-body">
+                    <div class="author-info">
+                        <h5 class="title"><a class="hover-flip-item-wrapper" href="#">${studentName}</a></h5>
+                        <div class="rating">${ratingHTML}</div>
+                    </div>
+                    <div class="content">
+                        <p class="description">${review.comment || ''}</p>
+                        <span class="review-date" style="font-size: 14px; color: #888;">${reviewDate}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    reviewsListContainer.innerHTML = reviewsHtml;
+};
+
+    /**
+     * Renders pagination controls.
+     * @param {number} currentPage - The current active page.
+     * @param {number} totalPages - The total number of pages available.
+     */
+    const renderPagination = (currentPage, totalPages) => {
+        paginationContainer.innerHTML = ''; // Clear existing pagination
+        if (totalPages <= 1) return;
+
+        let paginationHtml = '<nav><ul class="pagination justify-content-center">';
+
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHtml += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `;
+        }
+
+        paginationHtml += '</ul></nav>';
+        paginationContainer.innerHTML = paginationHtml;
+    };
+
+    /**
+     * Handles the submission of a new review.
+     * @param {Event} event - The form submission event.
+     */
+const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem('lmsToken'); // Using 'lmsToken' to be consistent
+
+    if (!token) {
+        alert('You must be logged in to submit a review.');
+        return;
+    }
+
+    // --- START OF FIX ---
+
+    // 1. Correctly find the CHECKED radio button to get the rating
+    const ratingInput = reviewForm.querySelector('input[name="rating"]:checked');
+    
+    // 2. Correctly find the comment textarea by its proper ID
+    const commentInput = reviewForm.querySelector('#review-comment');
+
+    // --- END OF FIX ---
+
+    // Get the values, and add a check in case no rating was selected
+    const rating = ratingInput ? ratingInput.value : null;
+    const comment = commentInput ? commentInput.value : '';
+
+    if (!rating) {
+        alert('Please select a star rating.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/courses/${courseId}/reviews`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': token
+            },
+            body: JSON.stringify({ rating, comment })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to submit review.');
+        }
+
+        // Success!
+        reviewForm.reset();
+        // Manually reset the visual stars since the form's reset doesn't trigger our JS
+        document.querySelectorAll('.review-form-rating label').forEach(label => {
+            label.classList.remove('selected');
+        });
+
+        fetchAndDisplayReviews(1); // Refresh reviews
+        alert('Review submitted successfully!');
+
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
+
+
+    // --- 3. EVENT LISTENERS & INITIALIZATION ---
+
+    // Listener for pagination clicks (using event delegation)
+    paginationContainer.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (event.target.matches('a.page-link')) {
+            const page = event.target.dataset.page;
+            if (page) {
+                fetchAndDisplayReviews(Number(page));
+            }
+        }
+    });
+
+    // Listener for the review form submission
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', handleReviewSubmit);
+    }
+
+    // Initial fetch of reviews when the page loads
+    fetchAndDisplayReviews();
+});
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('lmsToken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const API_BASE_URL = 'http://34.195.233.179';
+
+        if (!courseId) {
+            document.body.innerHTML = '<h1>Error: No MasterClass ID provided.</h1>';
+            return;
+        }
+
+        // =================================================================
+        // ===== HELPER FUNCTIONS TO POPULATE THE PAGE =====
+        // =================================================================
+
+        const populateBanner = (course) => {
+            document.getElementById('masterclass-title').textContent = course.title || 'MasterClass Title';
+            document.getElementById('masterclass-description').textContent = course.description || '';
+        };
+
+        const renderList = (items) => {
+            if (!items || items.length === 0) return '<p>No items listed.</p>';
+            return `
+                <ul class="rbt-list-style-1">
+                    ${items.map(item => `<li><i class="feather-check"></i>${item}</li>`).join('')}
+                </ul>`;
+        };
+
+        const renderCourseCurriculum = (episodes) => {
+            const container = document.querySelector('#coursecontent .accordion');
+            if (!container) return;
+            container.innerHTML = episodes.map((episode, index) => {
+                const lessonsHtml = episode.lessons.map(lesson => `
+                    <li>
+                        <a href="#">
+                            <div class="course-content-left">
+                                <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
+                            </div>
+                            <div class="course-content-right">
+                                <span class="min-lable">${lesson.duration || ''}</span>
+                            </div>
+                        </a>
+                    </li>`).join('');
+                return `
+                    <div class="accordion-item card">
+                        <h2 class="accordion-header card-header" id="heading-${index}">
+                            <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                                ${episode.title}
+                            </button>
+                        </h2>
+                        <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                            <div class="accordion-body card-body pr--0">
+                                <ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        };
+        
+        const populateMainContent = (course) => {
+            const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
+            if(overviewContainer) {
+                overviewContainer.innerHTML = `
+                    <div class="section-title"><h4 class="rbt-title-style-3">What you'll learn</h4></div>
+                    ${renderList(course.whatYoullLearn)}`;
+            }
+
+            const detailsContainer = document.querySelector('#details .row');
+             if(detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="col-lg-6">
+                        <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Requirements</h4></div>
+                        ${renderList(course.requirements)}
+                    </div>
+                    <div class="col-lg-6">
+                         <div class="section-title"><h4 class="rbt-title-style-3 mb--20">Description</h4></div>
+                        <p>${course.description || ''}</p>
+                    </div>`;
+            }
+        };
+
+// REPLACE your existing populateInstructor function with this one
+
+const populateInstructor = (instructor) => {
+    const container = document.getElementById('intructor');
+    if (!container || !instructor) return;
+
+    // NOTE: The student/review/course counts are static for now, as that data isn't on the instructor object yet.
+    container.innerHTML = `
+        <div class="about-author border-0 pb--0 pt--0">
+            <div class="section-title mb--30"><h4 class="rbt-title-style-3">Instructor</h4></div>
+            <div class="media align-items-center">
+                <div class="thumbnail">
+                    <a href="#"><img id="instructor-bio-avatar" src="/${instructor.avatar}" alt="Author Images"></a>
+                </div>
+                <div class="media-body">
+                    <div class="author-info">
+                        <h5 class="title"><a id="instructor-name" class="hover-flip-item-wrapper" href="#">${instructor.firstName} ${instructor.lastName}</a></h5>
+                        <span id="instructor-occupation" class="b3 subtitle">${instructor.occupation || ''}</span>
+                        <ul class="rbt-meta mb--20 mt--10">
+                            <li><i class="fa fa-star color-warning"></i>4.9 Rating</li>
+                            <li><i class="feather-users"></i>500 Students</li>
+                            <li><a href="#"><i class="feather-video"></i>5 Courses</a></li>
+                        </ul>
+                    </div>
+                    <div class="content">
+                        <p id="instructor-bio" class="description">${instructor.bio || ''}</p>
+                        <ul id="instructor-socials" class="social-icon social-default icon-naked justify-content-start"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    // This part adds the social media icons dynamically
+    const socialContainer = document.getElementById('instructor-socials');
+    if (socialContainer && instructor.social) {
+        if (instructor.social.facebook) socialContainer.innerHTML += `<li><a href="${instructor.social.facebook}" target="_blank"><i class="feather-facebook"></i></a></li>`;
+        if (instructor.social.twitter) socialContainer.innerHTML += `<li><a href="${instructor.social.twitter}" target="_blank"><i class="feather-twitter"></i></a></li>`;
+        if (instructor.social.linkedin) socialContainer.innerHTML += `<li><a href="${instructor.social.linkedin}" target="_blank"><i class="feather-linkedin"></i></a></li>`;
+    }
+};
+
+        // =================================================================
+        // ===== MAIN FETCH AND EXECUTION LOGIC =====
+        // =================================================================
+
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (!result.success || !result.course) {
+                throw new Error(result.message || 'Could not load MasterClass data.');
+            }
+
+            const course = result.course;
+
+            // Populate all sections of the page
+            populateBanner(course);
+            populateMainContent(course);
+            renderCourseCurriculum(course.episodes || []);
+            populateInstructor(course.instructor);
+            // You can add a populateSidebar(course) function here as well if needed
+            // --- ADD THIS NEW LOGIC ---
+            const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+            if (user && user.role === 'student') {
+                // Later, you can add a check here to see if the student is enrolled.
+                // For now, we'll just show the form if they are a student.
+                const reviewFormWrapper = document.getElementById('add-review-form-wrapper');
+                if (reviewFormWrapper) {
+                    reviewFormWrapper.style.display = 'block';
+                }
+            }
+            // --- END OF NEW LOGIC ---
+        })
+        
+        .catch(error => {
+            console.error('Error fetching MasterClass details:', error);
+            document.body.innerHTML = `<h1><center>Error: ${error.message}</center></h1>`;
+        });
+    });
+}
+// --- INTERACTIVE STAR RATING LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+    const ratingContainer = document.querySelector('.review-form-rating');
+
+    // Ensure the rating container exists before adding listeners
+    if (ratingContainer) {
+        const stars = ratingContainer.querySelectorAll('label');
+
+        // Use event delegation on the container
+        ratingContainer.addEventListener('click', (event) => {
+            // Check if a star label was clicked
+            if (event.target.tagName === 'LABEL') {
+                const clickedStarId = event.target.htmlFor; // e.g., "star3"
+                const radioInput = document.getElementById(clickedStarId);
+                const ratingValue = parseInt(radioInput.value);
+
+                // 1. Remove 'selected' from all stars first
+                stars.forEach(star => {
+                    star.classList.remove('selected');
+                });
+
+                // 2. Add 'selected' to the clicked star and all previous ones
+                for (let i = 0; i < ratingValue; i++) {
+                    stars[i].classList.add('selected');
+                }
+
+                // 3. Ensure the underlying radio button is checked
+                radioInput.checked = true;
+            }
+        });
+    }
+});
+
+// FINAL FIX: Paste this entire block at the very bottom of your main.js file.
+document.addEventListener('DOMContentLoaded', () => {
+
+    setTimeout(() => {
+        const token = localStorage.getItem('lmsToken');
+        if (!token) {
+            return; // Exit if user is not logged in
+        }
+
+        const API_BASE_URL = 'http://34.195.233.179';
+
+        fetch(`${API_BASE_URL}/api/user/profile?t=${new Date().getTime()}`, { headers: { 'x-auth-token': token } })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const profile = result.data;
+                    const fullName = `${profile.firstName} ${profile.lastName}`;
+
+                    // Update Name
+                    document.querySelectorAll('#nav-user-name, #nav-user-name-dropdown').forEach(el => {
+                        if (el) el.textContent = fullName;
+                    });
+                    
+                    // Update Avatar
+                    if (profile.avatar) {
+                        const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
+                        const navAvatars = document.querySelectorAll('.nav-user-avatar-img');
+                        navAvatars.forEach(img => {
+                            if (img) img.src = avatarUrl;
+                        });
+                    }
+                }
+            })
+            .catch(err => console.error("Delayed navbar update failed:", err));
+            
+    }, 500); // 500 milliseconds = 0.5 second delay
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const setupUserNavigation = () => {
+        // --- Get User Data ---
+        const token = localStorage.getItem('lmsToken');
+        const userString = localStorage.getItem('lmsUser');
+        const user = userString ? JSON.parse(userString) : null;
+
+        // --- Get Navigation Elements ---
+        const desktopNav = document.querySelector('.account-access.rbt-user-wrapper');
+        const mobileNav = document.querySelector('.access-icon.rbt-user-wrapper');
+        const loginLink = document.getElementById('nav-login-link');
+        const userLink = document.getElementById('nav-user-link');
+
+        // --- Handle Logged-Out State ---
+        if (!token || !user) {
+            if (loginLink) loginLink.classList.remove('d-none');
+            if (userLink) userLink.classList.add('d-none');
+            
+            // Add our new class to disable the hover dropdown via CSS
+            if (desktopNav) desktopNav.classList.add('user-logged-out');
+
+            // For mobile, make the icon a direct link to the login page
+            const mobileLoginLink = mobileNav?.querySelector('a');
+            if (mobileLoginLink) mobileLoginLink.href = 'login.html';
+            
+            return; // Stop here if user is not logged in
+        }
+
+        // --- Handle Logged-In State ---
+        if (loginLink) loginLink.classList.add('d-none');
+        if (userLink) userLink.classList.remove('d-none');
+        
+        // Populate user details
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        document.getElementById('nav-user-name').textContent = user.firstName || 'User';
+        document.getElementById('nav-user-name-dropdown').textContent = fullName;
+        document.querySelectorAll('.nav-user-avatar-img').forEach(img => {
+            img.src = user.avatar ? `/${user.avatar}` : 'assets/images/team/avatar.jpg';
+        });
+
+        // Show/hide links based on role
+        if (user.role === 'student') {
+            document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'list-item');
+        } else if (user.role === 'instructor') {
+            document.querySelectorAll('.student-only-link').forEach(el => el.style.display = 'none');
+             document.querySelectorAll('.instructor-only-link').forEach(el => el.style.display = 'list-item');
+        }
+
+        // Add functionality to logout buttons
+        document.querySelectorAll('.logout-btn, a[href="index.html"] > i.feather-log-out').forEach(btn => {
+            const logoutLink = btn.closest('a');
+            if (logoutLink) {
+                 logoutLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('lmsToken');
+                    localStorage.removeItem('lmsUser');
+                    window.location.href = '/'; // Redirect to homepage after logout
+                });
+            }
+        });
+    };
+
+    // Run the function on page load
+    setupUserNavigation();
+});
+
+
+        handlePageLogic();
+    };
 
     eduJs.i();
 
