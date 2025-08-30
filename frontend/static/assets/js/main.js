@@ -2256,7 +2256,7 @@ if (window.location.pathname.includes('edit-course.html')) {
             }
 
             // --- 1. STATE MANAGEMENT ---
-            let currentEditingEpisodeId = null;
+ //           let currentEditingEpisodeId = null;
             let currentEditingQuizId = null;
             let currentEditingQuestionId = null;
             const steps = { INFO: 1, QUESTIONS_LIST: 2, ADD_EDIT_QUESTION_FORM: 3, SETTINGS: 4 };
