@@ -1710,6 +1710,7 @@ const renderCourses = (containerSelector, courseList) => {
                 if (profileForm) {
                     profileForm.addEventListener('submit', (e) => {
                         e.preventDefault();
+                        console.log('STEP 1: "Update Info" button clicked.');
                         const updatedData = {
                             firstName: document.querySelector('#firstname').value,
                             lastName: document.querySelector('#lastname').value,
@@ -1937,6 +1938,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (profileForm) {
                     profileForm.addEventListener('submit', (e) => {
                         e.preventDefault();
+                        console.log('STEP 1: "Update Info" button clicked.');
                         const updatedData = {
                             firstName: document.querySelector('#firstname').value,
                             lastName: document.querySelector('#lastname').value,
