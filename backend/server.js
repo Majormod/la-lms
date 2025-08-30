@@ -1563,7 +1563,7 @@ app.get('/api/instructors/:instructorId/announcements', isAuthenticated, async (
     try {
         const announcements = await Announcement.find({ instructor: req.params.instructorId })
             .sort({ createdAt: -1 }) // Sort by newest first
-            .populate('course', 'title'); // Get course title
+ //           .populate('course', 'title'); // Get course title
         res.json({ success: true, announcements });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error.' });
