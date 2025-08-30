@@ -5067,7 +5067,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
         const modalElement = document.getElementById('addAnnouncementModal');
         const courseSelectInModal = document.getElementById('announcement-course');
-        const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
+        const courseFilterSelect = document.getElementById('announcement-filter-course'); // Using the new ID
         const sendBtn = document.getElementById('send-announcement-btn');
         const announcementTableBody = document.getElementById('announcements-table-body');
 
@@ -5089,6 +5089,12 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
                         if (courseSelectInModal) courseSelectInModal.innerHTML = optionsHtml;
                         if (courseFilterSelect) courseFilterSelect.innerHTML = filterOptionsHtml;
+
+                        // --- START OF FIX ---
+                        // Tell the Bootstrap-Select library to refresh the dropdowns
+                        $('#announcement-course').selectpicker('refresh');
+                        $('#announcement-filter-course').selectpicker('refresh');
+                        // --- END OF FIX ---
 
                     } else {
                         if (courseSelectInModal) courseSelectInModal.innerHTML = '<option disabled selected value="">No courses found</option>';
@@ -5178,10 +5184,11 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
         if (courseFilterSelect) {
             courseFilterSelect.addEventListener('change', () => {
-                const selectedCourseId = courseFilterSelect.value;
+                const selectedCourseId = $(courseFilterSelect).val(); // Use jQuery to get value from multi-select
                 const allRows = announcementTableBody.querySelectorAll('tr');
                 allRows.forEach(row => {
-                    if (selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
+                    // Check if 'all' is selected or if the row's courseId is in the selected array
+                    if (selectedCourseId.includes('all') || selectedCourseId.includes(row.dataset.courseId)) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
