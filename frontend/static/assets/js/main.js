@@ -1887,7 +1887,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
                 populateSettingsForms();
             }
-                        if (path.includes('student-settings.html')) {
+            if (path.includes('student-settings.html')) {
                 if (!token || user.role !== 'student') {
                     alert("Access Denied: You are not an student.");
                     window.location.href = '/login';
@@ -1900,6 +1900,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         .then(result => {
                             if (result.success) {
                                 const profile = result.data;
+                                 // --- ADD THIS FIX HERE ---
+                const settingsCoverBanner = document.getElementById('cover-photo-banner');
+                if (settingsCoverBanner && profile.coverPhoto) {
+                    settingsCoverBanner.style.backgroundImage = `url('/${profile.coverPhoto}')`;
+                }
+                // --- END FIX ---
                                 const firstNameInput = document.querySelector('#firstname');
                                 const lastNameInput = document.querySelector('#lastname');
                                 const usernameInput = document.querySelector('#username');
