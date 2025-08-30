@@ -2034,35 +2034,39 @@ document.addEventListener('DOMContentLoaded', () => {
             fileInput.click();
         });
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        // Inside the 'student-settings.html' block, for the avatar upload
 
-            // Optional: Add an immediate preview for the avatar as well
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const avatarImg = document.querySelector('.user-avatar-img'); // Or a more specific ID
-                if(avatarImg) avatarImg.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-            // Upload to server
-            const formData = new FormData();
-            formData.append('avatar', file);
-            fetch(`${API_BASE_URL}/api/user/avatar`, {
-                method: 'POST',
-                headers: { 'x-auth-token': token },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    updateUserDataOnPage();
-                } else {
-                    alert('Avatar upload failed.');
-                }
-            });
-        });
+    // --- START: Add this instant preview logic ---
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        // Make sure you have an <img> tag with this class or a unique ID
+        const avatarImgPreview = document.querySelector('.user-avatar-img'); 
+        if(avatarImgPreview) {
+            avatarImgPreview.src = event.target.result;
+        }
+    };
+    reader.readAsDataURL(file);
+    // --- END: Add this instant preview logic ---
+
+    // Your existing code to upload the file to the server
+    const formData = new FormData(); 
+    formData.append('avatar', file);
+    fetch(`${API_BASE_URL}/api/user/avatar`, { 
+        method: 'POST', 
+        headers: { 'x-auth-token': token }, 
+        body: formData 
+    })
+    .then(res => res.json())
+    .then(result => { 
+        if (result.success) { 
+            updateUserDataOnPage(); 
+        } 
+    });
+});
     }
 
     // --- Logic for Cover Photo Upload Button ---
@@ -2078,37 +2082,38 @@ document.addEventListener('DOMContentLoaded', () => {
             fileInput.click();
         });
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        // Inside the 'student-settings.html' block, for the cover photo upload
 
-            // Immediately update the preview
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const settingsCoverBanner = document.getElementById('cover-photo-banner');
-                if (settingsCoverBanner) {
-                    settingsCoverBanner.style.backgroundImage = `url('${event.target.result}')`;
-                }
-            }
-            reader.readAsDataURL(file);
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-            // Upload to server
-            const formData = new FormData();
-            formData.append('coverPhoto', file);
-            fetch(`${API_BASE_URL}/api/user/cover`, {
-                method: 'POST',
-                headers: { 'x-auth-token': token },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    updateUserDataOnPage();
-                } else {
-                    alert('Upload failed: ' + result.message);
-                }
-            });
-        });
+    // --- START: Add this instant preview logic ---
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const settingsCoverBanner = document.getElementById('cover-photo-banner');
+        if (settingsCoverBanner) {
+            settingsCoverBanner.style.backgroundImage = `url('${event.target.result}')`;
+        }
+    }
+    reader.readAsDataURL(file);
+    // --- END: Add this instant preview logic ---
+
+    // Your existing code to upload the file to the server
+    const formData = new FormData();
+    formData.append('coverPhoto', file);
+    fetch(`${API_BASE_URL}/api/user/cover`, {
+        method: 'POST',
+        headers: { 'x-auth-token': token },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            updateUserDataOnPage();
+        }
+    });
+});
     }
 });
                 populateSettingsForms();
