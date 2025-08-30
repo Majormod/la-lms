@@ -180,14 +180,41 @@ app.get('/api/user/profile', auth, async (req, res) => {
     } catch (err) { res.status(500).send('Server Error'); }
 });
 
+// In server.js - Replace your existing PUT /api/user/profile route with this
+
 app.put('/api/user/profile', auth, async (req, res) => {
     try {
-        // --- ADD THIS LINE FOR DEBUGGING ---
-        console.log('Data received for profile update:', req.body);
-        const { firstName, lastName, phone, occupation, bio } = req.body;
-        const user = await User.findByIdAndUpdate(req.user.id, { firstName, lastName, phone, occupation, bio }, { new: true });
-        res.json({ success: true, msg: 'Profile updated successfully' });
-    } catch (err) { res.status(500).send('Server Error'); }
+        // This now includes 'email'
+        const { firstName, lastName, phone, occupation, bio, email } = req.body;
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // If email is being changed, check if it's already in use
+        if (email && email !== user.email) {
+            const emailExists = await User.findOne({ email: email });
+            if (emailExists) {
+                return res.status(400).json({ success: false, message: 'Email is already in use.' });
+            }
+            user.email = email;
+        }
+
+        // Update all other fields
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.phone = phone;
+        user.occupation = occupation;
+        user.bio = bio;
+        
+        await user.save(); // Save all the changes
+
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (err) {
+        console.error("Profile update error:", err);
+        res.status(500).send('Server Error');
+    }
 });
 
 app.put('/api/user/password', auth, async (req, res) => {
