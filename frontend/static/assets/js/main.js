@@ -1140,66 +1140,85 @@ const renderCourseDetailsCurriculum = (episodes) => {
 // REPLACE your old updateUserDataOnPage function with this one
 
 const updateUserDataOnPage = () => {
-    // CHECKPOINT 1: Is the function running?
-    console.log("1. updateUserDataOnPage function has started.");
-
     const token = localStorage.getItem('lmsToken');
-    if (!token) {
-        console.log("No token found. Aborting.");
+    const userJSON = localStorage.getItem('lmsUser');
+
+    if (!token || !userJSON) {
+        // If user is not logged in, we can hide user-specific elements
+        document.querySelectorAll('.rbt-user-wrapper').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.guest-link').forEach(el => el.style.display = 'block');
         return;
     }
 
     fetch(`${API_BASE_URL}/api/user/profile`, { headers: { 'x-auth-token': token } })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                // If token is invalid or expired, the server will send an error
+                throw new Error('Session expired. Please log in again.');
+            }
+            return res.json();
+        })
         .then(result => {
             if (result.success) {
                 const profile = result.data;
-
-                // CHECKPOINT 2: Did we get the correct data from the server?
-                console.log("2. Profile data fetched successfully. Current avatar path is:", profile.avatar);
-
-                if (profile.avatar) {
-                    const avatarUrl = `/${profile.avatar}?t=${new Date().getTime()}`;
-                    
-                    const selectorString = '.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar-desktop, #nav-user-avatar-mobile';
-                    
-                    // CHECKPOINT 3: Is the JavaScript finding the HTML elements?
-                    const allAvatarImages = document.querySelectorAll(selectorString);
-                    console.log("3. Searching for avatar images with selector:", selectorString);
-                    console.log("4. Found these elements:", allAvatarImages);
-
-                    if (allAvatarImages.length > 0) {
-                        console.log("5. Updating images now...");
-                        allAvatarImages.forEach(img => {
-                            if (img) img.src = avatarUrl;
-                        });
-                        console.log("6. Image update complete.");
-                    } else {
-                        console.error("7. ERROR: Could not find any avatar elements to update. Check your HTML IDs and classes.");
-                    }
-                }
-                // ... (the rest of your function for cover photos, names, etc.) ...
                 const fullName = `${profile.firstName} ${profile.lastName}`;
-                const bannerNames = document.querySelectorAll('.rbt-tutor-information .title');
-                bannerNames.forEach(el => el.textContent = fullName);
+                
+                // Use a cache-busting query parameter to force image refresh
+                const cacheBuster = `?t=${new Date().getTime()}`;
+                const avatarPath = profile.avatar ? `/${profile.avatar}${cacheBuster}` : 'assets/images/team/avatar-placeholder.png';
+                const coverPath = profile.coverPhoto ? `/${profile.coverPhoto}${cacheBuster}` : '';
+
+                // --- 1. UPDATE ALL VISUAL ELEMENTS ---
+                
+                // Update Names (Banner, Sidebar, Header Dropdown)
+                document.querySelectorAll('.rbt-tutor-information .title, #nav-user-name-dropdown, .rbt-admin-profile .admin-info .name').forEach(el => {
+                    if (el) el.textContent = fullName;
+                });
                 const sidebarWelcomeName = document.querySelector('.rbt-default-sidebar-wrapper .rbt-title-style-2');
                 if (sidebarWelcomeName) sidebarWelcomeName.textContent = `Welcome, ${profile.firstName}`;
-                if (profile.coverPhoto) {
-                    const coverUrl = `url('/${profile.coverPhoto}?t=${new Date().getTime()}')`;
-                    const bannerCovers = document.querySelectorAll('.tutor-bg-photo');
-                    bannerCovers.forEach(div => div.style.backgroundImage = coverUrl);
+
+                // Update Avatars (Banner, Settings Page, Header Dropdown)
+                document.querySelectorAll('.rbt-tutor-information .rbt-avatars img, #settings-avatar-img, #nav-user-avatar, #nav-user-avatar-icon').forEach(img => {
+                    if (img) img.src = avatarPath;
+                });
+                
+                // Update Cover Photo
+                const bannerCover = document.querySelector('.rbt-dashboard-content-wrapper .tutor-bg-photo');
+                if (bannerCover && coverPath) {
+                    bannerCover.style.setProperty('background-image', `url(${coverPath})`, 'important');
                 }
 
+                // --- 2. CONFIGURE NAVIGATION MENU BASED ON ROLE ---
+                const profileLink = document.querySelector('.rbt-admin-profile .rbt-btn-link');
+                const settingsLinkInMenu = document.querySelector('a[href*="settings.html"]');
+
+                if (profile.role === 'instructor') {
+                    if (profileLink) profileLink.href = 'instructor-profile.html';
+                    if (settingsLinkInMenu) settingsLinkInMenu.href = 'instructor-settings.html';
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                } else { // Assumes student
+                    if (profileLink) profileLink.href = 'student-profile.html';
+                    if (settingsLinkInMenu) settingsLinkInMenu.href = 'student-settings.html';
+                    document.querySelectorAll('.instructor-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'none'; });
+                    document.querySelectorAll('.student-only-link').forEach(el => { if (el.parentElement.tagName === 'LI') el.parentElement.style.display = 'list-item'; });
+                }
             } else {
-                throw new Error(result.message || 'Failed to get profile');
+                throw new Error(result.message);
             }
         })
         .catch(error => {
-            console.error('Error in updateUserDataOnPage:', error);
+            console.error('Error fetching user data:', error.message);
             localStorage.clear();
             window.location.href = 'login.html';
         });
 };
+
+// To ensure this runs correctly on every page, call it after the page has loaded.
+// You should have this line at the end of your main.js file.
+document.addEventListener('DOMContentLoaded', () => {
+    updateUserDataOnPage();
+});
 
 const handlePageLogic = () => {
     const path = window.location.pathname;
