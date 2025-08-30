@@ -40884,3 +40884,21 @@ padding: 0 10px 0 10px;
 }
 
 /* Custom Styles for PDF Viewer Header and Close Button */
+
+.pdf-viewer-wrapper .pdf-viewer-header .rbt-btn.btn-xs {
+padding: 0 14px;
+font-size: var(--font-size-b3);
+height: 30px;
+line-height: 29px;
+font-size: 14px;
+margin: -15px 30px 0 0;
+}
+
+.pdf-viewer-wrapper .pdf-viewer-header .rbt-btn i {
+padding-left: 6px;
+display: inline-block;
+top: 3px;
+right: 11px;
+position: relative;
+font-size: 17px;
+}
