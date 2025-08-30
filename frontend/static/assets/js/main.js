@@ -5071,6 +5071,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 })
         .then(res => res.json())
         .then(data => {
+            console.log('API Response for Courses:', data);
             if (data.success && data.courses) {
                 courseSelectInModal.innerHTML = '<option disabled selected value="">Select a course</option>';
                 courseFilterSelect.innerHTML = '<option selected value="all">All Courses</option>';
