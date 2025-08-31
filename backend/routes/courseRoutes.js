@@ -6,41 +6,100 @@ const auth = require('../authMiddleware'); // Go up one level to the 'backend' f
 
 // ================================================================
 // @route   GET /api/courses
-// @desc    Get all published courses (with filters)
+// @desc    Get all published courses (with full filtering and sorting)
 // @access  Public
 // ================================================================
 router.get('/', async (req, res) => {
     try {
         const filters = { status: 'Published' };
+        let sortOptions = { createdAt: -1 }; // Default sort
+
+        // --- Search Filter ---
         if (req.query.search) {
             filters.$or = [
                 { title: { $regex: req.query.search, $options: 'i' } },
                 { description: { $regex: req.query.search, $options: 'i' } }
             ];
         }
-        // Add other filters like category, price etc. here as needed
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = 9;
-        const skip = (page - 1) * limit;
+        // --- [MODIFIED] Category & School Filtering ---
+        // Both "category" and "school" dropdowns will filter the `categories` array in the database.
+        const categoryFilters = [];
+        if (req.query.category) {
+            categoryFilters.push({ categories: req.query.category });
+        }
+        if (req.query.school) {
+            categoryFilters.push({ categories: req.query.school });
+        }
+        
+        // If either a category or school is selected, add it to the main filter
+        if (categoryFilters.length > 0) {
+            filters.$and = (filters.$and || []).concat(categoryFilters);
+        }
 
-        const courses = await Course.find(filters)
+        // --- Price Filtering Logic ---
+        let priceConditions = [];
+
+        // Condition 1: Price Type Dropdown ('free' or 'paid')
+        if (req.query.price === 'free') {
+            priceConditions.push({ price: 0 });
+        } else if (req.query.price === 'paid') {
+            priceConditions.push({ price: { $gt: 0 } });
+        }
+
+        // Condition 2: Price Range Slider
+        const minPrice = parseInt(req.query.minPrice);
+        const maxPrice = parseInt(req.query.maxPrice);
+        // Only apply the slider if the values have been changed from the default
+        if (!isNaN(minPrice) && !isNaN(maxPrice) && (minPrice > 0 || maxPrice < 5000)) {
+             priceConditions.push({ price: { $gte: minPrice, $lte: maxPrice } });
+        }
+        
+        // If there are any price conditions, add them to the main filters
+        if (priceConditions.length > 0) {
+            filters.$and = (filters.$and || []).concat(priceConditions);
+        }
+
+        // --- Sorting Filter ---
+        switch (req.query.sortBy) {
+            case 'price_asc':
+                sortOptions = { price: 1 };
+                break;
+            case 'price_desc':
+                sortOptions = { price: -1 };
+                break;
+            case 'latest':
+            default:
+                 sortOptions = { createdAt: -1 };
+                 break;
+        }
+
+        // --- Create the Query ---
+        let query = Course.find(filters)
             .populate('instructor', 'firstName lastName avatar')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+            .sort(sortOptions);
 
+        // --- Limit for Search Dropdown ---
+        // This is only used for the main search dropdown in the header, not the explore page.
+        if (req.query.limit) {
+            const limit = parseInt(req.query.limit, 10);
+            if (!isNaN(limit) && limit > 0) {
+                query = query.limit(limit);
+            }
+        }
+
+        // --- Final Database Execution ---
+        const courses = await query.exec();
         const totalCourses = await Course.countDocuments(filters);
 
         res.json({
             success: true,
-            courses,
-            pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(totalCourses / limit),
-                totalCourses
-            }
+            courses: courses,
+            pagination: { 
+                totalCourses: totalCourses 
+            } // Simplified pagination, as the frontend handles display
         });
+
     } catch (error) {
         console.error('Error fetching courses:', error);
         res.status(500).json({ success: false, message: 'Server Error' });

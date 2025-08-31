@@ -4669,14 +4669,29 @@ if (window.location.pathname.includes('explore-courses.html')) {
             const minPrice = $("#slider-range").slider("values", 0);
             const maxPrice = $("#slider-range").slider("values", 1);
             
+            // FIX: Get value from the offer select and convert to lowercase
+            const offerValue = document.getElementById('offer-select')?.value;
+
             const params = {
+                // Collect values from ALL filters now
                 sortBy: document.getElementById('sort-by-select')?.value,
                 search: document.getElementById('course-search-input')?.value,
                 category: document.getElementById('category-select')?.value,
-                price: document.getElementById('offer-select')?.value,
+                school: document.getElementById('school-select')?.value,
+                author: document.getElementById('author-select')?.value,
+                price: offerValue ? offerValue.toLowerCase() : '', // Convert to lowercase
                 minPrice: minPrice,
                 maxPrice: maxPrice
             };
+            
+            // Clean up the URL in the browser's history
+            const newUrl = new URL(window.location);
+            newUrl.search = ''; // Clear old params
+            Object.entries(params).forEach(([key, value]) => {
+                if (value) newUrl.searchParams.set(key, value);
+            });
+            history.pushState({}, '', newUrl);
+
             fetchAndDisplayCourses(params);
         };
 

@@ -453,12 +453,10 @@ const { title, slug, description, price, originalPrice, difficultyLevel, maxStud
 // ADD THIS NEW ROUTE FOR THE EXPLORE COURSES PAGE
 // In server.js, replace your existing GET /api/courses route with this one
 
-// server.js
-
 app.get('/api/courses', async (req, res) => {
     try {
         const filters = { status: 'Published' };
-        let sortOptions = { createdAt: -1 };
+        let sortOptions = { createdAt: -1 }; // Default sort is 'latest'
 
         // --- Search Filter ---
         if (req.query.search) {
@@ -472,35 +470,30 @@ app.get('/api/courses', async (req, res) => {
         if (req.query.category) {
             filters.category = req.query.category;
         }
-        
-        // --- [ADDED] School Filter ---
-        // NOTE: This assumes you have a field named 'school' in your Course model in MongoDB.
-        if (req.query.school) {
-            filters.school = req.query.school;
-        }
 
-        // --- [MODIFIED] Price Filtering Logic ---
-        let priceConditions = [];
-
-        // Condition 1: Price Type Dropdown ('free' or 'paid')
+        // --- Price Type Filter (from dropdown) ---
         if (req.query.price === 'free') {
-            priceConditions.push({ price: 0 });
+            filters.price = 0;
         } else if (req.query.price === 'paid') {
-            priceConditions.push({ price: { $gt: 0 } });
+            filters.price = { $gt: 0 };
         }
 
-        // Condition 2: Price Range Slider
+        // --- Price Range Slider Filter ---
+        // This will override the simple price filter if a range is provided
         const minPrice = parseInt(req.query.minPrice);
         const maxPrice = parseInt(req.query.maxPrice);
-        if (!isNaN(minPrice) && !isNaN(maxPrice) && (minPrice > 0 || maxPrice < 5000)) {
-             priceConditions.push({ price: { $gte: minPrice, $lte: maxPrice } });
+        if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+            // If a price filter already exists, merge with $and, otherwise create new
+            if (filters.price) {
+                 filters.$and = [
+                    { price: filters.price },
+                    { price: { $gte: minPrice, $lte: maxPrice } }
+                ];
+                delete filters.price; // remove original price filter to avoid conflict
+            } else {
+                filters.price = { $gte: minPrice, $lte: maxPrice };
+            }
         }
-        
-        // If there are any price conditions, add them to the main filters using $and
-        if (priceConditions.length > 0) {
-            filters.$and = (filters.$and || []).concat(priceConditions);
-        }
-
 
         // --- Sorting Filter ---
         switch (req.query.sortBy) {
@@ -510,18 +503,14 @@ app.get('/api/courses', async (req, res) => {
             case 'price_desc':
                 sortOptions = { price: -1 };
                 break;
-            // Add other sort options like 'latest' if needed
-            case 'latest':
-            default:
-                 sortOptions = { createdAt: -1 };
-                 break;
         }
 
         // --- Create the Query ---
         let query = Course.find(filters)
             .populate('instructor', 'firstName lastName avatar')
             .sort(sortOptions);
-        
+
+        // **NEW**: Add limit functionality for the search dropdown
         if (req.query.limit) {
             const limit = parseInt(req.query.limit, 10);
             if (!isNaN(limit) && limit > 0) {
@@ -529,7 +518,10 @@ app.get('/api/courses', async (req, res) => {
             }
         }
 
-        const courses = await query.exec();
+        // --- Final Database Query ---
+        const courses = await query.exec(); // Use .exec() for consistency
+        
+        // Count total documents matching filters for pagination
         const totalCourses = await Course.countDocuments(filters);
 
         res.json({
@@ -543,6 +535,7 @@ app.get('/api/courses', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
+
 
 // PUBLIC: For the course-details.html page (Preview)
 app.get('/api/courses/:id', async (req, res) => {
