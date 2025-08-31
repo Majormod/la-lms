@@ -1078,7 +1078,75 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
         const API_BASE_URL = 'http://34.195.233.179';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
+// main.js
 
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Global Header Search Handler ---
+    const mainSearchForm = document.getElementById('main-search-form');
+    if (mainSearchForm) {
+        mainSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const searchInput = document.getElementById('main-search-input');
+            const query = searchInput.value.trim();
+            if (query) {
+                // Redirect to the explore page with the search query
+                window.location.href = `explore-courses.html?search=${encodeURIComponent(query)}`;
+            }
+        });
+    }
+
+    // --- Dynamic Search Dropdown Courses ---
+    const populateSearchDropdownCourses = async () => {
+        const container = document.getElementById('search-dropdown-courses-container');
+        if (!container) return; // Only run if the dropdown exists on the page
+
+        try {
+            // Fetch the 4 latest courses
+            const response = await fetch(`${API_BASE_URL}/api/courses?limit=4`);
+            const data = await response.json();
+
+            if (data.success && data.courses.length > 0) {
+                // Keep the header, clear only the course content
+                container.innerHTML = `
+                    <div class="col-lg-12">
+                        <div class="section-title">
+                            <h5 class="rbt-title-style-2">Our Top Courses</h5>
+                        </div>
+                    </div>
+                `;
+                data.courses.forEach(course => {
+                    const priceHtml = course.price > 0 ? `<span class="current-price">₹${course.price.toLocaleString('en-IN')}</span>` : '<span class="current-price">Free</span>';
+                    const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`;
+                    
+                    const courseCardHtml = `
+                        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                            <div class="rbt-card variation-01 rbt-hover">
+                                <div class="rbt-card-img">
+                                    <a href="${detailPageUrl}">
+                                        <img src="/${course.thumbnail}" alt="${course.title}">
+                                    </a>
+                                </div>
+                                <div class="rbt-card-body">
+                                    <h5 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h5>
+                                    <div class="rbt-card-bottom">
+                                        <div class="rbt-price">${priceHtml}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.innerHTML += courseCardHtml;
+                });
+            }
+        } catch (error) {
+            console.error("Failed to populate search dropdown courses:", error);
+            // Optional: hide or show an error message in the dropdown
+        }
+    };
+    
+    populateSearchDropdownCourses();
+});
+
+// ... your existing if blocks for other pages ...
         // In main.js, add this to the top (global scope)
 // Helper function to trigger the hidden file input
 window.triggerExerciseFileUpload = function() {
@@ -4460,6 +4528,8 @@ if (window.location.pathname.includes('explore-courses.html')) {
         const courseListContainer = document.getElementById('course-list-container');
         const courseCountBadge = document.getElementById('course-count-badge');
         const courseResultCount = document.getElementById('course-result-count');
+        const courseSearchInput = document.getElementById('course-search-input'); // Search input on this page
+        const courseSearchForm = document.getElementById('course-search-form');
 
         // --- Initialize Price Range Slider ---
         if (typeof $ !== 'undefined' && $.ui) {
@@ -4481,84 +4551,78 @@ if (window.location.pathname.includes('explore-courses.html')) {
 
             filterBtn.on('click', function (e) {
                 e.preventDefault();
-                handleFilterChange(); // Use the main filter handler
+                handleFilterChange();
             });
         }
 
         // --- Function to Create a Single Course Card ---
-        // CHANGED: Now accepts a 'userWishlist' set to determine the icon state
-const createCourseCard = (course, userWishlist = new Set()) => {
-    let detailPageUrl;
-    if (course.isMasterclass) {
-        detailPageUrl = `the-masterclass-details.html?courseId=${course._id}`;
-    } else {
-        detailPageUrl = `course-details.html?courseId=${course._id}`;
-    }
+        const createCourseCard = (course, userWishlist = new Set()) => {
+            const detailPageUrl = course.isMasterclass ?
+                `the-masterclass-details.html?courseId=${course._id}` :
+                `course-details.html?courseId=${course._id}`;
 
-    const isWishlisted = userWishlist.has(course._id);
-    const activeClass = isWishlisted ? 'active' : '';
+            const isWishlisted = userWishlist.has(course._id);
+            const activeClass = isWishlisted ? 'active' : '';
 
-    let priceHtml = '';
-    if (course.isFree || course.price === 0) {
-        priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
-    } else {
-        const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
-        const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
-        priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
-    }
+            let priceHtml = '';
+            if (course.isFree || course.price === 0) {
+                priceHtml = `<div class="rbt-price"><span class="current-price">Free</span></div>`;
+            } else {
+                const currentPrice = `₹${course.price.toLocaleString('en-IN')}`;
+                const offPrice = course.originalPrice ? `<span class="off-price">₹${course.originalPrice.toLocaleString('en-IN')}</span>` : '';
+                priceHtml = `<div class="rbt-price"><span class="current-price">${currentPrice}</span>${offPrice}</div>`;
+            }
 
-    let discountBadgeHtml = '';
-    if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
-        const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
-        discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
-    }
-    
-    const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
-    const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
-    const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
-    
-    return `
-        <div class="course-grid-3" data-course-id="${course._id}">
-            <div class="rbt-card variation-01 rbt-hover">
-                <div class="rbt-card-img">
-                    <a href="${detailPageUrl}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
-                </div>
-                <div class="rbt-card-body">
-                    <div class="rbt-card-top">
-                        <div class="rbt-review">
-                            <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <span class="rating-count">(15 Reviews)</span>
-                        </div>
-                        <div class="rbt-bookmark-btn">
-                            <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
-                        </div>
+            let discountBadgeHtml = '';
+            if (course.price > 0 && course.originalPrice && course.originalPrice > course.price) {
+                const discount = Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100);
+                discountBadgeHtml = `<div class="rbt-badge-3 bg-white"><span>-${discount}%</span><span>Off</span></div>`;
+            }
+
+            const instructorName = course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}` : 'N/A';
+            const instructorAvatar = course.instructor && course.instructor.avatar ? `/${course.instructor.avatar}` : 'assets/images/client/avatar-02.png';
+            const lessonCount = course.episodes ? course.episodes.reduce((acc, ep) => acc + ep.lessons.length, 0) : 0;
+
+            return `
+            <div class="course-grid-3" data-course-id="${course._id}">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="${detailPageUrl}"><img src="/${course.thumbnail}" alt="Course Thumbnail">${discountBadgeHtml}</a>
                     </div>
-                    <h4 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h4>
-                    <ul class="rbt-meta">
-                        <li><i class="feather-book"></i>${lessonCount} Lessons</li>
-                        <li><i class="feather-users"></i>50 Students</li>
-                    </ul>
-                    <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
-                    <div class="rbt-author-meta mb--10">
-                        <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
-                        <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
-                    </div>
-                    <div class="rbt-card-bottom">
-                        ${priceHtml}
-                        <a class="rbt-btn-link" href="${detailPageUrl}">Learn More<i class="feather-arrow-right"></i></a>
+                    <div class="rbt-card-body">
+                        <div class="rbt-card-top">
+                            <div class="rbt-review">
+                                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                <span class="rating-count">(15 Reviews)</span>
+                            </div>
+                            <div class="rbt-bookmark-btn">
+                                <a class="rbt-round-btn ${activeClass}" title="Bookmark" href="#"><i class="feather-bookmark"></i></a>
+                            </div>
+                        </div>
+                        <h4 class="rbt-card-title"><a href="${detailPageUrl}">${course.title}</a></h4>
+                        <ul class="rbt-meta">
+                            <li><i class="feather-book"></i>${lessonCount} Lessons</li>
+                            <li><i class="feather-users"></i>50 Students</li>
+                        </ul>
+                        <p class="rbt-card-text">${course.description.substring(0, 100)}...</p>
+                        <div class="rbt-author-meta mb--10">
+                            <div class="rbt-avater"><a href="#"><img src="${instructorAvatar}" alt="${instructorName}"></a></div>
+                            <div class="rbt-author-info">By <a href="#">${instructorName}</a> in <a href="#">${course.category || 'General'}</a></div>
+                        </div>
+                        <div class="rbt-card-bottom">
+                            ${priceHtml}
+                            <a class="rbt-btn-link" href="${detailPageUrl}">Learn More<i class="feather-arrow-right"></i></a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>`;
-};
+            </div>`;
+        };
 
         // --- Main Function to Fetch and Display Courses ---
-        // CHANGED: Now fetches user wishlist first to set the initial state of bookmark icons
         const fetchAndDisplayCourses = async (queryParams = {}) => {
             let userWishlist = new Set();
             const token = localStorage.getItem('lmsToken');
 
-            // Step 1: If user is logged in, fetch their wishlist
             if (token) {
                 try {
                     const wishlistRes = await fetch(`${API_BASE_URL}/api/student/wishlist`, { headers: { 'x-auth-token': token } });
@@ -4567,11 +4631,11 @@ const createCourseCard = (course, userWishlist = new Set()) => {
                         userWishlist = new Set(wishlistData.courses.map(course => course._id));
                     }
                 } catch (error) {
-                    console.error("Could not fetch user wishlist for initial state.", error);
+                    console.error("Could not fetch user wishlist.", error);
                 }
             }
 
-            // Step 2: Fetch courses with filters
+            // Clean up query parameters
             Object.keys(queryParams).forEach(key => {
                 if (queryParams[key] === '' || queryParams[key] === null || queryParams[key] === undefined) {
                     delete queryParams[key];
@@ -4587,7 +4651,6 @@ const createCourseCard = (course, userWishlist = new Set()) => {
                 if (data.success) {
                     courseListContainer.innerHTML = '';
                     if (data.courses.length > 0) {
-                        // Step 3: Pass the wishlist to the card creation function
                         data.courses.forEach(course => courseListContainer.innerHTML += createCourseCard(course, userWishlist));
                     } else {
                         courseListContainer.innerHTML = '<div class="col-12 text-center"><p>No courses found matching your criteria.</p></div>';
@@ -4597,7 +4660,7 @@ const createCourseCard = (course, userWishlist = new Set()) => {
                 }
             } catch (error) {
                 console.error('Error fetching courses:', error);
-                courseListContainer.innerHTML = '<p>There was an error loading the courses.</p>';
+                courseListContainer.innerHTML = '<p class="col-12 text-center">There was an error loading the courses.</p>';
             }
         };
 
@@ -4618,14 +4681,14 @@ const createCourseCard = (course, userWishlist = new Set()) => {
         };
 
         // --- Add Event Listeners ---
-        document.getElementById('course-search-form')?.addEventListener('submit', (e) => {
+        courseSearchForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             handleFilterChange();
         });
 
-        // Attach the handler to all filter dropdowns that trigger a reload
         ['sort-by-select', 'school-select', 'author-select', 'offer-select', 'category-select'].forEach(id => {
-            document.getElementById(id)?.addEventListener('change', handleFilterChange);
+            const element = document.getElementById(id);
+            element?.addEventListener('change', handleFilterChange);
         });
 
         // --- Wishlist Click Handler ---
@@ -4636,14 +4699,14 @@ const createCourseCard = (course, userWishlist = new Set()) => {
             e.preventDefault();
             const token = localStorage.getItem('lmsToken');
             if (!token) {
+                // Use a less disruptive notification if you have one, otherwise alert is a fallback
                 alert('Please log in to add courses to your wishlist.');
-                window.location.href = '/login';
+                window.location.href = '/login.html'; // Assuming you have a login page
                 return;
             }
             
-            // BUG FIX: Changed to find the closest parent with the data-course-id
             const courseCard = bookmarkBtn.closest('.course-grid-3');
-            const courseId = courseCard.dataset.courseId;
+            const courseId = courseCard?.dataset.courseId;
 
             if (!courseId) {
                 console.error("Could not find courseId for this card.");
@@ -4666,9 +4729,29 @@ const createCourseCard = (course, userWishlist = new Set()) => {
         });
 
         // --- Initial Fetch on Page Load ---
-        fetchAndDisplayCourses();
+        const initialLoad = () => {
+            const params = new URLSearchParams(window.location.search);
+            const searchQueryFromUrl = params.get('search');
+            
+            const initialQueryParams = {};
+
+            // If a search query exists in the URL, use it
+            if (searchQueryFromUrl) {
+                if (courseSearchInput) {
+                    courseSearchInput.value = searchQueryFromUrl; // Populate the search bar on this page
+                }
+                initialQueryParams.search = searchQueryFromUrl;
+            }
+            
+            // Now, fetch courses with any parameters found (e.g., from the URL)
+            fetchAndDisplayCourses(initialQueryParams);
+        };
+
+        // Trigger the initial load when the page is ready
+        initialLoad();
     });
 }
+
 
 
 // In main.js, add this new block for the results page logic

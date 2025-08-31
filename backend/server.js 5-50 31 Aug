@@ -479,20 +479,11 @@ app.get('/api/courses', async (req, res) => {
         }
 
         // --- Price Range Slider Filter ---
-        // This will override the simple price filter if a range is provided
         const minPrice = parseInt(req.query.minPrice);
         const maxPrice = parseInt(req.query.maxPrice);
+        // This will override the simple price filter if a range is provided
         if (!isNaN(minPrice) && !isNaN(maxPrice)) {
-            // If a price filter already exists, merge with $and, otherwise create new
-            if (filters.price) {
-                 filters.$and = [
-                    { price: filters.price },
-                    { price: { $gte: minPrice, $lte: maxPrice } }
-                ];
-                delete filters.price; // remove original price filter to avoid conflict
-            } else {
-                filters.price = { $gte: minPrice, $lte: maxPrice };
-            }
+            filters.price = { $gte: minPrice, $lte: maxPrice };
         }
 
         // --- Sorting Filter ---
@@ -505,23 +496,11 @@ app.get('/api/courses', async (req, res) => {
                 break;
         }
 
-        // --- Create the Query ---
-        let query = Course.find(filters)
+        // --- Final Database Query ---
+        const courses = await Course.find(filters)
             .populate('instructor', 'firstName lastName avatar')
             .sort(sortOptions);
-
-        // **NEW**: Add limit functionality for the search dropdown
-        if (req.query.limit) {
-            const limit = parseInt(req.query.limit, 10);
-            if (!isNaN(limit) && limit > 0) {
-                query = query.limit(limit);
-            }
-        }
-
-        // --- Final Database Query ---
-        const courses = await query.exec(); // Use .exec() for consistency
         
-        // Count total documents matching filters for pagination
         const totalCourses = await Course.countDocuments(filters);
 
         res.json({
@@ -535,8 +514,6 @@ app.get('/api/courses', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
-
-
 // PUBLIC: For the course-details.html page (Preview)
 app.get('/api/courses/:id', async (req, res) => {
     try {
