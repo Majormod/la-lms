@@ -1,3 +1,4 @@
+// v8.6.9
 // --- START OF NEW DEBUGGING CODE ---
 console.log("--- main.js SCRIPT HAS STARTED ---");
 console.log("The current page pathname is:", window.location.pathname);
