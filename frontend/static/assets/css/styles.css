@@ -40911,3 +40911,9 @@ margin: 0 0 0 -10px !important;
 .rbt-lesson-attachments .feather-paperclip {
 
 }
+
+
+.player.right-content-area-supported {
+overflow: hidden;
+margin: -400px 0 0 0 !important;
+}
