@@ -3897,6 +3897,9 @@ if (window.location.pathname.includes('lesson.html')) {
 
         document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
 
+        // OPTIONAL: To remove the padding above the video, add this line.
+        // document.getElementById('lesson-inner-content').style.paddingTop = '0';
+
         fetch(`${API_BASE_URL}/api/courses/${courseId}`)
             .then(res => res.json())
             .then(result => {
@@ -3924,7 +3927,6 @@ if (window.location.pathname.includes('lesson.html')) {
                             const contentContainer = document.getElementById('lesson-inner-content');
 
                             if (filePath && contentContainer) {
-                                // We are now replacing the content of the 'inner' div
                                 contentContainer.innerHTML = `
                                     <div class="pdf-viewer-wrapper">
                                         <div class="pdf-viewer-header d-flex justify-content-between align-items-center bg-dark p-3 text-white">
@@ -4005,7 +4007,7 @@ if (window.location.pathname.includes('lesson.html')) {
     }
 
     // ==================================================================================
-    // === FINAL CORRECTED FUNCTION BASED ON YOUR ORIGINAL HTML STRUCTURE ===
+    // === FINAL UPDATE TO `updateLessonContent` ===
     // ==================================================================================
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
@@ -4022,14 +4024,16 @@ if (window.location.pathname.includes('lesson.html')) {
         let finalHTML = '';
 
         if (selectedLesson.vimeoUrl) {
-            // --- CASE 1: VIDEO LESSON ---
             const videoId = selectedLesson.vimeoUrl.split('/').pop();
             const embedUrl = `https://player.vimeo.com/video/${videoId}`;
             
-            // This is the video player block, exactly as seen in the original HTML.
+            // **THE FIX**: Wrap the video player in the theme's designated container.
+            // This class constrains the video and adds a bottom margin (mb--30).
             const videoHTML = `
-                <div class="plyr__video-embed rbtplayer">
-                    <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
+                <div class="rbt-video-player-wrapper mb--30">
+                    <div class="plyr__video-embed rbtplayer">
+                        <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
+                    </div>
                 </div>
             `;
 
@@ -4051,8 +4055,7 @@ if (window.location.pathname.includes('lesson.html')) {
                 `;
             }
 
-            // **THE FIX for unclickable links**: We add position:relative and z-index:2
-            // to the .content div to lift it above the video iframe.
+            // We keep the z-index as a safeguard, but the wrapper is the primary fix.
             const descriptionHTML = `
                 <div class="content" style="position: relative; z-index: 2;">
                     <div class="section-title">
@@ -4066,8 +4069,8 @@ if (window.location.pathname.includes('lesson.html')) {
             finalHTML = videoHTML + descriptionHTML;
 
         } else {
-            // --- CASE 2: TEXT-BASED LESSON ---
-            let resourcesHTML = '';
+            // --- Text-Based Lesson (unchanged) ---
+             let resourcesHTML = '';
              if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
                 resourcesHTML = `
                     <div class="rbt-lesson-attachments mt--30">
@@ -4085,7 +4088,6 @@ if (window.location.pathname.includes('lesson.html')) {
                 `;
             }
 
-            // **THE FIX for broken layout**: Everything is placed inside a single `.content` div.
             finalHTML = `
                 <div class="content">
                     <div class="no-video-placeholder p-5 text-center">
@@ -4105,6 +4107,7 @@ if (window.location.pathname.includes('lesson.html')) {
         contentContainer.innerHTML = finalHTML;
     }
 
+    // ... All other helper functions (renderQuizStartScreen, setupNavigation, etc.) remain unchanged ...
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -4121,7 +4124,6 @@ if (window.location.pathname.includes('lesson.html')) {
         document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
     }
     
-    // ... All other helper functions (renderQuizQuestions, setupNavigation, etc.) remain unchanged ...
     function renderQuizQuestions(quiz, container) {
         const questionsHTML = quiz.questions.map((question, index) => {
             const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
