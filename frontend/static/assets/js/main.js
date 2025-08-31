@@ -3897,11 +3897,11 @@ if (window.location.pathname.includes('lesson.html')) {
 
         document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
 
-        // OPTIONAL: To remove the padding above the video, add this line.
-        // document.getElementById('lesson-inner-content').style.paddingTop = '0';
-
         fetch(`${API_BASE_URL}/api/courses/${courseId}`)
-            .then(res => res.json())
+            .then(result => {
+                if (!result.ok) throw new Error(`HTTP error! status: ${result.status}`);
+                return result.json();
+            })
             .then(result => {
                 if (result.success) {
                     currentCourseData = result.course;
@@ -4007,7 +4007,7 @@ if (window.location.pathname.includes('lesson.html')) {
     }
 
     // ==================================================================================
-    // === FINAL UPDATE TO `updateLessonContent` ===
+    // === FINAL UPDATE WITH FORCEFUL STYLING ===
     // ==================================================================================
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
@@ -4021,16 +4021,19 @@ if (window.location.pathname.includes('lesson.html')) {
         const contentContainer = document.getElementById('lesson-inner-content');
         if (!contentContainer) return;
 
+        // **FIX #1: Forcefully remove the top padding from the main container.**
+        contentContainer.style.paddingTop = '0';
+        
         let finalHTML = '';
 
         if (selectedLesson.vimeoUrl) {
             const videoId = selectedLesson.vimeoUrl.split('/').pop();
             const embedUrl = `https://player.vimeo.com/video/${videoId}`;
             
-            // **THE FIX**: Wrap the video player in the theme's designated container.
-            // This class constrains the video and adds a bottom margin (mb--30).
+            // **FIX #2: Forcefully add 50px of padding at the bottom of the video wrapper.**
+            // This manually creates space and pushes the content below it down, fixing the overlap.
             const videoHTML = `
-                <div class="rbt-video-player-wrapper mb--30">
+                <div class="rbt-video-player-wrapper" style="padding-bottom: 50px;">
                     <div class="plyr__video-embed rbtplayer">
                         <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
                     </div>
@@ -4054,8 +4057,8 @@ if (window.location.pathname.includes('lesson.html')) {
                     </div>
                 `;
             }
-
-            // We keep the z-index as a safeguard, but the wrapper is the primary fix.
+            
+            // z-index is kept as a safeguard for clickability of links further down.
             const descriptionHTML = `
                 <div class="content" style="position: relative; z-index: 2;">
                     <div class="section-title">
@@ -4069,7 +4072,7 @@ if (window.location.pathname.includes('lesson.html')) {
             finalHTML = videoHTML + descriptionHTML;
 
         } else {
-            // --- Text-Based Lesson (unchanged) ---
+            // Text-Based Lesson (no changes needed here)
              let resourcesHTML = '';
              if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
                 resourcesHTML = `
@@ -4107,6 +4110,7 @@ if (window.location.pathname.includes('lesson.html')) {
         contentContainer.innerHTML = finalHTML;
     }
 
+
     // ... All other helper functions (renderQuizStartScreen, setupNavigation, etc.) remain unchanged ...
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
@@ -4119,6 +4123,9 @@ if (window.location.pathname.includes('lesson.html')) {
         document.getElementById('lesson-title').textContent = selectedQuiz.title;
         const contentContainer = document.getElementById('lesson-inner-content');
         if (!contentContainer) return;
+
+        // Also remove padding for quiz view for consistency
+        contentContainer.style.paddingTop = '0';
 
         contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
         document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
