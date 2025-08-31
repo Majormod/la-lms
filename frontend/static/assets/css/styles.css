@@ -40913,7 +40913,18 @@ margin: 0 0 0 -10px !important;
 }
 
 
+/*
+  RULE 1: Your working fix to pull the video UP by 400px.
+  This targets the video's container.
+*/
 #lesson-inner-content .rbt-video-player-wrapper {
   margin-top: -400px !important;
-  overflow: hidden;
+}
+
+/*
+  RULE 2: The new fix to push the text DOWN by 400px.
+  This targets the text's container and moves it below the video.
+*/
+#lesson-inner-content .content {
+  margin-top: 400px !important;;
 }
