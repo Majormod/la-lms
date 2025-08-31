@@ -40914,17 +40914,27 @@ margin: 0 0 0 -10px !important;
 
 
 /*
-  RULE 1: Your working fix to pull the video UP by 400px.
-  This targets the video's container.
+  This is your original rule that adds padding to the content area for
+  text lessons and quizzes, which is correct.
 */
-#lesson-inner-content .rbt-video-player-wrapper {
-  margin-top: -400px !important;
+.rbt-lesson-rightsidebar .inner {
+  padding: 50px 0;
 }
 
 /*
-  RULE 2: The new fix to push the text DOWN by 400px.
-  This targets the text's container and moves it below the video.
+  This is your original rule that REMOVES the padding when the 'lesson-video'
+  class is present, which fixes the top gap for video lessons.
 */
-#lesson-inner-content .content {
-  margin-top: 400px !important;;
+.rbt-lesson-rightsidebar.lesson-video .inner {
+  padding: 0;
+}
+
+/*
+  This is the ONLY new rule. It fixes the unclickable PDF links by
+  lifting the text content above the video, but ONLY on video pages.
+  It will NOT affect your quiz pages.
+*/
+.rbt-lesson-rightsidebar.lesson-video .content {
+  position: relative;
+  z-index: 2;
 }

@@ -3914,7 +3914,7 @@ if (window.location.pathname.includes('lesson.html')) {
                     setupSidebarClickHandler();
                     setupSidebarToggle();
 
-                    // PDF viewer logic remains
+                    // PDF viewer logic
                     document.addEventListener('click', (e) => {
                         const pdfLink = e.target.closest('.lesson-pdf-link');
                         if (pdfLink) {
@@ -3957,54 +3957,25 @@ if (window.location.pathname.includes('lesson.html')) {
             .catch(error => console.error('Error loading initial course data:', error));
     });
     
-    // Unchanged function
     function renderSidebar(activeLessonId, activeQuizId) {
+        // This function does not need to be changed
         const sidebar = document.querySelector('.rbt-accordion-style.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
-
-        const activeEpisode = currentCourseData.episodes.find(ep =>
-            ep.lessons.some(l => l._id === activeLessonId) || ep.quizzes.some(q => q._id === activeQuizId)
-        );
-
+        const activeEpisode = currentCourseData.episodes.find(ep => ep.lessons.some(l => l._id === activeLessonId) || ep.quizzes.some(q => q._id === activeQuizId));
         sidebar.innerHTML = currentCourseData.episodes.map((episode, index) => {
             const isExpanded = activeEpisode && episode._id === activeEpisode._id;
             const lessons = episode.lessons.map(item => ({ ...item, type: 'lesson' }));
             const quizzes = episode.quizzes.map(item => ({ ...item, type: 'quiz' }));
             const contents = [...lessons, ...quizzes];
-
             const contentHTML = contents.map(content => {
                 const isActive = (content.type === 'lesson' && content._id === activeLessonId) || (content.type === 'quiz' && content._id === activeQuizId);
                 const icon = content.type === 'lesson' ? 'play-circle' : 'help-circle';
-                return `
-                    <li>
-                        <a href="#" class="content-link ${isActive ? 'active' : ''}" data-type="${content.type}" data-id="${content._id}">
-                            <div class="course-content-left">
-                                <i class="feather-${icon}"></i>
-                                <span class="text">${content.title}</span>
-                            </div>
-                            <div class="course-content-right">
-                                <span class="rbt-check unread"><i class="feather-circle"></i></span>
-                            </div>
-                        </a>
-                    </li>
-                `;
+                return `<li><a href="#" class="content-link ${isActive ? 'active' : ''}" data-type="${content.type}" data-id="${content._id}"><div class="course-content-left"><i class="feather-${icon}"></i><span class="text">${content.title}</span></div><div class="course-content-right"><span class="rbt-check unread"><i class="feather-circle"></i></span></div></a></li>`;
             }).join('');
-
-            return `
-                <div class="accordion-item card">
-                    <h2 class="accordion-header card-header">
-                        <button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">
-                            ${episode.title}
-                        </button>
-                    </h2>
-                    <div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}">
-                        <div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div>
-                    </div>
-                </div>`;
+            return `<div class="accordion-item card"><h2 class="accordion-header card-header"><button class="accordion-button ${isExpanded ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSidebar${index}">${episode.title}</button></h2><div id="collapseSidebar${index}" class="accordion-collapse collapse ${isExpanded ? 'show' : ''}"><div class="accordion-body card-body"><ul class="rbt-course-main-content liststyle">${contentHTML}</ul></div></div></div>`;
         }).join('');
     }
 
-    // UPDATED FUNCTION
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
         for (const episode of currentCourseData.episodes) {
@@ -4019,51 +3990,26 @@ if (window.location.pathname.includes('lesson.html')) {
         if (!contentContainer || !rightSidebar) return;
 
         if (selectedLesson.vimeoUrl) {
-            // FOR VIDEO LESSONS: Add the 'lesson-video' class to remove padding.
+            // **FIX**: Add the 'lesson-video' class to remove the top gap.
             rightSidebar.classList.add('lesson-video');
 
             const videoId = selectedLesson.vimeoUrl.split('/').pop();
             const embedUrl = `https://player.vimeo.com/video/${videoId}`;
             const videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe></div>`;
-
             let resourcesHTML = '';
             if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-                // ... resources HTML generation ...
-                resourcesHTML = `
-                    <div class="rbt-lesson-attachments mt--30">
-                        <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                        <ul class="rbt-list-style-1">
-                            ${selectedLesson.exerciseFiles.map(file => `
-                                <li>
-                                    <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                                        <i class="feather-paperclip"></i> ${file.filename}
-                                    </a>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `;
+                resourcesHTML = `<div class="rbt-lesson-attachments mt--30"><h5 class="rbt-title-style-3">Lesson Resources</h5><ul class="rbt-list-style-1">${selectedLesson.exerciseFiles.map(file => `<li><a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}"><i class="feather-paperclip"></i> ${file.filename}</a></li>`).join('')}</ul></div>`;
             }
-
-            const descriptionHTML = `
-                <div class="content">
-                    <div class="section-title">
-                        <h4>About Lesson</h4>
-                        <p>${selectedLesson.summary || 'No summary available.'}</p>
-                    </div>
-                    ${resourcesHTML}
-                </div>`;
-            
+            const descriptionHTML = `<div class="content"><div class="section-title"><h4>About Lesson</h4><p>${selectedLesson.summary || 'No summary available.'}</p></div>${resourcesHTML}</div>`;
             contentContainer.innerHTML = videoHTML + descriptionHTML;
+
         } else {
-            // FOR TEXT LESSONS: Remove the 'lesson-video' class to add padding back.
+            // **FIX**: Remove the 'lesson-video' class so text lessons have correct padding.
             rightSidebar.classList.remove('lesson-video');
-            // ... logic to render text content ...
             contentContainer.innerHTML = `<div class="content"><div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is an exercise or text-based lesson.</h4></div></div>`;
         }
     }
 
-    // UPDATED FUNCTION
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -4077,64 +4023,35 @@ if (window.location.pathname.includes('lesson.html')) {
         const contentContainer = document.getElementById('lesson-inner-content');
         if(!contentContainer || !rightSidebar) return;
 
-        // FOR QUIZZES: Remove the 'lesson-video' class to ensure correct padding.
+        // **FIX**: Remove the 'lesson-video' class so quizzes have correct padding.
         rightSidebar.classList.remove('lesson-video');
 
         contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
         document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
     }
     
-    // Unchanged function
     function renderQuizQuestions(quiz, container) {
+        // This function does not need to be changed
         const questionsHTML = quiz.questions.map((question, index) => {
             const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
             const inputClass = question.questionType === 'single-choice' ? 'rbt-form-check' : 'rbt-checkbox-wrapper';
-            const optionsHTML = question.options.map((option, optIndex) => `
-                <div class="col-lg-6">
-                    <div class="${inputClass}">
-                        <input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}">
-                        <label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label>
-                    </div>
-                </div>`).join('');
+            const optionsHTML = question.options.map((option, optIndex) => `<div class="col-lg-6"><div class="${inputClass}"><input id="q${index}-opt${optIndex}" name="question-${question._id}" type="${inputType}" value="${option._id}"><label class="form-check-label" for="q${index}-opt${optIndex}">${option.text}</label></div></div>`).join('');
             const openEndedHTML = `<div class="col-lg-12"><div class="form-group"><textarea name="question-${question._id}" placeholder="Write your answer..."></textarea></div></div>`;
-
-            return `
-                <div class="rbt-single-quiz mb-5">
-                    <h4>${index + 1}. ${question.questionText}</h4>
-                    <div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div>
-                    <div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div>
-                </div>`;
+            return `<div class="rbt-single-quiz mb-5"><h4>${index + 1}. ${question.questionText}</h4><div class="mb-2"><span>Points: <strong>${question.points}</strong></span></div><div class="row g-3">${question.questionType === 'open-ended' ? openEndedHTML : optionsHTML}</div></div>`;
         }).join('');
-
-        container.innerHTML = `
-            <div class="content p-4 p-lg-5">
-                <div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr>
-                <form id="quiz-form-submission">${questionsHTML}
-                    <div class="submit-btn mt-2">
-                        <button type="submit" class="rbt-btn btn-gradient hover-icon-reverse">
-                            <span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
-        
+        container.innerHTML = `<div class="content p-4 p-lg-5"><div class="quize-top-meta"><div class="quize-top-left"><span>Questions: <strong>${quiz.questions.length}</strong></span></div></div><hr><form id="quiz-form-submission">${questionsHTML}<div class="submit-btn mt-2"><button type="submit" class="rbt-btn btn-gradient hover-icon-reverse"><span class="icon-reverse-wrapper"><span class="btn-text">Submit Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></form></div>`;
         document.getElementById('quiz-form-submission').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitButton = e.target.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.querySelector('.btn-text').textContent = 'Submitting...';
-
             const formData = new FormData(e.target);
             const answers = {};
             for (let [name, value] of formData.entries()) {
                 const questionId = name.replace('question-', '');
-                if (!answers[questionId]) {
-                    answers[questionId] = [];
-                }
+                if (!answers[questionId]) { answers[questionId] = []; }
                 answers[questionId].push(value);
             }
-
             try {
                 const courseId = new URLSearchParams(window.location.search).get('courseId');
                 const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/quizzes/${quiz._id}/submit`, {
@@ -4142,7 +4059,6 @@ if (window.location.pathname.includes('lesson.html')) {
                     headers: { 'Content-Type': 'application/json', 'x-auth-token': localStorage.getItem('lmsToken') },
                     body: JSON.stringify({ answers })
                 });
-
                 const data = await response.json();
                 if (data.success) {
                     sessionStorage.setItem('quizResult', JSON.stringify(data.result));
@@ -4156,13 +4072,12 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
-    // Unchanged function
     function setupNavigation(currentItemId, currentItemType) {
+        // This function does not need to be changed
         const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
         const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
         const prevButton = document.getElementById('prev-content-btn');
         const nextButton = document.getElementById('next-content-btn');
-
         if (currentIndex > 0) {
             const prevItem = allContents[currentIndex - 1];
             prevButton.style.display = 'block';
@@ -4181,8 +4096,8 @@ if (window.location.pathname.includes('lesson.html')) {
         }
     }
 
-    // Unchanged function
     function setupSidebarClickHandler() {
+        // This function does not need to be changed
         document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
             const link = event.target.closest('.content-link, .content-nav-link');
             if (!link) return;
@@ -4201,8 +4116,8 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
-    // Unchanged function
     function setupSidebarToggle() {
+        // This function does not need to be changed
         const toggleButton = document.querySelector('.rbt-lesson-toggle button');
         if (toggleButton) {
             toggleButton.addEventListener('click', function() {
