@@ -40916,3 +40916,6 @@ margin: 0 0 0 -10px !important;
 .rbt-lesson-rightsidebar .inner {
   padding-top: 0 !important;
 }
+#lesson-inner-content {
+  padding-top: 0 !important;
+}
