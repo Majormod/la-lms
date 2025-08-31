@@ -4041,14 +4041,14 @@ function updateLessonContent(lessonId) {
     document.getElementById('lesson-title').textContent = selectedLesson.title;
     const contentContainer = document.getElementById('lesson-inner-content');
 
-    // --- Build Video HTML (either the player or a placeholder) ---
+    // --- Build Video HTML ---
     let videoHTML = '';
     if (selectedLesson.vimeoUrl) {
         const videoId = selectedLesson.vimeoUrl.split('/').pop();
         const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        videoHTML = `<div class="plyr__video-embed rbtplayer mb--30"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+        videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
-        videoHTML = `<div class="no-video-placeholder p-5 text-center bg-color-extra2 radius-10 mb--30"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+        videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
     // --- Build Resources HTML (if files exist) ---
@@ -4070,17 +4070,18 @@ function updateLessonContent(lessonId) {
         `;
     }
 
-    // --- Combine everything into a single ".content" wrapper ---
-    // This solves both the layout and the unclickable link issues.
-    contentContainer.innerHTML = `
+    // --- Build Description and Final Content HTML ---
+    const descriptionHTML = `
         <div class="content">
-            ${videoHTML}
             <div class="section-title">
                 <h4>About Lesson</h4>
                 <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
             </div>
             ${resourcesHTML}
         </div>`;
+
+    // --- Render everything to the page ---
+    contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
     // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
