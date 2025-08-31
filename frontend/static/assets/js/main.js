@@ -2390,46 +2390,54 @@ if (window.location.pathname.includes('edit-course.html')) {
         }).join('');
     };
 
-    // --- DELETE ITEM (Lesson, Quiz, Assignment) ---
-    document.addEventListener('click', async (e) => {
-        const deleteBtn = e.target.closest('.delete-item');
-        if (!deleteBtn) return;
+// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
+// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-item');
+    if (!deleteBtn) return;
 
-        const { episodeId, itemId, itemType } = deleteBtn.dataset;
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); // Capitalizes 'quiz' to 'Quiz'
+    // ▼▼▼ START OF FIX ▼▼▼
+    // If the button is already marked as 'in-progress', ignore the click.
+    if (deleteBtn.classList.contains('deleting')) {
+        return; 
+    }
+    // Immediately mark the button as 'in-progress' to prevent double clicks.
+    deleteBtn.classList.add('deleting');
+    // ▲▲▲ END OF FIX ▲▲▲
 
-        if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
-            try {
-                // The URL is built dynamically based on the item type (e.g., /lessons/, /quizzes/)
-                let pathSegment = `${itemType}s`;
-                if (itemType === 'quiz') {
-                    pathSegment = 'quizzes';
-                }
-                const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
+    const { episodeId, itemId, itemType } = deleteBtn.dataset;
+    const courseId = new URLSearchParams(window.location.search).get('courseId');
+    let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); 
 
-                // --- ADD THIS DEBUGGING LOG ---
-                console.log("Attempting to send DELETE request to this URL:", url);
+    if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
+        try {
+            let pathSegment = itemType === 'quiz' ? 'quizzes' : `${itemType}s`;
+            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'x-auth-token': token }
+            });
+            const result = await response.json();
 
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: { 'x-auth-token': token }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    courseData = result.course;
-                    renderCourseBuilder(courseData.episodes);
-                } else {
-                    alert(`Error: ${result.message}`);
-                }
-            } catch (error) {
-                console.error(`Error deleting ${itemType}:`, error);
-                alert(`An error occurred while deleting the ${itemTypeName}.`);
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+            } else {
+                alert(`Error: ${result.message}`);
+                // On error, we must remove the class so the user can try again.
+                deleteBtn.classList.remove('deleting');
             }
+        } catch (error) {
+            console.error(`Error deleting ${itemType}:`, error);
+            alert(`An error occurred while deleting the ${itemTypeName}.`);
+            // Also remove the class on a critical failure.
+            deleteBtn.classList.remove('deleting');
         }
-    });
+    } else {
+        // If the user clicks "Cancel" in the confirmation, remove the class.
+        deleteBtn.classList.remove('deleting');
+    }
+});
 
     window.onload = function() {
         // --- AUTH & URL CHECK ---
@@ -3210,32 +3218,6 @@ if (window.location.pathname.includes('edit-course.html')) {
             });
         }
 
-        // Delete Lesson Event Listener
-        document.addEventListener('click', async (e) => {
-            const deleteLessonBtn = e.target.closest('.delete-lesson');
-            if (deleteLessonBtn) {
-                if (confirm('Are you sure you want to delete this lesson?')) {
-                    const episodeId = deleteLessonBtn.dataset.episodeId;
-                    const lessonId = deleteLessonBtn.dataset.lessonId;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            courseData = result.course;
-                            renderCourseBuilder(courseData.episodes);
-                        } else {
-                            alert(`Error: ${result.message}`);
-                        }
-                    } catch (error) {
-                        console.error('Error deleting lesson:', error);
-                        alert('An error occurred while deleting the lesson.');
-                    }
-                }
-            }
-        });
         // --- NEW: Remove Exercise File Event Listener ---
         document.addEventListener('click', async (e) => {
             const removeBtn = e.target.closest('.remove-existing-file-btn');
