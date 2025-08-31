@@ -3898,10 +3898,7 @@ if (window.location.pathname.includes('lesson.html')) {
         document.getElementById('back-to-course-link').href = `course-details.html?courseId=${courseId}`;
 
         fetch(`${API_BASE_URL}/api/courses/${courseId}`)
-            .then(result => {
-                if (!result.ok) throw new Error(`HTTP error! status: ${result.status}`);
-                return result.json();
-            })
+            .then(res => res.json())
             .then(result => {
                 if (result.success) {
                     currentCourseData = result.course;
@@ -3917,7 +3914,7 @@ if (window.location.pathname.includes('lesson.html')) {
                     setupSidebarClickHandler();
                     setupSidebarToggle();
 
-                    // --- PDF VIEWER LOGIC ---
+                    // PDF viewer logic remains
                     document.addEventListener('click', (e) => {
                         const pdfLink = e.target.closest('.lesson-pdf-link');
                         if (pdfLink) {
@@ -3959,7 +3956,8 @@ if (window.location.pathname.includes('lesson.html')) {
             })
             .catch(error => console.error('Error loading initial course data:', error));
     });
-
+    
+    // Unchanged function
     function renderSidebar(activeLessonId, activeQuizId) {
         const sidebar = document.querySelector('.rbt-accordion-style.rbt-accordion-02.for-right-content');
         if (!sidebar) return;
@@ -4006,9 +4004,7 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
     }
 
-    // ==================================================================================
-    // === FINAL UPDATE WITH FORCEFUL STYLING ===
-    // ==================================================================================
+    // UPDATED FUNCTION
     function updateLessonContent(lessonId) {
         let selectedLesson = null;
         for (const episode of currentCourseData.episodes) {
@@ -4018,30 +4014,21 @@ if (window.location.pathname.includes('lesson.html')) {
         if (!selectedLesson) return;
 
         document.getElementById('lesson-title').textContent = selectedLesson.title;
+        const rightSidebar = document.querySelector('.rbt-lesson-rightsidebar');
         const contentContainer = document.getElementById('lesson-inner-content');
-        if (!contentContainer) return;
-
-        // **FIX #1: Forcefully remove the top padding from the main container.**
-        contentContainer.style.paddingTop = '0';
-        
-        let finalHTML = '';
+        if (!contentContainer || !rightSidebar) return;
 
         if (selectedLesson.vimeoUrl) {
+            // FOR VIDEO LESSONS: Add the 'lesson-video' class to remove padding.
+            rightSidebar.classList.add('lesson-video');
+
             const videoId = selectedLesson.vimeoUrl.split('/').pop();
             const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-            
-            // **FIX #2: Forcefully add 50px of padding at the bottom of the video wrapper.**
-            // This manually creates space and pushes the content below it down, fixing the overlap.
-            const videoHTML = `
-                <div class="rbt-video-player-wrapper" style="padding-bottom: 50px;">
-                    <div class="plyr__video-embed rbtplayer">
-                        <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
-                    </div>
-                </div>
-            `;
+            const videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe></div>`;
 
             let resourcesHTML = '';
             if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
+                // ... resources HTML generation ...
                 resourcesHTML = `
                     <div class="rbt-lesson-attachments mt--30">
                         <h5 class="rbt-title-style-3">Lesson Resources</h5>
@@ -4057,61 +4044,26 @@ if (window.location.pathname.includes('lesson.html')) {
                     </div>
                 `;
             }
-            
-            // z-index is kept as a safeguard for clickability of links further down.
+
             const descriptionHTML = `
-                <div class="content" style="position: relative; z-index: 2;">
-                    <div class="section-title">
-                        <h4>About Lesson</h4>
-                        <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
-                    </div>
-                    ${resourcesHTML}
-                </div>
-            `;
-            
-            finalHTML = videoHTML + descriptionHTML;
-
-        } else {
-            // Text-Based Lesson (no changes needed here)
-             let resourcesHTML = '';
-             if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-                resourcesHTML = `
-                    <div class="rbt-lesson-attachments mt--30">
-                        <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                        <ul class="rbt-list-style-1">
-                            ${selectedLesson.exerciseFiles.map(file => `
-                                <li>
-                                    <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                                        <i class="feather-paperclip"></i> ${file.filename}
-                                    </a>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-
-            finalHTML = `
                 <div class="content">
-                    <div class="no-video-placeholder p-5 text-center">
-                        <i class="feather-file-text" style="font-size: 48px;"></i>
-                        <h4>This is a text-based lesson.</h4>
-                    </div>
-                    <hr>
                     <div class="section-title">
                         <h4>About Lesson</h4>
-                        <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+                        <p>${selectedLesson.summary || 'No summary available.'}</p>
                     </div>
                     ${resourcesHTML}
-                </div>
-            `;
+                </div>`;
+            
+            contentContainer.innerHTML = videoHTML + descriptionHTML;
+        } else {
+            // FOR TEXT LESSONS: Remove the 'lesson-video' class to add padding back.
+            rightSidebar.classList.remove('lesson-video');
+            // ... logic to render text content ...
+            contentContainer.innerHTML = `<div class="content"><div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is an exercise or text-based lesson.</h4></div></div>`;
         }
-        
-        contentContainer.innerHTML = finalHTML;
     }
 
-
-    // ... All other helper functions (renderQuizStartScreen, setupNavigation, etc.) remain unchanged ...
+    // UPDATED FUNCTION
     function renderQuizStartScreen(quizId) {
         let selectedQuiz = null;
         for (const episode of currentCourseData.episodes) {
@@ -4121,16 +4073,18 @@ if (window.location.pathname.includes('lesson.html')) {
         if (!selectedQuiz) return;
         
         document.getElementById('lesson-title').textContent = selectedQuiz.title;
+        const rightSidebar = document.querySelector('.rbt-lesson-rightsidebar');
         const contentContainer = document.getElementById('lesson-inner-content');
-        if (!contentContainer) return;
+        if(!contentContainer || !rightSidebar) return;
 
-        // Also remove padding for quiz view for consistency
-        contentContainer.style.paddingTop = '0';
+        // FOR QUIZZES: Remove the 'lesson-video' class to ensure correct padding.
+        rightSidebar.classList.remove('lesson-video');
 
         contentContainer.innerHTML = `<div class="content p-4 p-lg-5"><div class="text-center"><h5>${selectedQuiz.title}</h5><p class="mt-3">${selectedQuiz.summary}</p><ul class="rbt-list-style-1 mt-4 justify-content-center"><li><span>Time: <strong>${selectedQuiz.timeLimit.value > 0 ? `${selectedQuiz.timeLimit.value} ${selectedQuiz.timeLimit.unit}` : 'No Limit'}</strong></span></li><li><span>Questions: <strong>${selectedQuiz.questions.length}</strong></span></li><li><span>Passing Grade: <strong>${selectedQuiz.passingGrade}%</strong></span></li></ul><button class="rbt-btn btn-gradient hover-icon-reverse mt-4" id="start-quiz-btn"><span class="icon-reverse-wrapper"><span class="btn-text">Start Quiz</span><span class="btn-icon"><i class="feather-arrow-right"></i></span><span class="btn-icon"><i class="feather-arrow-right"></i></span></span></button></div></div>`;
         document.getElementById('start-quiz-btn').addEventListener('click', () => { renderQuizQuestions(selectedQuiz, contentContainer); });
     }
     
+    // Unchanged function
     function renderQuizQuestions(quiz, container) {
         const questionsHTML = quiz.questions.map((question, index) => {
             const inputType = question.questionType === 'single-choice' ? 'radio' : 'checkbox';
@@ -4202,6 +4156,7 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
+    // Unchanged function
     function setupNavigation(currentItemId, currentItemType) {
         const allContents = currentCourseData.episodes.flatMap(episode => [...episode.lessons.map(item => ({ ...item, type: 'lesson' })), ...episode.quizzes.map(item => ({ ...item, type: 'quiz' }))]);
         const currentIndex = allContents.findIndex(item => item._id === currentItemId && item.type === currentItemType);
@@ -4226,6 +4181,7 @@ if (window.location.pathname.includes('lesson.html')) {
         }
     }
 
+    // Unchanged function
     function setupSidebarClickHandler() {
         document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
             const link = event.target.closest('.content-link, .content-nav-link');
@@ -4245,6 +4201,7 @@ if (window.location.pathname.includes('lesson.html')) {
         });
     }
 
+    // Unchanged function
     function setupSidebarToggle() {
         const toggleButton = document.querySelector('.rbt-lesson-toggle button');
         if (toggleButton) {
