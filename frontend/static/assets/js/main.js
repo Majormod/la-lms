@@ -2390,104 +2390,47 @@ if (window.location.pathname.includes('edit-course.html')) {
         }).join('');
     };
 
-// --- CONSOLIDATED CLICK EVENT LISTENER ---
-    // This single block handles all clicks for the course builder to prevent conflicts.
+    // --- DELETE ITEM (Lesson, Quiz, Assignment) ---
     document.addEventListener('click', async (e) => {
+        const deleteBtn = e.target.closest('.delete-item');
+        if (!deleteBtn) return;
+
+        const { episodeId, itemId, itemType } = deleteBtn.dataset;
         const courseId = new URLSearchParams(window.location.search).get('courseId');
+        let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); // Capitalizes 'quiz' to 'Quiz'
 
-        // --- 1. Handle Delete Item (Lesson, Quiz, etc.) ---
-        const deleteItemBtn = e.target.closest('.delete-item');
-        if (deleteItemBtn) {
-            const { episodeId, itemId, itemType } = deleteItemBtn.dataset;
-            const itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1);
-
-            if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
-                try {
-                    const pathSegment = itemType === 'quiz' ? 'quizzes' : `${itemType}s`;
-                    const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
-                    
-                    const response = await fetch(url, { method: 'DELETE', headers: { 'x-auth-token': token } });
-                    const result = await response.json();
-
-                    if (result.success) {
-                        courseData = result.course; // Update state
-                        renderCourseBuilder(courseData.episodes); // Re-render UI
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error(`Error deleting ${itemType}:`, error);
-                    alert(`An error occurred while deleting the ${itemTypeName}.`);
+        if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
+            try {
+                // The URL is built dynamically based on the item type (e.g., /lessons/, /quizzes/)
+                let pathSegment = `${itemType}s`;
+                if (itemType === 'quiz') {
+                    pathSegment = 'quizzes';
                 }
-            }
-            return; // Stop further processing for this click
-        }
+                const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
 
-        // --- 2. Handle Delete Topic ---
-        const deleteTopicBtn = e.target.closest('.rbt-course-del');
-        if (deleteTopicBtn) {
-            if (confirm('Are you sure you want to delete this topic?')) {
-                const episodeId = deleteTopicBtn.dataset.episodeId;
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course; // Update state
-                        renderCourseBuilder(courseData.episodes); // Re-render UI
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error deleting topic:', error);
-                    alert('An error occurred while deleting the topic.');
-                }
-            }
-            return; 
-        }
+                // --- ADD THIS DEBUGGING LOG ---
+                console.log("Attempting to send DELETE request to this URL:", url);
 
-        // --- 3. Handle Edit Item (opens the correct modal) ---
-        const editItemBtn = e.target.closest('.edit-item');
-        if (editItemBtn) {
-            const { episodeId, itemId, itemType } = editItemBtn.dataset;
-            if (itemType === 'lesson') {
-                openUpdateLessonModal(episodeId, itemId);
-            } else if (itemType === 'quiz') {
-                openUpdateQuizModal(episodeId, itemId);
-            }
-            // The data-bs-toggle attribute on the button will handle opening the modal itself.
-            return;
-        }
-        
-        // --- 4. Handle Remove Existing Exercise File (inside a modal) ---
-        const removeFileBtn = e.target.closest('.remove-existing-file-btn');
-        if (removeFileBtn) {
-            e.preventDefault();
-            if (confirm('Are you sure you want to remove this file?')) {
-                const { courseId: btnCourseId, episodeId, lessonId, filePath } = removeFileBtn.dataset;
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/courses/${btnCourseId}/episodes/${episodeId}/lessons/${lessonId}/files`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                        body: JSON.stringify({ filePath })
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        courseData = result.course;
-                        renderCourseBuilder(courseData.episodes); // Update main page icons
-                        removeFileBtn.closest('li').remove(); // Visually remove from modal
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error removing file:', error);
-                    alert('An error occurred while removing the file.');
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    courseData = result.course;
+                    renderCourseBuilder(courseData.episodes);
+                } else {
+                    alert(`Error: ${result.message}`);
                 }
+            } catch (error) {
+                console.error(`Error deleting ${itemType}:`, error);
+                alert(`An error occurred while deleting the ${itemTypeName}.`);
             }
-            return;
         }
     });
 
-    
     window.onload = function() {
         // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
@@ -2511,6 +2454,34 @@ if (window.location.pathname.includes('edit-course.html')) {
         // --- FINAL, COMPLETE QUIZ LOGIC (ADD/EDIT/NAVIGATE/SAVE) ---
         let currentEditingQuizId = null;
         let currentEditingQuestionId = null;
+    document.addEventListener('click', (e) => {
+        // Logic for the "Add Quiz" button
+        const addQuizBtn = e.target.closest('.add-content-btn[data-bs-target="#Quiz"]');
+        if (addQuizBtn) {
+            // This is the crucial part that was lost. It saves the topic ID.
+            currentEditingEpisodeId = addQuizBtn.dataset.episodeId;
+            // ADD THIS LINE
+    console.log('STEP 1: "Add Quiz" button clicked. The Topic ID is now:', currentEditingEpisodeId);
+            // This resets the modal for a new quiz
+            window.currentEditingQuizId = null; 
+            document.getElementById('quiz-title').value = '';
+            document.getElementById('quiz-summary').value = '';
+            document.getElementById('quiz-questions-list').innerHTML = '<p>Save quiz info to add questions.</p>';
+        }
+
+        // Logic for the "Edit Quiz" button
+        const editQuizBtn = e.target.closest('.edit-item[data-item-type="quiz"]');
+        if (editQuizBtn) {
+            const episodeId = editQuizBtn.dataset.episodeId;
+            const quizId = editQuizBtn.dataset.itemId;
+            
+            // This calls the function (which should already be in your quiz modal code) 
+            // to load the existing quiz data into the modal.
+            if (typeof window.openUpdateQuizModal === 'function') {
+                window.openUpdateQuizModal(episodeId, quizId);
+            }
+        }
+    });
 
         window.openUpdateQuizModal = function(episodeId, quizId) {
             currentEditingEpisodeId = episodeId;
@@ -3239,6 +3210,127 @@ if (window.location.pathname.includes('edit-course.html')) {
             });
         }
 
+        // Delete Lesson Event Listener
+        document.addEventListener('click', async (e) => {
+            const deleteLessonBtn = e.target.closest('.delete-lesson');
+            if (deleteLessonBtn) {
+                if (confirm('Are you sure you want to delete this lesson?')) {
+                    const episodeId = deleteLessonBtn.dataset.episodeId;
+                    const lessonId = deleteLessonBtn.dataset.lessonId;
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}`, {
+                            method: 'DELETE',
+                            headers: { 'x-auth-token': token }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            courseData = result.course;
+                            renderCourseBuilder(courseData.episodes);
+                        } else {
+                            alert(`Error: ${result.message}`);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting lesson:', error);
+                        alert('An error occurred while deleting the lesson.');
+                    }
+                }
+            }
+        });
+        // --- NEW: Remove Exercise File Event Listener ---
+        document.addEventListener('click', async (e) => {
+            const removeBtn = e.target.closest('.remove-existing-file-btn');
+            if (removeBtn) {
+                e.preventDefault(); // Prevent any default button action
+
+                if (confirm('Are you sure you want to remove this file?')) {
+                    const { courseId, episodeId, lessonId, filePath } = removeBtn.dataset;
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/lessons/${lessonId}/files`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-auth-token': token
+                            },
+                            body: JSON.stringify({ filePath: filePath }) // Send the file path to identify which file to delete
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Update global data and re-render the main list
+                            courseData = result.course;
+                            renderCourseBuilder(courseData.episodes);
+                            
+                            // Visually remove the file from the modal list immediately
+                            removeBtn.closest('li').remove(); 
+                            
+                            // Optional: If the list is now empty, remove the "Attached Files" heading
+                            const fileList = removeBtn.closest('ul');
+                            if (fileList && fileList.children.length === 0) {
+                                fileList.previousElementSibling.remove(); // Removes the <p> heading
+                                fileList.remove();
+                            }
+                        } else {
+                            alert(`Error: ${result.message}`);
+                        }
+                    } catch (error) {
+                        console.error('Error removing exercise file:', error);
+                        alert('An error occurred while removing the file.');
+                    }
+                }
+            }
+        });
+        // --- CORRECTED: Generic Edit Item Event Listener ---
+        document.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-item'); 
+            if (editBtn) {
+                const { episodeId, itemId, itemType } = editBtn.dataset; 
+
+                if (itemType === 'lesson') {
+                    openUpdateLessonModal(episodeId, itemId); 
+                    const lessonModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Lesson'));
+                    lessonModalInstance.show();
+                } 
+                else if (itemType === 'quiz') {
+                    openUpdateQuizModal(episodeId, itemId);
+
+                    // This resets the quiz modal to step 1 when editing
+                    const quizNav = document.querySelector('#Quiz .quiz-modal-btn');
+                    if (quizNav) quizNav.dispatchEvent(new Event('reset'));
+
+                    const quizModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('Quiz'));
+                    quizModalInstance.show();
+                }
+            }
+        });
+        // Add this event listener for lesson clicks
+        document.addEventListener('click', function(e) {
+            const lessonLink = e.target.closest('.lesson-link');
+            if (lessonLink) {
+                e.preventDefault();
+                
+                const courseId = new URLSearchParams(window.location.search).get('courseId');
+                const episodeId = lessonLink.dataset.episodeId;
+                const lessonId = lessonLink.dataset.lessonId;
+                const lessonTitle = lessonLink.dataset.title;
+                const lessonSummary = lessonLink.dataset.summary;
+                const vimeoUrl = lessonLink.dataset.vimeoUrl;
+                
+                // Store lesson data for lesson.html
+                localStorage.setItem('currentLesson', JSON.stringify({
+                    courseId,
+                    episodeId,
+                    lessonId,
+                    title: lessonTitle,
+                    summary: lessonSummary,
+                    vimeoUrl: vimeoUrl
+                }));
+                
+                // Navigate to lesson page
+                window.location.href = `lesson.html?courseId=${courseId}&episodeId=${episodeId}&lessonId=${lessonId}`;
+            }
+        });
         // "Add Topic" Modal Save Button
         if (saveTopicBtn) {
             saveTopicBtn.addEventListener('click', async () => {
@@ -3268,6 +3360,31 @@ if (window.location.pathname.includes('edit-course.html')) {
             });
         }
 
+        // Delete Topic Event Listener
+        document.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('.rbt-course-del');
+            if (deleteBtn) {
+                if (confirm('Are you sure you want to delete this topic?')) {
+                    const episodeId = deleteBtn.dataset.episodeId;
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}`, {
+                            method: 'DELETE',
+                            headers: { 'x-auth-token': token }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            courseData = result.course;
+                            renderCourseBuilder(courseData.episodes);
+                        } else {
+                            alert(`Error: ${result.message}`);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting topic:', error);
+                        alert('An error occurred while deleting the topic.');
+                    }
+                }
+            }
+        });
 
         // Update Topic Save Button
         if (saveUpdateTopicBtn) {
@@ -3936,55 +4053,53 @@ function updateLessonContent(lessonId) {
             break;
         }
     }
-    if (!selectedLesson) {
-        console.error("Lesson not found in current course data:", lessonId);
-        return;
-    }
+    if (!selectedLesson) return;
 
-    const contentContainer = document.getElementById('lesson-inner-content');
+    // --- Selectors for the content areas ---
     document.getElementById('lesson-title').textContent = selectedLesson.title;
+    const contentContainer = document.getElementById('lesson-inner-content');
 
-    // Step 1: Define the HTML for the video area (either the player or a placeholder)
-    let videoAreaHTML = '';
+    // --- Build Video HTML ---
+    let videoHTML = '';
     if (selectedLesson.vimeoUrl) {
         const videoId = selectedLesson.vimeoUrl.split('/').pop();
         const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        // Added mb--30 for spacing below the video
-        videoAreaHTML = `<div class="plyr__video-embed rbtplayer mb--30"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+        videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
-        // This placeholder will now correctly occupy the video's spot
-        videoAreaHTML = `<div class="no-video-placeholder p-5 text-center bg-color-extra2 radius-10 mb--30"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+        videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
-    // Step 2: Define the HTML for the lesson resources
+    // --- Build Resources HTML (if files exist) ---
     let resourcesHTML = '';
     if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
         resourcesHTML = `
-        <div class="rbt-lesson-attachments mt--30">
-            <h5 class="rbt-title-style-3">Lesson Resources</h5>
-            <ul class="rbt-list-style-1">
-                ${selectedLesson.exerciseFiles.map(file => `
-                    <li>
-                        <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                            <i class="feather-paperclip"></i> ${file.filename}
-                        </a>
-                    </li>
-                `).join('')}
-            </ul>
-        </div>`;
+            <div class="rbt-lesson-attachments mt--30">
+                <h5 class="rbt-title-style-3">Lesson Resources</h5>
+                <ul class="rbt-list-style-1">
+                    ${selectedLesson.exerciseFiles.map(file => `
+                        <li>
+                            <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
+                                <i class="feather-paperclip"></i> ${file.filename}
+                            </a>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
     }
 
-    // Step 3: Combine everything inside a single ".content" wrapper
-    // This solves the overlapping issue and ensures consistent layout
-    contentContainer.innerHTML = `
+    // --- Build Description and Final Content HTML ---
+    const descriptionHTML = `
         <div class="content">
-            ${videoAreaHTML}
             <div class="section-title">
                 <h4>About Lesson</h4>
                 <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
             </div>
             ${resourcesHTML}
         </div>`;
+
+    // --- Render everything to the page ---
+    contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
     // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
