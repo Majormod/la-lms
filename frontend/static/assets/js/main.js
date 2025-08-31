@@ -4064,9 +4064,9 @@ function updateLessonContent(lessonId) {
     if (selectedLesson.vimeoUrl) {
         const videoId = selectedLesson.vimeoUrl.split('/').pop();
         const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        videoHTML = `<div class="plyr__video-embed rbtplayer mb--30"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+        videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
     } else {
-        videoHTML = `<div class="no-video-placeholder p-5 text-center bg-color-extra2 radius-10 mb--30"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
+        videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
     }
 
     // --- Build Resources HTML (if files exist) ---
@@ -4088,16 +4088,18 @@ function updateLessonContent(lessonId) {
         `;
     }
 
-    // --- Build Final Content HTML with a single ".content" wrapper ---
-    contentContainer.innerHTML = `
+    // --- Build Description and Final Content HTML ---
+    const descriptionHTML = `
         <div class="content">
-            ${videoHTML}
             <div class="section-title">
                 <h4>About Lesson</h4>
                 <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
             </div>
             ${resourcesHTML}
         </div>`;
+
+    // --- Render everything to the page ---
+    contentContainer.innerHTML = videoHTML + descriptionHTML;
 }
 
     // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
@@ -5065,7 +5067,7 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
         const announcementModal = new bootstrap.Modal(document.getElementById('addAnnouncementModal'));
         const modalElement = document.getElementById('addAnnouncementModal');
         const courseSelectInModal = document.getElementById('announcement-course');
-        const courseFilterSelect = document.getElementById('announcement-filter-course'); // Using the new ID
+        const courseFilterSelect = document.querySelector('.rbt-dashboard-filter-wrapper select');
         const sendBtn = document.getElementById('send-announcement-btn');
         const announcementTableBody = document.getElementById('announcements-table-body');
 
@@ -5087,12 +5089,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
                         if (courseSelectInModal) courseSelectInModal.innerHTML = optionsHtml;
                         if (courseFilterSelect) courseFilterSelect.innerHTML = filterOptionsHtml;
-
-                        // --- START OF FIX ---
-                        // Tell the Bootstrap-Select library to refresh the dropdowns
-                        $('#announcement-course').selectpicker('refresh');
-                        $('#announcement-filter-course').selectpicker('refresh');
-                        // --- END OF FIX ---
 
                     } else {
                         if (courseSelectInModal) courseSelectInModal.innerHTML = '<option disabled selected value="">No courses found</option>';
@@ -5182,11 +5178,10 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 
         if (courseFilterSelect) {
             courseFilterSelect.addEventListener('change', () => {
-                const selectedCourseId = $(courseFilterSelect).val(); // Use jQuery to get value from multi-select
+                const selectedCourseId = courseFilterSelect.value;
                 const allRows = announcementTableBody.querySelectorAll('tr');
                 allRows.forEach(row => {
-                    // Check if 'all' is selected or if the row's courseId is in the selected array
-                    if (selectedCourseId.includes('all') || selectedCourseId.includes(row.dataset.courseId)) {
+                    if (selectedCourseId === 'all' || row.dataset.courseId === selectedCourseId) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
@@ -5756,3 +5751,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 })(window, document, jQuery);
+
+// v6.5.5
