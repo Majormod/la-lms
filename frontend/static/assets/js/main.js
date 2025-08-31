@@ -5648,7 +5648,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run the function on page load
     setupUserNavigation();
 });
+function setupSidebarClickHandler() {
+    document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
+        const link = event.target.closest('.content-link, .content-nav-link');
+        if (!link) return;
+        event.preventDefault();
+        const id = link.dataset.id;
+        const type = link.dataset.type;
+        const url = new URL(window.location);
+        url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
+        if (type === 'lesson') url.searchParams.delete('quizId');
+        else url.searchParams.delete('lessonId');
+        history.pushState({}, '', url);
+        if (type === 'lesson') { updateLessonContent(id); } else if (type === 'quiz') { renderQuizStartScreen(id); }
+        document.querySelector('.content-link.active')?.classList.remove('active');
+        document.querySelector(`.content-link[data-id="${id}"]`)?.classList.add('active');
+        setupNavigation(id, type);
 
+        // Add this to update the checkmark
+        const statusElement = link.querySelector('.course-content-right');
+        if (statusElement) {
+            statusElement.innerHTML = '<span class="rbt-check"><i class="feather-check"></i></span>';
+        }
+    });
+}
 
         handlePageLogic();
     };
