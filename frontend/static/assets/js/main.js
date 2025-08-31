@@ -4017,72 +4017,103 @@ if (window.location.pathname.includes('lesson.html')) {
         }).join('');
     }
     
+  // ==================================================================================
+    // === BUG FIX: THIS ENTIRE FUNCTION IS REPLACED TO FIX BOTH BUGS ===
+    // ==================================================================================
     /**
-     * CORRECTED: Rebuilds the content to exactly match your UI theme's HTML structure.
+     * Updates the lesson content area with video or text content.
+     *
+     * BUG FIX 1: Unclickable Links
+     * Wraps the video in a dedicated container, separating it from the description block.
+     * This prevents the video player's overlay from blocking clicks on the resource links below.
+     *
+     * BUG FIX 2: Broken Layout
+     * For text-based lessons, it now generates a single, unified content block.
+     * The "text-based lesson" placeholder is integrated directly into the main content area,
+     * ensuring a consistent and correct layout every time.
      */
- /**
- * This function displays the lesson video, description, and resources.
- */
-/**
- * This function displays the lesson video, description, and resources.
- */
-function updateLessonContent(lessonId) {
-    let selectedLesson = null;
-    for (const episode of currentCourseData.episodes) {
-        const found = episode.lessons.find(l => l._id === lessonId);
-        if (found) {
-            selectedLesson = found;
-            break;
+    function updateLessonContent(lessonId) {
+        let selectedLesson = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.lessons.find(l => l._id === lessonId);
+            if (found) {
+                selectedLesson = found;
+                break;
+            }
         }
-    }
-    if (!selectedLesson) return;
+        if (!selectedLesson) return;
 
-    // --- Selectors for the content areas ---
-    document.getElementById('lesson-title').textContent = selectedLesson.title;
-    const contentContainer = document.getElementById('lesson-inner-content');
+        document.getElementById('lesson-title').textContent = selectedLesson.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
 
-    // --- Build Video HTML ---
-    let videoHTML = '';
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        videoHTML = `<div class="plyr__video-embed rbtplayer"><iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
-    } else {
-        videoHTML = `<div class="no-video-placeholder p-5 text-center"><i class="feather-file-text" style="font-size: 48px;"></i><h4>This is a text-based lesson.</h4></div>`;
-    }
+        // --- 1. Build Media HTML (Video or nothing) ---
+        let mediaHTML = '';
+        if (selectedLesson.vimeoUrl) {
+            const videoId = selectedLesson.vimeoUrl.split('/').pop();
+            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            mediaHTML = `
+                <div class="rbt-video-player-wrapper mb--30">
+                    <div class="plyr__video-embed rbtplayer">
+                        <iframe src="${embedUrl}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            `;
+        }
 
-    // --- Build Resources HTML (if files exist) ---
-    let resourcesHTML = '';
-    if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-        resourcesHTML = `
-            <div class="rbt-lesson-attachments mt--30">
-                <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                <ul class="rbt-list-style-1">
-                    ${selectedLesson.exerciseFiles.map(file => `
-                        <li>
-                            <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                                <i class="feather-paperclip"></i> ${file.filename}
-                            </a>
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }
+        // --- 2. Build Resources HTML ---
+        let resourcesHTML = '';
+        if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
+            resourcesHTML = `
+                <div class="rbt-lesson-attachments mt--30">
+                    <h5 class="rbt-title-style-3">Lesson Resources</h5>
+                    <ul class="rbt-list-style-1">
+                        ${selectedLesson.exerciseFiles.map(file => `
+                            <li>
+                                <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
+                                    <i class="feather-paperclip"></i> ${file.filename}
+                                </a>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
 
-    // --- Build Description and Final Content HTML ---
-    const descriptionHTML = `
-        <div class="content">
-            <div class="section-title">
+        // --- 3. Build the main description block (handling the text-lesson case here) ---
+        let descriptionContentHTML = '';
+        if (selectedLesson.vimeoUrl) {
+            // For video lessons, just show the summary.
+            descriptionContentHTML = `
                 <h4>About Lesson</h4>
                 <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
-            </div>
-            ${resourcesHTML}
-        </div>`;
+            `;
+        } else {
+            // For text lessons, add the placeholder inside the main content block.
+            descriptionContentHTML = `
+                <div class="no-video-placeholder pt-4 pb-4 text-center">
+                    <i class="feather-file-text" style="font-size: 48px; display: block; margin-bottom: 10px;"></i>
+                    <h4>This is a text-based lesson.</h4>
+                </div>
+                <hr>
+                <h4>About Lesson</h4>
+                <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+            `;
+        }
 
-    // --- Render everything to the page ---
-    contentContainer.innerHTML = videoHTML + descriptionHTML;
-}
+        // --- 4. Assemble and render the final HTML ---
+        // This structure ensures a consistent layout for both lesson types.
+        const finalHTML = `
+            ${mediaHTML}
+            <div class="content">
+                <div class="section-title">
+                    ${descriptionContentHTML}
+                </div>
+                ${resourcesHTML}
+            </div>
+        `;
+
+        contentContainer.innerHTML = finalHTML;
+    }
 
     // Unchanged functions (renderQuizStartScreen, renderQuizQuestions, etc.)
     function renderQuizStartScreen(quizId) {
