@@ -40913,7 +40913,26 @@ margin: 0 0 0 -10px !important;
 }
 
 
-#lesson-inner-content .rbt-video-player-wrapper {
-  margin-top: -400px !important;
-  overflow: hidden;
+/*
+  This rule adds the default padding for text/quiz lessons.
+*/
+.rbt-lesson-rightsidebar .inner {
+  padding: 50px 0;
+}
+
+/*
+  This rule removes the top gap when a video is present.
+*/
+.rbt-lesson-rightsidebar.lesson-video .inner {
+  padding: 0;
+}
+
+/*
+  THIS IS THE KEY RULE:
+  It lifts the entire content area to a higher "layer" (z-index: 2),
+  which makes the PDF links clickable even when the video overlaps.
+*/
+.rbt-lesson-rightsidebar.lesson-video .content {
+  position: relative;
+  z-index: 2;
 }
