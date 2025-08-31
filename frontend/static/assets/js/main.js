@@ -4009,108 +4009,106 @@ if (window.location.pathname.includes('lesson.html')) {
     // ==================================================================================
     // === FINAL UPDATE WITH FORCEFUL STYLING ===
     // ==================================================================================
-function updateLessonContent(lessonId) {
-    let selectedLesson = null;
-    for (const episode of currentCourseData.episodes) {
-        const found = episode.lessons.find(l => l._id === lessonId);
-        if (found) { selectedLesson = found; break; }
-    }
-    if (!selectedLesson) return;
+    function updateLessonContent(lessonId) {
+        let selectedLesson = null;
+        for (const episode of currentCourseData.episodes) {
+            const found = episode.lessons.find(l => l._id === lessonId);
+            if (found) { selectedLesson = found; break; }
+        }
+        if (!selectedLesson) return;
 
-    document.getElementById('lesson-title').textContent = selectedLesson.title;
-    const contentContainer = document.getElementById('lesson-inner-content');
-    if (!contentContainer) return;
+        document.getElementById('lesson-title').textContent = selectedLesson.title;
+        const contentContainer = document.getElementById('lesson-inner-content');
+        if (!contentContainer) return;
 
-    let finalHTML = '';
-
-    // For video lessons, we create a new wrapper
-    if (selectedLesson.vimeoUrl) {
-        const videoId = selectedLesson.vimeoUrl.split('/').pop();
-        const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+        // **FIX #1: Forcefully remove the top padding from the main container.**
+        contentContainer.style.paddingTop = '0';
         
-        const videoHTML = `
-            <div class="rbt-video-player-wrapper">
-                <div class="plyr__video-embed rbtplayer">
-                    <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
-                </div>
-            </div>
-        `;
+        let finalHTML = '';
 
-        let resourcesHTML = '';
-        if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-            resourcesHTML = `
-                <div class="rbt-lesson-attachments mt--30">
-                    <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                    <ul class="rbt-list-style-1">
-                        ${selectedLesson.exerciseFiles.map(file => `
-                            <li>
-                                <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                                    <i class="feather-paperclip"></i> ${file.filename}
-                                </a>
-                            </li>
-                        `).join('')}
-                    </ul>
+        if (selectedLesson.vimeoUrl) {
+            const videoId = selectedLesson.vimeoUrl.split('/').pop();
+            const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            
+            // **FIX #2: Forcefully add 50px of padding at the bottom of the video wrapper.**
+            // This manually creates space and pushes the content below it down, fixing the overlap.
+            const videoHTML = `
+                <div class="rbt-video-player-wrapper" style="padding-bottom: 50px;">
+                    <div class="plyr__video-embed rbtplayer">
+                        <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
+                    </div>
+                </div>
+            `;
+
+            let resourcesHTML = '';
+            if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
+                resourcesHTML = `
+                    <div class="rbt-lesson-attachments mt--30">
+                        <h5 class="rbt-title-style-3">Lesson Resources</h5>
+                        <ul class="rbt-list-style-1">
+                            ${selectedLesson.exerciseFiles.map(file => `
+                                <li>
+                                    <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
+                                        <i class="feather-paperclip"></i> ${file.filename}
+                                    </a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // z-index is kept as a safeguard for clickability of links further down.
+            const descriptionHTML = `
+                <div class="content" style="position: relative; z-index: 2;">
+                    <div class="section-title">
+                        <h4>About Lesson</h4>
+                        <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+                    </div>
+                    ${resourcesHTML}
+                </div>
+            `;
+            
+            finalHTML = videoHTML + descriptionHTML;
+
+        } else {
+            // Text-Based Lesson (no changes needed here)
+             let resourcesHTML = '';
+             if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
+                resourcesHTML = `
+                    <div class="rbt-lesson-attachments mt--30">
+                        <h5 class="rbt-title-style-3">Lesson Resources</h5>
+                        <ul class="rbt-list-style-1">
+                            ${selectedLesson.exerciseFiles.map(file => `
+                                <li>
+                                    <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
+                                        <i class="feather-paperclip"></i> ${file.filename}
+                                    </a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            finalHTML = `
+                <div class="content">
+                    <div class="no-video-placeholder p-5 text-center">
+                        <i class="feather-file-text" style="font-size: 48px;"></i>
+                        <h4>This is a text-based lesson.</h4>
+                    </div>
+                    <hr>
+                    <div class="section-title">
+                        <h4>About Lesson</h4>
+                        <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
+                    </div>
+                    ${resourcesHTML}
                 </div>
             `;
         }
         
-        // IMPORTANT: The inline style="...z-index..." is removed from your original div.
-        const descriptionHTML = `
-            <div class="content">
-                <div class="section-title">
-                    <h4>About Lesson</h4>
-                    <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
-                </div>
-                ${resourcesHTML}
-            </div>
-        `;
-        
-        // We wrap both blocks in our new parent div
-        finalHTML = `
-            <div id="lesson-content-block">
-                ${videoHTML}
-                ${descriptionHTML}
-            </div>
-        `;
-
-    } else {
-        // Text-Based Lesson (no changes needed here)
-        // ... (The text lesson logic remains the same)
-        let resourcesHTML = '';
-        if (selectedLesson.exerciseFiles && selectedLesson.exerciseFiles.length > 0) {
-            resourcesHTML = `
-                <div class="rbt-lesson-attachments mt--30">
-                    <h5 class="rbt-title-style-3">Lesson Resources</h5>
-                    <ul class="rbt-list-style-1">
-                        ${selectedLesson.exerciseFiles.map(file => `
-                            <li>
-                                <a href="#" class="lesson-pdf-link" data-file-path="/${file.path}" data-file-name="${file.filename}">
-                                    <i class="feather-paperclip"></i> ${file.filename}
-                                </a>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-            `;
-        }
-        finalHTML = `
-            <div class="content">
-                <div class="no-video-placeholder p-5 text-center">
-                    <i class="feather-file-text" style="font-size: 48px;"></i>
-                    <h4>This is a text-based lesson.</h4>
-                </div>
-                <hr>
-                <div class="section-title">
-                    <h4>About Lesson</h4>
-                    <p>${selectedLesson.summary || 'No summary available for this lesson.'}</p>
-                </div>
-                ${resourcesHTML}
-            </div>
-        `;
+        contentContainer.innerHTML = finalHTML;
     }
-    
-    contentContainer.innerHTML = finalHTML;
-}
 
 
     // ... All other helper functions (renderQuizStartScreen, setupNavigation, etc.) remain unchanged ...
