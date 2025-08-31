@@ -40914,18 +40914,17 @@ margin: 0 0 0 -10px !important;
 
 
 /*
-  Step 1: Use your working fix to pull the video UP into the correct position.
-  We target the player's direct container.
+  RULE 1: Your working fix to pull the video UP by 400px.
+  This targets the video's container.
 */
-#lesson-inner-content .plyr__video-embed {
+#lesson-inner-content .rbt-video-player-wrapper {
   margin-top: -400px !important;
 }
 
-
 /*
-  Step 2: Force the text content DOWN to make space for the video above it.
+  RULE 2: The new fix to push the text DOWN by 400px.
+  This targets the text's container and moves it below the video.
 */
 #lesson-inner-content .content {
-  padding-top: 500px;
-  background-color: #121212; /* IMPORTANT: Match your dark theme background color */
+  margin-top: 400px !important;;
 }
