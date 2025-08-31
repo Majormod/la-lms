@@ -5474,18 +5474,13 @@ const handleReviewSubmit = async (event) => {
                 </ul>`;
         };
 
-const renderCourseCurriculum = (episodes) => {
+        const renderCourseCurriculum = (episodes) => {
             const container = document.querySelector('#coursecontent .accordion');
             if (!container) return;
-
-            // Get courseId from the URL parameters, which is available in this scope
-            const urlParams = new URLSearchParams(window.location.search);
-            const courseId = urlParams.get('courseId');
-
             container.innerHTML = episodes.map((episode, index) => {
                 const lessonsHtml = episode.lessons.map(lesson => `
                     <li>
-                        <a href="lesson.html?courseId=${courseId}&lessonId=${lesson._id}">
+                        <a href="#">
                             <div class="course-content-left">
                                 <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
                             </div>
@@ -5613,7 +5608,6 @@ const populateInstructor = (instructor) => {
         });
     });
 }
-
 // --- INTERACTIVE STAR RATING LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
     const ratingContainer = document.querySelector('.review-form-rating');
@@ -5764,5 +5758,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 })(window, document, jQuery);
-
-// v6.5.5
