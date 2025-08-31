@@ -5382,36 +5382,36 @@ const handleReviewSubmit = async (event) => {
                 </ul>`;
         };
 
-const renderCourseCurriculum = (episodes) => {
-    const container = document.querySelector('#coursecontent .accordion');
-    if (!container) return;
-    container.innerHTML = episodes.map((episode, index) => {
-        const lessonsHtml = episode.lessons.map(lesson => `
-            <li>
-                <a href="#" data-lesson-id="${lesson._id}">
-                    <div class="course-content-left">
-                        <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
-                    </div>
-                    <div class="course-content-right">
-                        <span class="min-lable">${lesson.duration || ''}</span>
-                    </div>
-                </a>
-            </li>`).join('');
-        return `
-            <div class="accordion-item card">
-                <h2 class="accordion-header card-header" id="heading-${index}">
-                    <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
-                        ${episode.title}
-                    </button>
-                </h2>
-                <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
-                    <div class="accordion-body card-body pr--0">
-                        <ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul>
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
-};
+        const renderCourseCurriculum = (episodes) => {
+            const container = document.querySelector('#coursecontent .accordion');
+            if (!container) return;
+            container.innerHTML = episodes.map((episode, index) => {
+                const lessonsHtml = episode.lessons.map(lesson => `
+                    <li>
+                        <a href="#">
+                            <div class="course-content-left">
+                                <i class="feather-play-circle"></i> <span class="text">${lesson.title}</span>
+                            </div>
+                            <div class="course-content-right">
+                                <span class="min-lable">${lesson.duration || ''}</span>
+                            </div>
+                        </a>
+                    </li>`).join('');
+                return `
+                    <div class="accordion-item card">
+                        <h2 class="accordion-header card-header" id="heading-${index}">
+                            <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                                ${episode.title}
+                            </button>
+                        </h2>
+                        <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                            <div class="accordion-body card-body pr--0">
+                                <ul class="rbt-course-main-content liststyle">${lessonsHtml}</ul>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        };
         
         const populateMainContent = (course) => {
             const overviewContainer = document.querySelector('#overview .rbt-course-feature-inner');
@@ -5495,15 +5495,6 @@ const populateInstructor = (instructor) => {
             populateBanner(course);
             populateMainContent(course);
             renderCourseCurriculum(course.episodes || []);
-            // Add this after renderCourseCurriculum(...)
-document.querySelector('#coursecontent').addEventListener('click', (e) => {
-    const link = e.target.closest('a[data-lesson-id]');
-    if (link) {
-        e.preventDefault();
-        const lessonId = link.dataset.lessonId;
-        window.location.href = `lesson.html?courseId=${courseId}&lessonId=${lessonId}`;
-    }
-});
             populateInstructor(course.instructor);
             // You can add a populateSidebar(course) function here as well if needed
             // --- ADD THIS NEW LOGIC ---
