@@ -4129,6 +4129,12 @@ if (window.location.pathname.includes('lesson.html')) {
             const id = link.dataset.id;
             const type = link.dataset.type;
             const url = new URL(window.location);
+            // Add this to update the checkmark
+const checkSpan = link.querySelector('.rbt-check');
+if (checkSpan) {
+    checkSpan.classList.remove('unread');
+    checkSpan.innerHTML = '<i class="feather-check"></i>';
+}
             url.searchParams.set(type === 'lesson' ? 'lessonId' : 'quizId', id);
             if (type === 'lesson') url.searchParams.delete('quizId');
             else url.searchParams.delete('lessonId');
