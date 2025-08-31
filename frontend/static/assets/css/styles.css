@@ -40911,7 +40911,11 @@ margin: 0 0 0 -10px !important;
 .rbt-lesson-attachments .feather-paperclip {
 
 }
-
+* Pragmatic override for stubborn video player script */
+.rbt-video-player-wrapper {
+  margin-top: -400px !important;
+  overflow: hidden;
+}
 .rbt-lesson-rightsidebar {
   justify-content: flex-start !important;
 }
