@@ -40907,3 +40907,12 @@ font-size: 17px;
 font-size: 10px;
 margin: 0 0 0 -10px !important;
 }
+
+.rbt-lesson-attachments .feather-paperclip {
+
+}
+
+/* Example: If you found the .inner div has unwanted padding */
+.rbt-lesson-rightsidebar .inner {
+  padding-top: 0 !important;
+}
