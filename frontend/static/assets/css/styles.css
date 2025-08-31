@@ -40912,7 +40912,9 @@ margin: 0 0 0 -10px !important;
 
 }
 
-/* Example: If you found the .inner div has unwanted padding */
+.rbt-lesson-rightsidebar {
+  justify-content: flex-start !important;
+}
 .rbt-lesson-rightsidebar .inner {
   padding-top: 0 !important;
 }
