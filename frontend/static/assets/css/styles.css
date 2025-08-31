@@ -40913,7 +40913,7 @@ margin: 0 0 0 -10px !important;
 }
 
 
-.player.right-content-area-supported {
-overflow: hidden;
-margin: -400px 0 0 0 !important;
+#lesson-inner-content .rbt-video-player-wrapper {
+  margin-top: -400px !important;
+  overflow: hidden;
 }
