@@ -33595,7 +33595,7 @@ padding: 0 10px 0 10px;
   display: flex;
 }
 .rbt-lesson-rightsidebar .inner {
-  padding: 0;
+  padding: 50px 0;
 }
 @media only screen and (min-width: 768px) and (max-width: 991px) {
   .rbt-lesson-rightsidebar .inner {
@@ -40913,18 +40913,7 @@ margin: 0 0 0 -10px !important;
 }
 
 
-/*
-  RULE 1: Your working fix to pull the video UP by 400px.
-  This targets the video's container.
-*/
 #lesson-inner-content .rbt-video-player-wrapper {
   margin-top: -400px !important;
-}
-
-/*
-  RULE 2: The new fix to push the text DOWN by 400px.
-  This targets the text's container and moves it below the video.
-*/
-#lesson-inner-content .content {
-  margin-top: 400px !important;;
+  overflow: hidden;
 }
