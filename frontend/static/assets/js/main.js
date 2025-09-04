@@ -1174,55 +1174,8 @@ document.addEventListener('click', async (e) => {
     }
 });
 
-// REPLACE your current, simple Cart.updateUI function with this one.
-
-Cart.updateUI: function() {
-    const cart = this.get();
-
-    // 1. Update header mini-cart count
-    document.querySelectorAll('.rbt-cart-count').forEach(el => {
-        el.textContent = cart.length;
-    });
-
-    // 2. Update the slide-out mini-cart's content
-    const miniCartWrapper = document.querySelector('.rbt-minicart-wrapper');
-    const miniCartFooter = document.querySelector('.rbt-minicart-footer');
-
-    if (miniCartWrapper && miniCartFooter) {
-        if (cart.length === 0) {
-            miniCartWrapper.innerHTML = '<p class="text-center mt--20">Your cart is empty.</p>';
-            miniCartFooter.style.display = 'none'; // Hide footer if cart is empty
-        } else {
-            let subtotal = 0;
-            miniCartWrapper.innerHTML = ''; // Clear any static items
-
-            cart.forEach(item => {
-                subtotal += item.price;
-                const itemHtml = `
-                    <li class="minicart-item">
-                        <div class="thumbnail">
-                            <a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a>
-                        </div>
-                        <div class="product-content">
-                            <h6 class="title"><a href="${item.url}">${item.title}</a></h6>
-                            <span class="quantity">1 * <span class="price">₹${item.price.toLocaleString('en-IN')}</span></span>
-                        </div>
-                        <div class="close-btn">
-                            <button class="rbt-round-btn remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></button>
-                        </div>
-                    </li>`;
-                miniCartWrapper.innerHTML += itemHtml;
-            });
-
-            // 3. Update the subtotal and show the footer
-            miniCartFooter.style.display = 'block';
-            const subtotalElement = miniCartFooter.querySelector('.rbt-cart-subttotal .price');
-            if (subtotalElement) {
-                subtotalElement.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
-            }
-        }
-    }
-}
+// Immediately update the UI on every page load to show the correct cart count.
+Cart.updateUI();
 
 // ===== END: Shopping Cart Logic =====
 
