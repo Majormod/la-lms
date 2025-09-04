@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth'); // Your JWT auth middleware
+const auth = require('../authMiddleware');
 const { createOrder, verifyPayment } = require('../controllers/paymentController');
 
 // @route   POST api/payment/create-order
