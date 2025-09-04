@@ -1118,14 +1118,55 @@ const Cart = {
     /**
      * Updates the cart count in the website header.
      */
-    updateUI: function() {
-        const cart = this.get();
-        const cartCountElements = document.querySelectorAll('.rbt-cart-count');
-        
-        cartCountElements.forEach(el => {
-            el.textContent = cart.length;
-        });
+// This is the corrected version.
+
+updateUI: function() {
+    const cart = this.get();
+
+    // 1. Update header mini-cart count
+    document.querySelectorAll('.rbt-cart-count').forEach(el => {
+        el.textContent = cart.length;
+    });
+
+    // 2. Update the slide-out mini-cart's content
+    const miniCartWrapper = document.querySelector('.rbt-minicart-wrapper');
+    const miniCartFooter = document.querySelector('.rbt-minicart-footer');
+
+    if (miniCartWrapper && miniCartFooter) {
+        if (cart.length === 0) {
+            miniCartWrapper.innerHTML = '<p class="text-center mt--20">Your cart is empty.</p>';
+            miniCartFooter.style.display = 'none';
+        } else {
+            let subtotal = 0;
+            miniCartWrapper.innerHTML = '';
+
+            cart.forEach(item => {
+                subtotal += item.price;
+                const itemHtml = `
+                    <li class="minicart-item">
+                        <div class="thumbnail">
+                            <a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a>
+                        </div>
+                        <div class="product-content">
+                            <h6 class="title"><a href="${item.url}">${item.title}</a></h6>
+                            <span class="quantity">1 * <span class="price">₹${item.price.toLocaleString('en-IN')}</span></span>
+                        </div>
+                        <div class="close-btn">
+                            <button class="rbt-round-btn remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></button>
+                        </div>
+                    </li>`;
+                miniCartWrapper.innerHTML += itemHtml;
+            });
+            
+            // 3. Update the subtotal and show the footer
+            miniCartFooter.style.display = 'block';
+            const subtotalElement = miniCartFooter.querySelector('.rbt-cart-subttotal .price');
+            if (subtotalElement) {
+                subtotalElement.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            }
+        }
     }
+} // The trailing comma that caused the error is now removed.
 };
 
 // --- Add to Cart Event Listener (using Event Delegation) ---
