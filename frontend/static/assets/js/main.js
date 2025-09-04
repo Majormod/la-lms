@@ -1222,7 +1222,7 @@ updateUI: function() {
             }
         }
     }
-},
+}
 
 // ===== END: Shopping Cart Logic =====
 
