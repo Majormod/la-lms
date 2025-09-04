@@ -1174,8 +1174,55 @@ document.addEventListener('click', async (e) => {
     }
 });
 
-// Immediately update the UI on every page load to show the correct cart count.
-Cart.updateUI();
+// REPLACE your current, simple Cart.updateUI function with this one.
+
+updateUI: function() {
+    const cart = this.get();
+
+    // 1. Update header mini-cart count
+    document.querySelectorAll('.rbt-cart-count').forEach(el => {
+        el.textContent = cart.length;
+    });
+
+    // 2. Update the slide-out mini-cart's content
+    const miniCartWrapper = document.querySelector('.rbt-minicart-wrapper');
+    const miniCartFooter = document.querySelector('.rbt-minicart-footer');
+
+    if (miniCartWrapper && miniCartFooter) {
+        if (cart.length === 0) {
+            miniCartWrapper.innerHTML = '<p class="text-center mt--20">Your cart is empty.</p>';
+            miniCartFooter.style.display = 'none'; // Hide footer if cart is empty
+        } else {
+            let subtotal = 0;
+            miniCartWrapper.innerHTML = ''; // Clear any static items
+
+            cart.forEach(item => {
+                subtotal += item.price;
+                const itemHtml = `
+                    <li class="minicart-item">
+                        <div class="thumbnail">
+                            <a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a>
+                        </div>
+                        <div class="product-content">
+                            <h6 class="title"><a href="${item.url}">${item.title}</a></h6>
+                            <span class="quantity">1 * <span class="price">₹${item.price.toLocaleString('en-IN')}</span></span>
+                        </div>
+                        <div class="close-btn">
+                            <button class="rbt-round-btn remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></button>
+                        </div>
+                    </li>`;
+                miniCartWrapper.innerHTML += itemHtml;
+            });
+
+            // 3. Update the subtotal and show the footer
+            miniCartFooter.style.display = 'block';
+            const subtotalElement = miniCartFooter.querySelector('.rbt-cart-subttotal .price');
+            if (subtotalElement) {
+                subtotalElement.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            }
+        }
+    }
+},
 
 // ===== END: Shopping Cart Logic =====
 
@@ -5348,51 +5395,6 @@ if (window.location.pathname.includes('instructor-announcements.html')) {
 // main.js
 
 if (window.location.pathname.includes('the-masterclass-details.html')) {
-    // --- Add to Cart Event Listener (using Event Delegation) ---
-document.addEventListener('click', async (e) => {
-    // Check if the clicked element is the "Add to Cart" button
-    const addToCartButton = e.target.closest('.add-to-card-button a');
-
-    // If it's not the button we're looking for, do nothing
-    if (!addToCartButton) {
-        return;
-    }
-
-    // If it IS the button, prevent its default link behavior and run our logic
-    e.preventDefault();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
-
-    if (courseId) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
-            const result = await response.json();
-
-            if (result.success) {
-                const course = result.course;
-                const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`;
-                
-                if (course.price > 0) {
-                    const cartItem = {
-                        id: course._id,
-                        title: course.title,
-                        price: course.price,
-                        thumbnail: course.thumbnail,
-                        url: detailPageUrl
-                    };
-                    Cart.add(cartItem);
-                    alert(`"${course.title}" was added to your cart!`);
-                } else {
-                    alert('This is a free course. Free enrollment will be handled separately.');
-                }
-            }
-        } catch (error) {
-            console.error("Error adding course to cart:", error);
-            alert('Could not add course to cart. Please try again.');
-        }
-    }
-});
 
 loadCoursePage('MasterClass');
     // --- DYNAMIC REVIEW SECTION ---
