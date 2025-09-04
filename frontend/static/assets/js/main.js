@@ -1176,7 +1176,7 @@ document.addEventListener('click', async (e) => {
 
 // REPLACE your current, simple Cart.updateUI function with this one.
 
-updateUI: function() {
+Cart.updateUI: function() {
     const cart = this.get();
 
     // 1. Update header mini-cart count
