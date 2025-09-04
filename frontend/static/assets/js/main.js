@@ -1079,6 +1079,59 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 // main.js
+// ===== START: Shopping Cart Logic =====
+
+const Cart = {
+    /**
+     * Retrieves the cart from localStorage.
+     * @returns {Array} The cart items.
+     */
+    get: function() {
+        return JSON.parse(localStorage.getItem('lmsCart') || '[]');
+    },
+
+    /**
+     * Saves the cart to localStorage and updates the UI.
+     * @param {Array} cart - The cart array to save.
+     */
+    save: function(cart) {
+        localStorage.setItem('lmsCart', JSON.stringify(cart));
+        this.updateUI();
+    },
+
+    /**
+     * Adds an item to the cart if it's not already there.
+     * @param {object} item - The course item to add.
+     */
+    add: function(item) {
+        let cart = this.get();
+        const existingItem = cart.find(cartItem => cartItem.id === item.id);
+        if (!existingItem) {
+            cart.push(item);
+            this.save(cart);
+            // We'll add a success message in a later step.
+        } else {
+            // Item is already in the cart.
+        }
+    },
+    
+    /**
+     * Updates the cart count in the website header.
+     */
+    updateUI: function() {
+        const cart = this.get();
+        const cartCountElements = document.querySelectorAll('.rbt-cart-count');
+        
+        cartCountElements.forEach(el => {
+            el.textContent = cart.length;
+        });
+    }
+};
+
+// Immediately update the UI on every page load to show the correct cart count.
+Cart.updateUI();
+
+// ===== END: Shopping Cart Logic =====
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Global Header Search Handler ---
