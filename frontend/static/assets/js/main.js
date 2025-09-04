@@ -3613,7 +3613,45 @@ if (window.location.pathname.includes('course-details.html')) {
         const lessons = episode.lessons ? episode.lessons.map(item => ({ ...item, type: 'lesson' })) : [];
         const quizzes = episode.quizzes ? episode.quizzes.map(item => ({ ...item, type: 'quiz' })) : [];
         const contents = [...lessons, ...quizzes];
+// --- Add to Cart Event Listener ---
+const addToCartButton = document.querySelector('.add-to-card-button a');
+if (addToCartButton) {
+    addToCartButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
 
+        if (courseId) {
+            try {
+                // Fetch the latest course data to ensure price is correct
+                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const course = result.course;
+                    const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`;
+                    
+                    if (course.price > 0) {
+                        const cartItem = {
+                            id: course._id,
+                            title: course.title,
+                            price: course.price,
+                            thumbnail: course.thumbnail,
+                            url: detailPageUrl
+                        };
+                        Cart.add(cartItem);
+                        alert(`"${course.title}" was added to your cart!`);
+                    } else {
+                        alert('This is a free course. Free enrollment will be handled separately.');
+                    }
+                }
+            } catch (error) {
+                console.error("Error adding course to cart:", error);
+                alert('Could not add course to cart. Please try again.');
+            }
+        }
+    });
+}
         if (contents.length === 0) {
             return '<p class="text-muted ps-4">No content in this topic yet.</p>';
         }
