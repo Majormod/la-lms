@@ -1079,6 +1079,90 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
 // main.js
+// ===== START: E-COMMERCE & CART LOGIC =====
+
+const Cart = {
+    get: function() {
+        return JSON.parse(localStorage.getItem('lmsCart') || '[]');
+    },
+    save: function(cart) {
+        localStorage.setItem('lmsCart', JSON.stringify(cart));
+        this.updateUI();
+    },
+    add: function(item) {
+        let cart = this.get();
+        const existingItem = cart.find(cartItem => cartItem.id === item.id);
+        if (!existingItem) {
+            cart.push(item);
+            this.save(cart);
+            alert(`"${item.title}" has been added to your cart.`);
+        } else {
+            alert(`"${item.title}" is already in your cart.`);
+        }
+    },
+    remove: function(itemId) {
+        let cart = this.get().filter(item => item.id !== itemId);
+        this.save(cart);
+    },
+    clear: function() {
+        localStorage.removeItem('lmsCart');
+        this.updateUI();
+    },
+    updateUI: function() {
+        const cart = this.get();
+        // Update header mini-cart count
+        document.querySelectorAll('.rbt-cart-count').forEach(el => {
+            el.textContent = cart.length;
+        });
+
+        // Update the slide-out mini-cart
+        const miniCartWrapper = document.querySelector('.rbt-minicart-wrapper');
+        const miniCartFooter = document.querySelector('.rbt-minicart-footer');
+
+        if (miniCartWrapper && miniCartFooter) {
+            if (cart.length === 0) {
+                miniCartWrapper.innerHTML = '<p class="text-center mt--20">Your cart is empty.</p>';
+                miniCartFooter.style.display = 'none';
+            } else {
+                let subtotal = 0;
+                miniCartWrapper.innerHTML = ''; // Clear it first
+                cart.forEach(item => {
+                    subtotal += item.price;
+                    const itemHtml = `
+                        <li class="minicart-item">
+                            <div class="thumbnail"><a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a></div>
+                            <div class="product-content">
+                                <h6 class="title"><a href="${item.url}">${item.title}</a></h6>
+                                <span class="quantity">1 * <span class="price">₹${item.price.toLocaleString('en-IN')}</span></span>
+                            </div>
+                            <div class="close-btn">
+                                <button class="rbt-round-btn remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></button>
+                            </div>
+                        </li>`;
+                    miniCartWrapper.innerHTML += itemHtml;
+                });
+
+                miniCartFooter.style.display = 'block';
+                miniCartFooter.querySelector('.rbt-cart-subttotal .price').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            }
+        }
+    }
+};
+
+// Listen for clicks on remove buttons within the mini-cart
+document.addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.remove-from-cart-btn');
+    if(removeBtn) {
+        e.preventDefault();
+        const itemId = removeBtn.dataset.itemId;
+        Cart.remove(itemId);
+    }
+});
+
+// Initial UI update on page load
+Cart.updateUI();
+
+// ===== END: E-COMMERCE & CART LOGIC =====
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Global Header Search Handler ---
@@ -1152,6 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.triggerExerciseFileUpload = function() {
     document.getElementById('lesson-exercise-file').click();
 }
+// REPLACE your old function with this NEW version
 function loadCoursePage(pageType) {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -1159,44 +1244,72 @@ function loadCoursePage(pageType) {
         document.body.innerHTML = '<h1>Error: Course ID not found.</h1>';
         return;
     }
+    
+    // --- NEW: Get user and enrollment status ---
+    const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+    const enrolledCourseIds = new Set((user.enrolledCourses || []).map(course => course._id || course));
+    const isEnrolled = enrolledCourseIds.has(courseId);
 
+    // This function now correctly checks for enrollment
     const renderCurriculumWithLinks = (episodes) => {
         const container = document.querySelector('#coursecontent .accordion');
         if (!container) return;
 
         container.innerHTML = (episodes || []).map((episode, index) => {
-            // Combine lessons and quizzes
             const lessons = episode.lessons ? episode.lessons.map(item => ({ ...item, type: 'lesson' })) : [];
             const quizzes = episode.quizzes ? episode.quizzes.map(item => ({ ...item, type: 'quiz' })) : [];
             const contents = [...lessons, ...quizzes];
+            
+            // --- NEW: Logic to disable the main topic header ---
+            const isDisabled = isEnrolled ? '' : 'disabled';
+            const lockIcon = isEnrolled ? '' : '<i class="feather-lock rbt-badge-5 ml--10"></i>';
+            const dataBsToggle = isEnrolled ? `data-bs-toggle="collapse"` : '';
 
             const itemsHtml = contents.map(content => {
                 const isLesson = content.type === 'lesson';
                 const icon = isLesson ? (content.vimeoUrl ? 'play-circle' : 'file-text') : 'help-circle';
                 const link = `lesson.html?courseId=${courseId}&${isLesson ? 'lessonId' : 'quizId'}=${content._id}`;
                 const duration = isLesson ? (content.duration || '') : `${content.questions.length} Questions`;
-
-                return `
-                    <li>
-                        <a href="${link}" class="curriculum-content-link">
-                            <div class="course-content-left">
-                                <i class="feather-${icon}"></i> <span class="text">${content.title}</span>
-                            </div>
-                            <div class="course-content-right">
-                                <span class="min-lable">${duration}</span>
-                            </div>
-                        </a>
-                    </li>`;
+                
+                // Logic for individual lesson links
+                if (isEnrolled || content.isPreview) {
+                    return `
+                        <li>
+                            <a href="${link}" class="curriculum-content-link">
+                                <div class="course-content-left">
+                                    <i class="feather-${icon}"></i> <span class="text">${content.title}</span>
+                                </div>
+                                <div class="course-content-right">
+                                    <span class="min-lable">${duration}</span>
+                                    ${content.isPreview ? '<span class="rbt-badge-5 bg-primary-opacity">Preview</span>' : ''}
+                                </div>
+                            </a>
+                        </li>`;
+                } else {
+                    return `
+                        <li class="locked">
+                            <a href="#" class="curriculum-content-link disabled">
+                                <div class="course-content-left">
+                                    <i class="feather-${icon}"></i> <span class="text">${content.title}</span>
+                                </div>
+                                <div class="course-content-right">
+                                    <span class="min-lable">${duration}</span>
+                                    <i class="feather-lock lock-icon"></i>
+                                </div>
+                            </a>
+                        </li>`;
+                }
             }).join('');
 
             return `
                 <div class="accordion-item card">
                     <h2 class="accordion-header card-header" id="heading-${index}">
-                        <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                        <button class="accordion-button collapsed" type="button" ${dataBsToggle} data-bs-target="#collapse-${index}" ${isDisabled}>
                             ${episode.title}
+                            ${lockIcon}
                         </button>
                     </h2>
-                    <div id="collapse-${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}">
+                    <div id="collapse-${index}" class="accordion-collapse collapse">
                         <div class="accordion-body card-body pr--0">
                             <ul class="rbt-course-main-content liststyle">${itemsHtml}</ul>
                         </div>
@@ -1210,8 +1323,8 @@ function loadCoursePage(pageType) {
         .then(result => {
             if (result.success) {
                 const course = result.course;
-                renderCurriculumWithLinks(course.episodes || []);
-                // ... (your other functions to populate the page can go here)
+                // This function will now automatically handle the lock icons
+                renderCurriculumWithLinks(course.episodes || []); 
             } else { throw new Error(result.message); }
         })
         .catch(error => { console.error(`Error fetching details for ${pageType}:`, error); });
@@ -3614,41 +3727,48 @@ if (window.location.pathname.includes('course-details.html')) {
      * MODIFIED: This function builds the entire accordion using the new helper function.
      * This replaces your old 'renderCourseContent' function.
      */
-    function renderCourseContent(episodes, courseId) {
-        const accordionContainer = document.querySelector('#coursecontent .rbt-accordion-02.accordion');
-        if (!accordionContainer || !episodes) {
-            return;
-        }
-
-        accordionContainer.innerHTML = ''; // Clear existing static content
-
-        episodes.forEach((episode, index) => {
-            const episodeElement = document.createElement('div');
-            episodeElement.className = 'accordion-item card';
-            
-            const lessonCount = episode.lessons ? episode.lessons.length : 0;
-            const quizCount = episode.quizzes ? episode.quizzes.length : 0;
-            const totalContentCount = lessonCount + quizCount;
-            
-            episodeElement.innerHTML = `
-                <h2 class="accordion-header card-header" id="headingTwo${index}">
-                    <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo${index}" aria-expanded="${index === 0}">
-                        <div class="title-summary-wrapper">
-                            <span>${episode.title}</span>
-                            ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
-                        </div>
-                        <span class="rbt-badge-5 ml--10">${totalContentCount} Item${totalContentCount !== 1 ? 's' : ''}</span>
-                    </button>
-                </h2>
-                <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="headingTwo${index}">
-                    <div class="accordion-body card-body pr--0">
-                        ${renderEpisodeContents(episode, courseId)}
-                    </div>
-                </div>
-            `;
-            accordionContainer.appendChild(episodeElement);
-        });
+function renderCourseContent(episodes, courseId, isEnrolled) { // <-- Added isEnrolled parameter
+    const accordionContainer = document.querySelector('#coursecontent .rbt-accordion-02.accordion');
+    if (!accordionContainer || !episodes) {
+        return;
     }
+
+    accordionContainer.innerHTML = ''; // Clear existing static content
+
+    episodes.forEach((episode, index) => {
+        const episodeElement = document.createElement('div');
+        episodeElement.className = 'accordion-item card';
+        
+        const lessonCount = episode.lessons ? episode.lessons.length : 0;
+        const quizCount = episode.quizzes ? episode.quizzes.length : 0;
+        const totalContentCount = lessonCount + quizCount;
+
+        // --- NEW LOGIC IS HERE ---
+        const isDisabled = isEnrolled ? '' : 'disabled';
+        const lockIcon = isEnrolled ? '' : '<i class="feather-lock rbt-badge-5 ml--10"></i>';
+        const dataBsToggle = isEnrolled ? `data-bs-toggle="collapse"` : '';
+        // --- END NEW LOGIC ---
+
+        episodeElement.innerHTML = `
+            <h2 class="accordion-header card-header" id="headingTwo${index}">
+                <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" ${dataBsToggle} data-bs-target="#collapseTwo${index}" aria-expanded="${index === 0}" ${isDisabled}>
+                    <div class="title-summary-wrapper">
+                        <span>${episode.title}</span>
+                        ${episode.summary ? `<small class="text-muted">${episode.summary}</small>` : ''}
+                    </div>
+                    <span class="rbt-badge-5 ml--10">${totalContentCount} Item${totalContentCount !== 1 ? 's' : ''}</span>
+                    ${lockIcon}
+                </button>
+            </h2>
+            <div id="collapseTwo${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="headingTwo${index}">
+                <div class="accordion-body card-body pr--0">
+                    ${renderEpisodeContents(episode, courseId)}
+                </div>
+            </div>
+        `;
+        accordionContainer.appendChild(episodeElement);
+    });
+}
 
     // REPLACE the placeholder 'renderPaginationControls' with this full function
     const renderPaginationControls = (pagination, container) => {
@@ -3711,7 +3831,48 @@ const checkEnrollmentAndHandleReviewForm = async () => {
         // ==========================================================
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
+// Add this logic to BOTH 'course-details.html' and 'the-masterclass-details.html' blocks
 
+// --- Add to Cart Event Listener ---
+const sidebarButtonContainer = document.querySelector('.course-sidebar .add-to-card-button');
+if (sidebarButtonContainer) {
+    sidebarButtonContainer.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+
+        if (courseId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`);
+                const result = await response.json();
+                if (result.success) {
+                    const course = result.course;
+                    
+                    // For free courses, we can handle enrollment differently later.
+                    // For now, let's focus on adding paid courses to the cart.
+                    if (course.price > 0) {
+                        const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`;
+
+                        const cartItem = {
+                            id: course._id,
+                            title: course.title,
+                            price: course.price,
+                            thumbnail: course.thumbnail,
+                            url: detailPageUrl
+                        };
+                        Cart.add(cartItem);
+                    } else {
+                        // Logic for free enrollment can be added here
+                        alert('This is a free course. Enrollment will be handled differently.');
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching course data to add to cart:", error);
+                alert('Could not add course to cart. Please try again.');
+            }
+        }
+    });
+}
 
         
 // Render Review Design

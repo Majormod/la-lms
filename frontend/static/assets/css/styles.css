@@ -40953,3 +40953,8 @@ margin: 0 0 0 -10px !important;
   height: 100%;
   border: 0;
 }
+/* It will prevent the click cursor and fade the button slightly. */
+.accordion-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
