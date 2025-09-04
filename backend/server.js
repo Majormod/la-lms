@@ -21,7 +21,6 @@ const staticPath = path.join(__dirname, '../frontend/static');
 const User = require('./models/User');
 const Course = require('./models/Course');
 const auth = require('./authMiddleware');
-const paymentRoutes = require('./routes/paymentRoutes');
 const QuizResult = require('./models/QuizResult');
 const Review = require('./models/Review');
 const Announcement = require('./models/Announcement'); 
