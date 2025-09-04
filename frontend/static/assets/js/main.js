@@ -5850,4 +5850,4 @@ function setupSidebarClickHandler() {
 
 })(window, document, jQuery);
 
-// v9.0.0
+// v9.0.3
