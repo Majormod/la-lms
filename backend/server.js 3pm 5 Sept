@@ -547,17 +547,10 @@ app.get('/api/courses', async (req, res) => {
 // PUBLIC: For the course-details.html page (Preview)
 // In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
 // (You may need to merge this with your existing route for course details)
-// In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
 
 app.get('/api/courses/:id', async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id)
-            .populate('instructor')
-            .populate({
-                path: 'episodes',
-                populate: { path: 'lessons quizzes' }
-            });
-
+        const course = await Course.findById(req.params.id).populate('instructor');
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
@@ -567,25 +560,22 @@ app.get('/api/courses/:id', async (req, res) => {
 
         if (token) {
             try {
-                // We don't need to block the request if the token is invalid,
-                // just treat the user as not logged in.
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 const user = await User.findById(decoded.user.id);
-                // Check if the user's enrolledCourses array contains this course's ID
-                if (user && user.enrolledCourses.map(id => id.toString()).includes(course._id.toString())) {
+                if (user && user.enrolledCourses.includes(course._id)) {
                     isEnrolled = true;
                 }
             } catch (e) {
-                // Token is invalid or expired; user is not enrolled.
+                // Invalid token, just treat as not enrolled
                 isEnrolled = false;
             }
         }
 
-        // Send back the course data PLUS the new isEnrolled flag
+        // Send back the course data PLUS the enrollment status
         res.json({ success: true, course, isEnrolled });
 
     } catch (error) {
-        console.error('Error fetching course details:', error.message);
+        console.error(error.message);
         res.status(500).send('Server Error');
     }
 });

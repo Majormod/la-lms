@@ -302,5 +302,79 @@ if (path.includes('checkout.html')) {
     });
 }
 
+// Add this new block to ecommerce.js for the details pages
+
+// In ecommerce.js, REPLACE the block for the details pages with this one.
+
+if (path.includes('course-details.html') || path.includes('the-masterclass-details.html')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    const token = localStorage.getItem('lmsToken');
+
+    if (courseId) {
+        fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
+            headers: { 'x-auth-token': token } // Send the token to get enrollment status
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const course = data.course;
+                const isEnrolled = data.isEnrolled; // Get the new flag from the API
+                const curriculumContainer = document.querySelector('#coursecontent .accordion');
+
+                if (curriculumContainer) {
+                    curriculumContainer.innerHTML = ''; // Clear static content
+                    course.episodes.forEach((episode, index) => {
+                        const allContents = [
+                            ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
+                            ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' }))
+                        ];
+
+                        const contentHtml = allContents.map(content => {
+                            const isLesson = content.type === 'lesson';
+                            const link = `lesson.html?courseId=${course._id}&${isLesson ? 'lessonId' : 'quizId'}=${content._id}`;
+                            const iconClass = isLesson ? 'feather-play-circle' : 'feather-help-circle';
+                            const lockIcon = '<i class="feather-lock lock-icon rbt-badge-5 ml--10"></i>';
+
+                            if (isEnrolled || content.isPreview) {
+                                return `
+                                    <li>
+                                        <a href="${link}">
+                                            <div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div>
+                                            <div class="course-content-right"><span class="min-lable">${isLesson ? content.duration || '' : `${content.questions.length} Qs`}</span></div>
+                                        </a>
+                                    </li>`;
+                            } else {
+                                return `
+                                    <li class="locked">
+                                        <a href="#" class="disabled">
+                                            <div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div>
+                                            <div class="course-content-right">${lockIcon}</div>
+                                        </a>
+                                    </li>`;
+                            }
+                        }).join('');
+                        
+                        const accordionItem = `
+                            <div class="accordion-item card">
+                                <h2 class="accordion-header card-header" id="heading-${index}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                                        ${episode.title}
+                                    </button>
+                                </h2>
+                                <div id="collapse-${index}" class="accordion-collapse collapse">
+                                    <div class="accordion-body card-body pr--0">
+                                        <ul class="rbt-course-main-content liststyle">${contentHtml}</ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        curriculumContainer.innerHTML += accordionItem;
+                    });
+                }
+            }
+        });
+    }
+}
 
 });
