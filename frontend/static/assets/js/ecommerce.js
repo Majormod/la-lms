@@ -1,7 +1,5 @@
 // This is the complete, final content for ecommerce.js
 document.addEventListener('DOMContentLoaded', () => {
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     const API_BASE_URL = 'http://34.195.233.179';
     const path = window.location.pathname;
     const token = localStorage.getItem('lmsToken');
@@ -19,52 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', async (e) => { const addToCartButton = e.target.closest('.add-to-card-button a'); if (addToCartButton) { e.preventDefault(); const urlParams = new URLSearchParams(window.location.search); const courseId = urlParams.get('courseId'); if (courseId) { try { const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`); const result = await response.json(); if (result.success) { const course = result.course; const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`; const cartItem = { id: course._id, title: course.title, price: course.price, thumbnail: course.thumbnail, url: detailPageUrl }; Cart.add(cartItem); alert(`"${course.title}" was added to your cart!`); } } catch (error) { console.error("Error adding to cart:", error); } } } const removeFromMiniCartBtn = e.target.closest('.minicart-item .close-btn button'); if (removeFromMiniCartBtn) { e.preventDefault(); const itemId = removeFromMiniCartBtn.dataset.itemId; Cart.remove(itemId); } });
 
-// In ecommerce.js, REPLACE the block for the details pages with this one.
-
-if (path.includes('course-details.html') || path.includes('the-masterclass-details.html')) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('courseId');
-    const token = localStorage.getItem('lmsToken');
-
-    if (courseId) {
-        fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
-            headers: { 'x-auth-token': token }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const { course, hasAccess } = data;
-                const curriculumContainer = document.querySelector('#coursecontent .accordion');
-                if (curriculumContainer) {
-                    curriculumContainer.innerHTML = '';
-                    course.episodes.forEach((episode, index) => {
-                        const allContents = [...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })), ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' }))];
-                        const contentHtml = allContents.map(content => {
-                            const isLesson = content.type === 'lesson';
-                            const link = `lesson.html?courseId=${course._id}&${isLesson ? 'lessonId' : 'quizId'}=${content._id}`;
-                            const iconClass = isLesson ? 'feather-play-circle' : 'feather-help-circle';
-                            const lockIcon = '<i class="feather-lock lock-icon rbt-badge-5 ml--10"></i>';
-
-                            if (hasAccess || content.isPreview) {
-                                return `<li><a href="${link}"><div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div><div class="course-content-right"><span class="min-lable">${isLesson ? content.duration || '' : `${(content.questions || []).length} Qs`}</span></div></a></li>`;
-                            } else {
-                                // This adds the tooltip attributes to the locked link
-                                return `<li class="locked">
-                                            <a href="#" class="disabled" data-bs-toggle="tooltip" data-bs-placement="top" title="Please purchase the course to view this content.">
-                                                <div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div>
-                                                <div class="course-content-right">${lockIcon}</div>
-                                            </a>
-                                        </li>`;
-                            }
-                        }).join('');
-                        const accordionItem = `<div class="accordion-item card"><h2 class="accordion-header card-header" id="heading-${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">${episode.title}</button></h2><div id="collapse-${index}" class="accordion-collapse collapse"><div class="accordion-body card-body pr--0"><ul class="rbt-course-main-content liststyle">${contentHtml}</ul></div></div></div>`;
-                        curriculumContainer.innerHTML += accordionItem;
-                    });
-                }
-            }
-        });
-    }
-}
+    if (path.includes('course-details.html') || path.includes('the-masterclass-details.html')) { const urlParams = new URLSearchParams(window.location.search); const courseId = urlParams.get('courseId'); if (courseId) { fetch(`${API_BASE_URL}/api/courses/${courseId}`, { headers: { 'x-auth-token': token } }).then(res => res.json()).then(data => { if (data.success) { const { course, hasAccess } = data; const curriculumContainer = document.querySelector('#coursecontent .accordion'); if (curriculumContainer) { curriculumContainer.innerHTML = ''; course.episodes.forEach((episode, index) => { const allContents = [...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })), ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' }))]; const contentHtml = allContents.map(content => { const isLesson = content.type === 'lesson'; const link = `lesson.html?courseId=${course._id}&${isLesson ? 'lessonId' : 'quizId'}=${content._id}`; const iconClass = isLesson ? 'feather-play-circle' : 'feather-help-circle'; const lockIcon = '<i class="feather-lock lock-icon rbt-badge-5 ml--10"></i>'; if (hasAccess || content.isPreview) { return `<li><a href="${link}"><div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div><div class="course-content-right"><span class="min-lable">${isLesson ? content.duration || '' : `${(content.questions || []).length} Qs`}</span></div></a></li>`; } else { return `<li class="locked"><a href="#" class="disabled"><div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div><div class="course-content-right">${lockIcon}</div></a></li>`; } }).join(''); const accordionItem = `<div class="accordion-item card"><h2 class="accordion-header card-header" id="heading-${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">${episode.title}</button></h2><div id="collapse-${index}" class="accordion-collapse collapse"><div class="accordion-body card-body pr--0"><ul class="rbt-course-main-content liststyle">${contentHtml}</ul></div></div></div>`; curriculumContainer.innerHTML += accordionItem; }); } } }); } }
 
     if (path.includes('student-enrolled-courses.html')) { const createCourseCardHTML = (course) => { const isCompleted = course.status === 'completed'; const progressColor = isCompleted ? 'bar-color-success' : 'bar-color-primary'; return `<div class="col-lg-4 col-md-6 col-12"><div class="rbt-card variation-01 rbt-hover"><div class="rbt-card-img"><a href="course-details.html?courseId=${course._id}"><img src="/${course.thumbnail}" alt="${course.title}"></a></div><div class="rbt-card-body"><h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4><div class="rbt-progress-style-1 mb--20 mt--10"><div class="single-progress"><h6 class="rbt-title-style-2 mb--10">${isCompleted ? 'Completed' : 'In Progress'}</h6><div class="progress"><div class="progress-bar ${progressColor}" style="width: ${course.progress}%" aria-valuenow="${course.progress}"></div><span class="rbt-title-style-2 progress-number">${course.progress}%</span></div></div></div><div class="rbt-card-bottom"><a class="rbt-btn btn-sm ${isCompleted ? 'bg-primary-opacity' : 'btn-border-gradient'} w-100 text-center" href="${isCompleted ? '#' : `course-details.html?courseId=${course._id}`}">${isCompleted ? 'Download Certificate' : 'Continue Course'}</a></div></div></div></div>`; }; const renderCourses = (courseList, containerSelector) => { const container = document.querySelector(containerSelector); if (!container) return; container.innerHTML = ''; if (courseList.length === 0) { container.innerHTML = '<p class="text-center">No courses in this category.</p>'; return; } courseList.forEach(course => container.innerHTML += createCourseCardHTML(course)); }; fetch(`${API_BASE_URL}/api/student/my-courses`, { headers: { 'x-auth-token': token } }).then(res => res.json()).then(result => { if (result.success) { const allCourses = result.courses; const activeCourses = allCourses.filter(c => c.status === 'active'); const completedCourses = allCourses.filter(c => c.status === 'completed'); renderCourses(allCourses, '#home-4 .row'); const profileTab = document.getElementById('profile-tab-4'); const contactTab = document.getElementById('contact-tab-4'); const homeTab = document.getElementById('home-tab-4'); if (profileTab) profileTab.addEventListener('click', () => renderCourses(activeCourses, '#profile-4 .row')); if (contactTab) contactTab.addEventListener('click', () => renderCourses(completedCourses, '#contact-4 .row')); if (homeTab) homeTab.addEventListener('click', () => renderCourses(allCourses, '#home-4 .row')); } }); }
     
