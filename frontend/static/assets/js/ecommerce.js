@@ -210,7 +210,7 @@ if (path.includes('cart.html')) {
 if (path.includes('checkout.html')) {
     const orderSummaryList = document.querySelector('.checkout-cart-total ul');
     const subTotalSpan = document.querySelector('.checkout-cart-total p:nth-of-type(1) span');
-    const grandTotalSpan = document.querySelector('.checkout-cart-total h4 span');
+    const grandTotalSpan = document.querySelector('.checkout-cart-total h4.mt--30 span');
     const placeOrderBtn = document.querySelector('.plceholder-button .rbt-btn');
     const cart = Cart.get();
     let subtotal = 0;
