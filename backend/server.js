@@ -550,6 +550,8 @@ app.get('/api/courses', async (req, res) => {
 // In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
 
 // In server.js, replace the '/api/courses/:id' route
+// In server.js, REPLACE the '/api/courses/:id' route with this one.
+
 app.get('/api/courses/:id', async (req, res) => {
     try {
         const course = await Course.findById(req.params.id).populate('instructor').populate({
@@ -560,23 +562,33 @@ app.get('/api/courses/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        let isEnrolled = false;
+        let hasAccess = false; // Simplified to a single 'hasAccess' flag
         const token = req.header('x-auth-token');
+
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 const user = await User.findById(decoded.user.id);
-                // Check if any enrollment object in the array matches the course ID
-                if (user && user.enrolledCourses.some(e => e.course.toString() === course._id.toString())) {
-                    isEnrolled = true;
+                
+                // Grant access if the user is an instructor OR is enrolled
+                if (user) {
+                    if (user.role === 'instructor') {
+                        hasAccess = true;
+                    } else if (user.enrolledCourses.some(e => e.course.toString() === course._id.toString())) {
+                        hasAccess = true;
+                    }
                 }
             } catch (e) {
-                isEnrolled = false;
+                // Invalid token means no access
+                hasAccess = false;
             }
         }
-        res.json({ success: true, course, isEnrolled });
+        
+        // Send back the course and the final access decision
+        res.json({ success: true, course, hasAccess });
+
     } catch (error) {
-        console.error(error.message);
+        console.error('Error fetching course details:', error.message);
         res.status(500).send('Server Error');
     }
 });

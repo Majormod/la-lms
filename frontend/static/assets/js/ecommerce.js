@@ -306,6 +306,8 @@ if (path.includes('checkout.html')) {
 
 // In ecommerce.js, REPLACE the block for the details pages with this one.
 
+// In ecommerce.js, REPLACE the block for the details pages with this one.
+
 if (path.includes('course-details.html') || path.includes('the-masterclass-details.html')) {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -313,17 +315,17 @@ if (path.includes('course-details.html') || path.includes('the-masterclass-detai
 
     if (courseId) {
         fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
-            headers: { 'x-auth-token': token } // Send the token to get enrollment status
+            headers: { 'x-auth-token': token } 
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
                 const course = data.course;
-                const isEnrolled = data.isEnrolled; // Get the new flag from the API
+                const hasAccess = data.hasAccess; // Get the new, simple flag
                 const curriculumContainer = document.querySelector('#coursecontent .accordion');
 
                 if (curriculumContainer) {
-                    curriculumContainer.innerHTML = ''; // Clear static content
+                    curriculumContainer.innerHTML = '';
                     course.episodes.forEach((episode, index) => {
                         const allContents = [
                             ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
@@ -336,12 +338,13 @@ if (path.includes('course-details.html') || path.includes('the-masterclass-detai
                             const iconClass = isLesson ? 'feather-play-circle' : 'feather-help-circle';
                             const lockIcon = '<i class="feather-lock lock-icon rbt-badge-5 ml--10"></i>';
 
-                            if (isEnrolled || content.isPreview) {
+                            // The new, simpler condition for showing content
+                            if (hasAccess || content.isPreview) {
                                 return `
                                     <li>
                                         <a href="${link}">
                                             <div class="course-content-left"><i class="${iconClass}"></i> <span class="text">${content.title}</span></div>
-                                            <div class="course-content-right"><span class="min-lable">${isLesson ? content.duration || '' : `${content.questions.length} Qs`}</span></div>
+                                            <div class="course-content-right"><span class="min-lable">${isLesson ? content.duration || '' : `${(content.questions || []).length} Qs`}</span></div>
                                         </a>
                                     </li>`;
                             } else {
@@ -376,5 +379,78 @@ if (path.includes('course-details.html') || path.includes('the-masterclass-detai
         });
     }
 }
+
+
+// Add this new block to ecommerce.js
+
+if (path.includes('student-enrolled-courses.html')) {
+    const token = localStorage.getItem('lmsToken');
+    
+    // This helper function builds the HTML for a single course card
+    const createCourseCardHTML = (course) => {
+        const isCompleted = course.status === 'completed';
+        const progressColor = isCompleted ? 'bar-color-success' : 'bar-color-primary';
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="${course.title}">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <h4 class="rbt-card-title"><a href="course-details.html?courseId=${course._id}">${course.title}</a></h4>
+                        <div class="rbt-progress-style-1 mb--20 mt--10">
+                            <div class="single-progress">
+                                <h6 class="rbt-title-style-2 mb--10">${isCompleted ? 'Completed' : 'In Progress'}</h6>
+                                <div class="progress">
+                                    <div class="progress-bar ${progressColor}" style="width: ${course.progress}%" aria-valuenow="${course.progress}"></div>
+                                    <span class="rbt-title-style-2 progress-number">${course.progress}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn btn-sm ${isCompleted ? 'bg-primary-opacity' : 'btn-border-gradient'} w-100 text-center" href="${isCompleted ? '#' : `course-details.html?courseId=${course._id}`}">
+                                ${isCompleted ? 'Download Certificate' : 'Continue Course'}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    };
+
+    const renderCourses = (courseList, containerSelector) => {
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+        container.innerHTML = '';
+        if (courseList.length === 0) {
+            container.innerHTML = '<p class="text-center">No courses in this category.</p>';
+            return;
+        }
+        courseList.forEach(course => container.innerHTML += createCourseCardHTML(course));
+    };
+
+    fetch(`${API_BASE_URL}/api/student/my-courses`, { headers: { 'x-auth-token': token } })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const allCourses = result.courses;
+                const activeCourses = allCourses.filter(c => c.status === 'active');
+                const completedCourses = allCourses.filter(c => c.status === 'completed');
+
+                renderCourses(allCourses, '#home-4 .row'); // Render the initial "All" tab
+
+                // Set up click listeners for the other tabs
+                const profileTab = document.getElementById('profile-tab-4');
+                const contactTab = document.getElementById('contact-tab-4');
+                const homeTab = document.getElementById('home-tab-4');
+
+                if (profileTab) profileTab.addEventListener('click', () => renderCourses(activeCourses, '#profile-4 .row'));
+                if (contactTab) contactTab.addEventListener('click', () => renderCourses(completedCourses, '#contact-4 .row'));
+                if (homeTab) homeTab.addEventListener('click', () => renderCourses(allCourses, '#home-4 .row'));
+            }
+        });
+}
+
 
 });
