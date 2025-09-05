@@ -49,12 +49,8 @@ router.post('/create-order', auth, async (req, res) => {
 // Verify payment and enroll user
 // In paymentRoutes.js, replace the '/verify' route with this final version
 
-// In paymentRoutes.js, replace the '/verify' route with this final version
-
 router.post('/verify', auth, async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseIds } = req.body;
-
-    // Use the correct secret from your .env file
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const digest = shasum.digest('hex');
@@ -69,18 +65,14 @@ router.post('/verify', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
         
-        // Find courses that the user is not already enrolled in
-        const newCourseIds = courseIds.filter(courseId => 
-            !user.enrolledCourses.some(e => e.course && e.course.toString() === courseId)
-        );
+        // Create an array of new enrollment objects that match the User model schema
+        const newEnrollments = courseIds
+             // Filter out courses the user is already enrolled in
+            .filter(courseId => !user.enrolledCourses.some(e => e.course.toString() === courseId))
+            // Map the remaining IDs to the correct object structure
+            .map(courseId => ({ course: courseId })); // 'progress' and 'status' will use default values from the model
 
-        // Create the new enrollment objects with the correct structure
-        const newEnrollments = newCourseIds.map(courseId => ({
-            course: courseId, // This is the critical line that was missing
-            status: 'active',
-            progress: 0
-        }));
-
+        // Add the new enrollments to the user's array and save the entire user document
         if (newEnrollments.length > 0) {
             user.enrolledCourses.push(...newEnrollments);
             await user.save();
