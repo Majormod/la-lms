@@ -128,15 +128,18 @@ if (path.includes('cart.html')) {
     const cartTableBody = document.getElementById('cart-table-body');
     const summarySubTotal = document.querySelector('.cart-summary-wrap p:first-of-type span');
     const summaryGrandTotal = document.querySelector('.cart-summary-wrap h2 span');
-    const checkoutButton = document.querySelector('.cart-submit-btn-group .rbt-btn[data-text="Checkout"]');
+    
+    // This is the corrected selector to find the checkout button
+    const checkoutButton = document.querySelector('.cart-summary .single-button:first-child button');
+
     const cart = Cart.get();
     let grandTotal = 0;
 
     if (cartTableBody) {
         cartTableBody.innerHTML = ''; // Clear the static HTML rows
         if (cart.length === 0) {
-            cartTableBody.innerHTML = '<tr><td colspan="5">Your cart is empty.</td></tr>'; // colspan is now 5
-            if (checkoutButton) checkoutButton.classList.add('disabled');
+            cartTableBody.innerHTML = '<tr><td colspan="5">Your cart is empty.</td></tr>';
+            if (checkoutButton) checkoutButton.disabled = true;
         } else {
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
@@ -163,9 +166,9 @@ if (path.includes('cart.html')) {
                 `;
                 cartTableBody.innerHTML += row;
             });
-            const checkoutLink = checkoutButton.closest('button');
-            if(checkoutLink) {
-                checkoutLink.onclick = () => window.location.href = 'checkout.html';
+            // Simplified logic to make the button a link
+            if (checkoutButton) {
+                 checkoutButton.onclick = () => window.location.href = 'checkout.html';
             }
         }
     }
