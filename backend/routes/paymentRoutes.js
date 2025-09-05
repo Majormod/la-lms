@@ -47,8 +47,7 @@ router.post('/create-order', auth, async (req, res) => {
 });
 
 // Verify payment and enroll user
-// In paymentRoutes.js, replace the '/verify' route with this final version
-
+// In paymentRoutes.js, replace the '/verify' route
 router.post('/verify', auth, async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseIds } = req.body;
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
@@ -58,31 +57,20 @@ router.post('/verify', auth, async (req, res) => {
     if (digest !== razorpay_signature) {
         return res.status(400).json({ success: false, message: 'Transaction not legit!' });
     }
-
     try {
         const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
         
-        // Create an array of new enrollment objects that match the User model schema
+        // Create new enrollment objects
         const newEnrollments = courseIds
-             // Filter out courses the user is already enrolled in
-            .filter(courseId => !user.enrolledCourses.some(e => e.course.toString() === courseId))
-            // Map the remaining IDs to the correct object structure
-            .map(courseId => ({ course: courseId })); // 'progress' and 'status' will use default values from the model
+            .filter(courseId => !user.enrolledCourses.some(e => e.course.toString() === courseId)) // Filter out courses user is already enrolled in
+            .map(courseId => ({ course: courseId, status: 'active', progress: 0 }));
 
-        // Add the new enrollments to the user's array and save the entire user document
         if (newEnrollments.length > 0) {
             user.enrolledCourses.push(...newEnrollments);
             await user.save();
         }
 
-        res.json({
-            success: true,
-            message: 'Payment verified successfully. You are now enrolled!',
-        });
-
+        res.json({ success: true, message: 'Payment verified successfully. You are now enrolled!' });
     } catch (error) {
         console.error("Error verifying payment:", error);
         res.status(500).send('Server Error');
