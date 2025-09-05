@@ -1,4 +1,4 @@
-// Updated v7.9.5
+// server.js
 // This new line explicitly tells the server where to find the .env file
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 // +++ ADD THIS LINE FOR DEBUGGING +++
@@ -547,55 +547,33 @@ app.get('/api/courses', async (req, res) => {
 });
 
 // PUBLIC: For the course-details.html page (Preview)
-// In server.js, REPLACE the '/api/courses/:id' route with this DEBUG version.
 app.get('/api/courses/:id', async (req, res) => {
-    console.log(`\n--- DEBUG: Course details request for ID: ${req.params.id} ---`);
     try {
-        const course = await Course.findById(req.params.id).populate('instructor');
-        if (!course) {
-            console.log('--- DEBUG: Course not found in database. ---');
-            return res.status(404).json({ success: false, message: 'Course not found' });
-        }
+        const course = await Course.findById(req.params.id).populate('instructor').populate({
+            path: 'episodes',
+            populate: { path: 'lessons quizzes' }
+        });
+        if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
 
         let hasAccess = false;
         const token = req.header('x-auth-token');
-        console.log(`1. Token received from browser: ${token ? 'Yes' : 'No'}`);
 
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                console.log(`2. Token decoded for user ID: ${decoded.user.id}`);
-                
                 const user = await User.findById(decoded.user.id);
-                if (!user) {
-                   console.log(`3. User with ID ${decoded.user.id} NOT FOUND in database.`);
-                } else {
-                   console.log(`3. User found in database: ${user.email}, Role: ${user.role}`);
-                   console.log(`4. User's enrolledCourses array:`, JSON.stringify(user.enrolledCourses, null, 2));
-
-                   if (user.role === 'instructor') {
+                if (user) {
+                    if (user.role === 'instructor') {
                         hasAccess = true;
-                        console.log(`5. User is an INSTRUCTOR. Granting access.`);
-                   } else {
-                        const isEnrolled = user.enrolledCourses.some(e => e.course && e.course.toString() === course._id.toString());
-                        console.log(`5. Is student enrolled in this course? ${isEnrolled}`);
-                        if (isEnrolled) {
-                            hasAccess = true;
-                        }
-                   }
+                    } else if (user.enrolledCourses && user.enrolledCourses.some(e => e.course && e.course.toString() === course._id.toString())) {
+                        hasAccess = true;
+                    }
                 }
-            } catch (e) {
-                console.log(`! TOKEN ERROR: ${e.message}`);
-            }
-        } else {
-            console.log('2. No token provided. User is a visitor.');
+            } catch (e) { /* Invalid token, user has no access */ }
         }
-
-        console.log(`--- FINAL DECISION: hasAccess is ${hasAccess} ---`);
         res.json({ success: true, course, hasAccess });
-
     } catch (error) {
-        console.error('!!! MAJOR ROUTE ERROR:', error.message);
+        console.error(error.message);
         res.status(500).send('Server Error');
     }
 });
@@ -1406,9 +1384,8 @@ app.get('/api/student/my-courses', auth, async (req, res) => {
         });
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
         
-        // Filter out any potential null courses and transform data for the frontend
         const courses = user.enrolledCourses
-            .filter(enrollment => enrollment.course) // IMPORTANT: Prevents crashes if a course was deleted
+            .filter(enrollment => enrollment.course) // Prevents errors if a course is deleted
             .map(enrollment => ({
                 ...enrollment.course.toObject(),
                 progress: enrollment.progress,
