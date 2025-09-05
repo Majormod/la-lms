@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Handle "Remove from Cart" clicks (in mini-cart)
-        const removeFromMiniCartBtn = e.target.closest('.rbt-minicart-wrapper .remove-from-cart-btn');
+        const removeFromMiniCartBtn = e.target.closest('.minicart-item .close-btn button');
         if (removeFromMiniCartBtn) {
             e.preventDefault();
             const itemId = removeFromMiniCartBtn.dataset.itemId;
