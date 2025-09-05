@@ -98,7 +98,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend/static')));
 // when a URL starts with '/uploads'.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.use('/api/payment', require('./routes/paymentRoutes'));
 // =================================================================
 // --- API ROUTES ---
 // =================================================================

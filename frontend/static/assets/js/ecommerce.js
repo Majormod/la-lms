@@ -126,7 +126,102 @@ document.addEventListener('DOMContentLoaded', () => {
         // ... Logic for the main cart.html page ...
     }
 
-    if (path.includes('checkout.html')) {
-        // ... Logic for the checkout.html page ...
+// In ecommerce.js, REPLACE the empty checkout.html block with this one.
+
+if (path.includes('checkout.html')) {
+    const orderSummaryList = document.querySelector('.checkout-cart-total ul');
+    const subTotalSpan = document.querySelector('.checkout-cart-total p:nth-of-type(1) span');
+    const grandTotalSpan = document.querySelector('.checkout-cart-total h4 span');
+    const placeOrderBtn = document.querySelector('.plceholder-button .rbt-btn');
+    const cart = Cart.get();
+    let subtotal = 0;
+
+    // --- Part A: Display the order summary ---
+    if (orderSummaryList) {
+        orderSummaryList.innerHTML = '';
+        if (cart.length > 0) {
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                orderSummaryList.innerHTML += `<li>${item.title} <strong>× ${item.quantity}</strong><span>₹${itemTotal.toLocaleString('en-IN')}</span></li>`;
+            });
+        }
     }
+    
+    if (subTotalSpan) subTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    if (grandTotalSpan) grandTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    if (cart.length === 0) placeOrderBtn.classList.add('disabled');
+
+    // --- Part B: Handle the "Place Order" button click ---
+    placeOrderBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('lmsToken');
+        const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+
+        if (cart.length === 0) return;
+
+        placeOrderBtn.querySelector('.btn-text').textContent = 'Processing...';
+
+        try {
+            // 1. Create Order on your backend
+            const orderResponse = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ items: cart }),
+            });
+            const orderResult = await orderResponse.json();
+            if (!orderResult.success) throw new Error(orderResult.message);
+            
+            const order = orderResult.order;
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: 'YOUR_RAZORPAY_KEY_ID', // IMPORTANT: Replace with your public Razorpay Key ID
+                amount: order.amount,
+                currency: order.currency,
+                name: "Imperium Learning",
+                description: "Course Purchase",
+                order_id: order.id,
+                handler: async function (response) {
+                    // 3. Verify Payment on your backend
+                    const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            courseIds: cart.map(item => item.id)
+                        }),
+                    });
+                    const verifyResult = await verifyResponse.json();
+
+                    if (verifyResult.success) {
+                        alert('Payment successful! You are now enrolled.');
+                        Cart.clear();
+                        window.location.href = 'student-enrolled-courses.html';
+                    } else {
+                        alert('Payment verification failed. Please contact support.');
+                    }
+                },
+                prefill: {
+                    name: `${user.firstName} ${user.lastName}`,
+                    email: user.email,
+                },
+                theme: {
+                    color: '#0575E6'
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+        } catch (error) {
+            alert(`An error occurred: ${error.message}`);
+        } finally {
+            placeOrderBtn.querySelector('.btn-text').textContent = 'Place order';
+        }
+    });
+}
+
+
 });
