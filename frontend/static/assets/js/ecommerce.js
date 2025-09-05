@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', async (e) => { const addToCartButton = e.target.closest('.add-to-card-button a'); if (addToCartButton) { e.preventDefault(); const urlParams = new URLSearchParams(window.location.search); const courseId = urlParams.get('courseId'); if (courseId) { try { const response = await fetch(`${API_BASE_URL}/api/courses/${courseId}`); const result = await response.json(); if (result.success) { const course = result.course; const detailPageUrl = course.isMasterclass ? `the-masterclass-details.html?courseId=${course._id}` : `course-details.html?courseId=${course._id}`; const cartItem = { id: course._id, title: course.title, price: course.price, thumbnail: course.thumbnail, url: detailPageUrl }; Cart.add(cartItem); alert(`"${course.title}" was added to your cart!`); } } catch (error) { console.error("Error adding to cart:", error); } } } const removeFromMiniCartBtn = e.target.closest('.minicart-item .close-btn button'); if (removeFromMiniCartBtn) { e.preventDefault(); const itemId = removeFromMiniCartBtn.dataset.itemId; Cart.remove(itemId); } });
 
+// In ecommerce.js, REPLACE the block for the details pages with this jQuery version.
+
 if (path.includes('course-details.html') || path.includes('the-masterclass-details.html')) {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -31,11 +33,9 @@ if (path.includes('course-details.html') || path.includes('the-masterclass-detai
             if (data.success) {
                 const { course, hasAccess } = data;
                 const curriculumContainer = document.querySelector('#coursecontent .accordion');
-
                 if (curriculumContainer) {
                     curriculumContainer.innerHTML = '';
                     course.episodes.forEach((episode, index) => {
-                        // ... (The code that builds the HTML is the same) ...
                         const allContents = [...(episode.lessons || []).map(item => ({...item, type: 'lesson'})), ...(episode.quizzes || []).map(item => ({...item, type: 'quiz'}))];
                         const contentHtml = allContents.map(content => {
                             const isLesson = content.type === 'lesson';
@@ -52,12 +52,8 @@ if (path.includes('course-details.html') || path.includes('the-masterclass-detai
                         curriculumContainer.innerHTML += accordionItem;
                     });
 
-                    // +++ THIS IS THE NEW, SAFER INITIALIZATION CODE +++
-                    // It runs only after the locked links have been added to the page.
-                    const newTooltipTriggers = curriculumContainer.querySelectorAll('[data-bs-toggle="tooltip"]');
-                    newTooltipTriggers.forEach(tooltipEl => {
-                        new bootstrap.Tooltip(tooltipEl);
-                    });
+                    // +++ THIS IS THE NEW JQUERY INITIALIZATION +++
+                    $(curriculumContainer).find('[data-bs-toggle="tooltip"]').tooltip();
                 }
             }
         });
