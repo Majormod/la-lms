@@ -176,7 +176,7 @@ if (path.includes('checkout.html')) {
 
             // 2. Open Razorpay Checkout
             const options = {
-                key: 'YOUR_RAZORPAY_KEY_ID', // IMPORTANT: Replace with your public Razorpay Key ID
+                key: 'rzp_test_RDnbLvfhXFITDS', // IMPORTANT: Replace with your public Razorpay Key ID
                 amount: order.amount,
                 currency: order.currency,
                 name: "Imperium Learning",
