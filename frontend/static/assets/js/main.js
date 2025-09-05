@@ -70,6 +70,7 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
             eduJs.dnd(); 
             eduJs.multiStepForm(); 
             eduJs.cursorFollow(); 
+            eduJs.lmsInit();
         },
         dnd: function () {
             const dnd1 = document.getElementById("dnd1");
