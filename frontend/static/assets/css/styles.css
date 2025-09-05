@@ -16051,7 +16051,7 @@ span.transparent-button:hover i {
     justify-content: flex-start; /* <-- Add this line */
 }
 .rbt-price .current-price {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
 }
 .rbt-price .off-price {
