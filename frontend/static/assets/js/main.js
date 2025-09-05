@@ -1081,92 +1081,63 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
 // main.js
 // ===== START: Shopping Cart Logic =====
 
+// REPLACE the entire Cart object with this new version
+
 const Cart = {
-    /**
-     * Retrieves the cart from localStorage.
-     * @returns {Array} The cart items.
-     */
     get: function() {
         return JSON.parse(localStorage.getItem('lmsCart') || '[]');
     },
-
-    /**
-     * Saves the cart to localStorage and updates the UI.
-     * @param {Array} cart - The cart array to save.
-     */
     save: function(cart) {
         localStorage.setItem('lmsCart', JSON.stringify(cart));
         this.updateUI();
     },
-
-    /**
-     * Adds an item to the cart if it's not already there.
-     * @param {object} item - The course item to add.
-     */
     add: function(item) {
         let cart = this.get();
         const existingItem = cart.find(cartItem => cartItem.id === item.id);
-        if (!existingItem) {
+
+        if (existingItem) {
+            // If item already exists, just increase its quantity
+            existingItem.quantity++;
+        } else {
+            // Otherwise, add the new item with quantity 1
+            item.quantity = 1;
             cart.push(item);
-            this.save(cart);
-            // We'll add a success message in a later step.
-        } else {
-            // Item is already in the cart.
         }
+        this.save(cart);
     },
-    
-    /**
-     * Updates the cart count in the website header.
-     */
-// This is the corrected version.
-
-updateUI: function() {
-    const cart = this.get();
-
-    // 1. Update header mini-cart count
-    document.querySelectorAll('.rbt-cart-count').forEach(el => {
-        el.textContent = cart.length;
-    });
-
-    // 2. Update the slide-out mini-cart's content
-    const miniCartWrapper = document.querySelector('.rbt-minicart-wrapper');
-    const miniCartFooter = document.querySelector('.rbt-minicart-footer');
-
-    if (miniCartWrapper && miniCartFooter) {
-        if (cart.length === 0) {
-            miniCartWrapper.innerHTML = '<p class="text-center mt--20">Your cart is empty.</p>';
-            miniCartFooter.style.display = 'none';
-        } else {
-            let subtotal = 0;
-            miniCartWrapper.innerHTML = '';
-
-            cart.forEach(item => {
-                subtotal += item.price;
-                const itemHtml = `
-                    <li class="minicart-item">
-                        <div class="thumbnail">
-                            <a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a>
-                        </div>
-                        <div class="product-content">
-                            <h6 class="title"><a href="${item.url}">${item.title}</a></h6>
-                            <span class="quantity">1 * <span class="price">₹${item.price.toLocaleString('en-IN')}</span></span>
-                        </div>
-                        <div class="close-btn">
-                            <button class="rbt-round-btn remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></button>
-                        </div>
-                    </li>`;
-                miniCartWrapper.innerHTML += itemHtml;
-            });
-            
-            // 3. Update the subtotal and show the footer
-            miniCartFooter.style.display = 'block';
-            const subtotalElement = miniCartFooter.querySelector('.rbt-cart-subttotal .price');
-            if (subtotalElement) {
-                subtotalElement.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    updateQuantity: function(itemId, newQuantity) {
+        let cart = this.get();
+        const item = cart.find(cartItem => cartItem.id === itemId);
+        if (item) {
+            item.quantity = parseInt(newQuantity, 10);
+            if (item.quantity <= 0) {
+                this.remove(itemId);
+            } else {
+                this.save(cart);
             }
         }
+    },
+    remove: function(itemId) {
+        let cart = this.get().filter(item => item.id !== itemId);
+        this.save(cart);
+    },
+    updateUI: function() {
+        const cart = this.get();
+        let totalItems = 0;
+        cart.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        document.querySelectorAll('.rbt-cart-count').forEach(el => {
+            el.textContent = totalItems;
+        });
+        
+        // ... (The mini-cart logic will be updated in the next step)
+    },
+    clear: function() {
+        localStorage.removeItem('lmsCart');
+        this.updateUI();
     }
-} // The trailing comma that caused the error is now removed.
 };
 
 // --- Add to Cart Event Listener (using Event Delegation) ---
@@ -5764,6 +5735,83 @@ document.querySelector('#coursecontent').addEventListener('click', (e) => {
         });
     });
 }
+
+// REPLACE your existing cart.html logic with this new block
+
+if (window.location.pathname.includes('cart.html')) {
+    const cartTableBody = document.getElementById('cart-table-body');
+    const summarySubTotal = document.querySelector('.cart-summary-wrap p:first-of-type span');
+    const summaryGrandTotal = document.querySelector('.cart-summary-wrap h2 span');
+    const checkoutButton = document.querySelector('.cart-submit-btn-group .rbt-btn[data-text="Checkout"]');
+
+    const cart = Cart.get();
+    let grandTotal = 0;
+
+    if (cartTableBody) {
+        cartTableBody.innerHTML = ''; // Clear static rows
+        if (cart.length === 0) {
+            cartTableBody.innerHTML = '<tr><td colspan="6">Your cart is empty.</td></tr>';
+            if (checkoutButton) checkoutButton.classList.add('disabled');
+        } else {
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                grandTotal += itemTotal;
+                const row = `
+                    <tr>
+                        <td class="pro-thumbnail"><a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a></td>
+                        <td class="pro-title"><a href="${item.url}">${item.title}</a></td>
+                        <td class="pro-price"><span>₹${item.price.toLocaleString('en-IN')}</span></td>
+                        <td class="pro-quantity">
+                            <div class="pro-qty">
+                                <span class="dec qtybtn" data-item-id="${item.id}">-</span>
+                                <input type="number" value="${item.quantity}" data-item-id="${item.id}" class="quantity-input">
+                                <span class="inc qtybtn" data-item-id="${item.id}">+</span>
+                            </div>
+                        </td>
+                        <td class="pro-subtotal"><span>₹${itemTotal.toLocaleString('en-IN')}</span></td>
+                        <td class="pro-remove"><a href="#" class="remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></a></td>
+                    </tr>
+                `;
+                cartTableBody.innerHTML += row;
+            });
+             if (checkoutButton) checkoutButton.closest('a, button').href = 'checkout.html';
+        }
+    }
+
+    if (summarySubTotal) summarySubTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+    if (summaryGrandTotal) summaryGrandTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+
+    // Event listener for all clicks within the cart table
+    cartTableBody.addEventListener('click', (e) => {
+        const target = e.target;
+        
+        // Handle remove button clicks
+        if (target.closest('.remove-from-cart-btn')) {
+            e.preventDefault();
+            const itemId = target.closest('.remove-from-cart-btn').dataset.itemId;
+            Cart.remove(itemId);
+            window.location.reload();
+        }
+
+        // Handle quantity increment/decrement button clicks
+        if (target.classList.contains('qtybtn')) {
+            const itemId = target.dataset.itemId;
+            const input = cartTableBody.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+            let currentValue = parseInt(input.value, 10);
+            
+            if (target.classList.contains('inc')) {
+                currentValue++;
+            } else if (target.classList.contains('dec')) {
+                currentValue--;
+            }
+            
+            Cart.updateQuantity(itemId, currentValue);
+            window.location.reload();
+        }
+    });
+}
+
+
 // --- INTERACTIVE STAR RATING LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
     const ratingContainer = document.querySelector('.review-form-rating');
@@ -5902,6 +5950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run the function on page load
     setupUserNavigation();
 });
+
 function setupSidebarClickHandler() {
     document.querySelector('.rbt-lesson-content-wrapper').addEventListener('click', (event) => {
         const link = event.target.closest('.content-link, .content-nav-link');
