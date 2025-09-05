@@ -64,5 +64,98 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Logic for other pages (cart, checkout) remains the same...
     if (path.includes('cart.html')) { const cartTableBody = document.getElementById('cart-table-body'); const summarySubTotal = document.querySelector('.cart-summary-wrap p:first-of-type span'); const summaryGrandTotal = document.querySelector('.cart-summary-wrap h2 span'); const checkoutButton = document.querySelector('.cart-summary .single-button:first-child button'); const cart = Cart.get(); let grandTotal = 0; if (cartTableBody) { cartTableBody.innerHTML = ''; if (cart.length === 0) { cartTableBody.innerHTML = '<tr><td colspan="5">Your cart is empty.</td></tr>'; if (checkoutButton) checkoutButton.disabled = true; } else { cart.forEach(item => { const itemTotal = item.price * item.quantity; grandTotal += itemTotal; const row = `<tr><td class="pro-title"><a href="${item.url}" style="display: flex; align-items: center;"><img src="/${item.thumbnail}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px; margin-right: 15px;"> ${item.title}</a></td><td class="pro-price"><span>₹${item.price.toLocaleString('en-IN')}</span></td><td class="pro-quantity"><div class="pro-qty"><span class="dec qtybtn" data-item-id="${item.id}">-</span><input type="number" value="${item.quantity}" data-item-id="${item.id}" class="quantity-input" readonly><span class="inc qtybtn" data-item-id="${item.id}">+</span></div></td><td class="pro-subtotal"><span>₹${itemTotal.toLocaleString('en-IN')}</span></td><td class="pro-remove"><a href="#" class="remove-from-cart-btn" data-item-id="${item.id}"><i class="feather-x"></i></a></td></tr>`; cartTableBody.innerHTML += row; }); if (checkoutButton) { checkoutButton.onclick = () => window.location.href = 'checkout.html'; } } } if (summarySubTotal) summarySubTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`; if (summaryGrandTotal) summaryGrandTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`; cartTableBody.addEventListener('click', (e) => { const target = e.target; const removeBtn = target.closest('.remove-from-cart-btn'); if (removeBtn) { e.preventDefault(); const itemId = removeBtn.dataset.itemId; Cart.remove(itemId); window.location.reload(); } if (target.classList.contains('qtybtn')) { const itemId = target.dataset.itemId; const input = cartTableBody.querySelector(`.quantity-input[data-item-id="${itemId}"]`); let currentValue = parseInt(input.value, 10); if (target.classList.contains('inc')) { currentValue++; } else if (target.classList.contains('dec')) { currentValue--; } Cart.updateQuantity(itemId, currentValue); window.location.reload(); } }); }
-    if (path.includes('checkout.html')) { const orderSummaryList = document.querySelector('.checkout-cart-total ul'); const subTotalSpan = document.querySelector('.checkout-cart-total p:nth-of-type(1) span'); const grandTotalSpan = document.querySelector('.checkout-cart-total h4.mt--30 span'); const placeOrderBtn = document.querySelector('.plceholder-button .rbt-btn'); const cart = Cart.get(); let subtotal = 0; if (orderSummaryList) { orderSummaryList.innerHTML = ''; if (cart.length > 0) { cart.forEach(item => { const itemTotal = item.price * item.quantity; subtotal += itemTotal; orderSummaryList.innerHTML += `<li>${item.title} <strong>× ${item.quantity}</strong><span>₹${itemTotal.toLocaleString('en-IN')}</span></li>`; }); } } if (subTotalSpan) subTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`; if (grandTotalSpan) grandTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`; if (cart.length === 0 && placeOrderBtn) placeOrderBtn.classList.add('disabled'); if (placeOrderBtn) { placeOrderBtn.addEventListener('click', async (e) => { e.preventDefault(); const user = JSON.parse(localStorage.getItem('lmsUser') || '{}'); if (cart.length === 0) return; placeOrderBtn.querySelector('.btn-text').textContent = 'Processing...'; try { const orderResponse = await fetch(`${API_BASE_URL}/api/payment/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ items: cart }), }); const orderResult = await orderResponse.json(); if (!orderResult.success) throw new Error(orderResult.message); const order = orderResult.order; const options = { key: 'rzp_test_xxxxxxxxxxxxxx', amount: order.amount, currency: order.currency, name: "Imperium Learning", description: "Course Purchase", order_id: order.id, handler: async function (response) { const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id, razorpay_order_id: response.razorpay_order_id, razorpay_signature: response.razorpay_signature, courseIds: cart.map(item => item.id) }), }); const verifyResult = await verifyResponse.json(); if (verifyResult.success) { alert('Payment successful! You are now enrolled.'); Cart.clear(); window.location.href = 'student-enrolled-courses.html'; } else { alert('Payment verification failed. Please contact support.'); } }, prefill: { name: `${user.firstName} ${user.lastName}`, email: user.email, }, theme: { color: '#0575E6' } }; const rzp = new Razorpay(options); rzp.open(); } catch (error) { alert(`An error occurred: ${error.message}`); } finally { placeOrderBtn.querySelector('.btn-text').textContent = 'Place order'; } }); } }
+    
+  if (path.includes('checkout.html')) {
+    const orderSummaryList = document.querySelector('.checkout-cart-total ul');
+    const subTotalSpan = document.querySelector('.checkout-cart-total p:nth-of-type(1) span');
+    const grandTotalSpan = document.querySelector('.checkout-cart-total h4.mt--30 span');
+    const placeOrderBtn = document.querySelector('.plceholder-button .rbt-btn');
+    const cart = Cart.get();
+    let subtotal = 0;
+
+    if (orderSummaryList) {
+        orderSummaryList.innerHTML = '';
+        if (cart.length > 0) {
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                orderSummaryList.innerHTML += `<li>${item.title} <strong>× ${item.quantity}</strong><span>₹${itemTotal.toLocaleString('en-IN')}</span></li>`;
+            });
+        }
+    }
+
+    if (subTotalSpan) subTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    if (grandTotalSpan) grandTotalSpan.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    if (cart.length === 0 && placeOrderBtn) placeOrderBtn.classList.add('disabled');
+
+    if (placeOrderBtn) {
+        placeOrderBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('lmsToken');
+
+            // +++ THIS IS THE NEW DEBUGGING LINE +++
+            console.log("Token being sent to server:", token);
+
+            const user = JSON.parse(localStorage.getItem('lmsUser') || '{}');
+            if (cart.length === 0) return;
+
+            placeOrderBtn.querySelector('.btn-text').textContent = 'Processing...';
+
+            try {
+                const orderResponse = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ items: cart }),
+                });
+
+                const orderResult = await orderResponse.json();
+                if (!orderResult.success) throw new Error(orderResult.message);
+
+                const order = orderResult.order;
+
+                const options = {
+                    key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Test Key ID
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "Imperium Learning",
+                    description: "Course Purchase",
+                    order_id: order.id,
+                    handler: async function(response) {
+                        const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                courseIds: cart.map(item => item.id)
+                            }),
+                        });
+                        const verifyResult = await verifyResponse.json();
+                        if (verifyResult.success) {
+                            alert('Payment successful! You are now enrolled.');
+                            Cart.clear();
+                            window.location.href = 'student-enrolled-courses.html';
+                        } else {
+                            alert('Payment verification failed. Please contact support.');
+                        }
+                    },
+                    prefill: {
+                        name: `${user.firstName} ${user.lastName}`,
+                        email: user.email,
+                    },
+                    theme: {
+                        color: '#0575E6'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                placeOrderBtn.querySelector('.btn-text').textContent = 'Place order';
+            }
+        });
+    }
+}
 });
