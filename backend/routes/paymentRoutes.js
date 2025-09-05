@@ -47,7 +47,6 @@ router.post('/create-order', auth, async (req, res) => {
 });
 
 // Verify payment and enroll user
-// In paymentRoutes.js, replace the '/verify' route
 router.post('/verify', auth, async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseIds } = req.body;
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
@@ -58,19 +57,14 @@ router.post('/verify', auth, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Transaction not legit!' });
     }
     try {
-        const user = await User.findById(req.user.id);
-        
-        // Create new enrollment objects
-        const newEnrollments = courseIds
-            .filter(courseId => !user.enrolledCourses.some(e => e.course.toString() === courseId)) // Filter out courses user is already enrolled in
-            .map(courseId => ({ course: courseId, status: 'active', progress: 0 }));
-
-        if (newEnrollments.length > 0) {
-            user.enrolledCourses.push(...newEnrollments);
-            await user.save();
-        }
-
-        res.json({ success: true, message: 'Payment verified successfully. You are now enrolled!' });
+        await User.updateOne(
+            { _id: req.user.id },
+            { $addToSet: { enrolledCourses: { $each: courseIds } } }
+        );
+        res.json({
+            success: true,
+            message: 'Payment verified successfully. You are now enrolled!',
+        });
     } catch (error) {
         console.error("Error verifying payment:", error);
         res.status(500).send('Server Error');
