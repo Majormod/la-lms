@@ -1,6 +1,8 @@
 // Updated v7.9.5
 // This new line explicitly tells the server where to find the .env file
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
+// +++ ADD THIS LINE FOR DEBUGGING +++
+console.log('JWT Secret loaded by server:', process.env.JWT_SECRET);
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
