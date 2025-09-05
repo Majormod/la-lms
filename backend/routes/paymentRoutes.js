@@ -47,8 +47,14 @@ router.post('/create-order', auth, async (req, res) => {
 });
 
 // Verify payment and enroll user
+// In paymentRoutes.js, replace the '/verify' route with this final version
+
+// In paymentRoutes.js, replace the '/verify' route with this final version
+
 router.post('/verify', auth, async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseIds } = req.body;
+
+    // Use the correct secret from your .env file
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const digest = shasum.digest('hex');
@@ -56,15 +62,35 @@ router.post('/verify', auth, async (req, res) => {
     if (digest !== razorpay_signature) {
         return res.status(400).json({ success: false, message: 'Transaction not legit!' });
     }
+
     try {
-        await User.updateOne(
-            { _id: req.user.id },
-            { $addToSet: { enrolledCourses: { $each: courseIds } } }
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        // Find courses that the user is not already enrolled in
+        const newCourseIds = courseIds.filter(courseId => 
+            !user.enrolledCourses.some(e => e.course && e.course.toString() === courseId)
         );
+
+        // Create the new enrollment objects with the correct structure
+        const newEnrollments = newCourseIds.map(courseId => ({
+            course: courseId, // This is the critical line that was missing
+            status: 'active',
+            progress: 0
+        }));
+
+        if (newEnrollments.length > 0) {
+            user.enrolledCourses.push(...newEnrollments);
+            await user.save();
+        }
+
         res.json({
             success: true,
             message: 'Payment verified successfully. You are now enrolled!',
         });
+
     } catch (error) {
         console.error("Error verifying payment:", error);
         res.status(500).send('Server Error');
