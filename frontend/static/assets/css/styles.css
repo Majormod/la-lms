@@ -26505,7 +26505,6 @@ blockquote.has-text-align-right cite,
 }
 .cart-table .table thead {
   background-color: var(--color-primary);
-  background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary), var(--color-secondary), var(--color-primary));
   background-size: 300% 100%;
 }
 @media only screen and (max-width: 575px) {
