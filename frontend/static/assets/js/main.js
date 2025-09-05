@@ -1075,6 +1075,7 @@ console.log("--- RUNNING LATEST VERSION OF main.js ---");
 
     // ===== START LMS FRONTEND LOGIC (UNIFIED) =====
     eduJs.lmsInit = function () {
+        if (eduJs.hasInitialized) return;
         const API_BASE_URL = 'http://34.195.233.179';
         const token = localStorage.getItem('lmsToken');
         const user = JSON.parse(localStorage.getItem('lmsUser'));
@@ -6019,6 +6020,10 @@ function setupSidebarClickHandler() {
 
         handlePageLogic();
     };
+ // ADD THIS LINE HERE
+    eduJs.hasInitialized = true; 
+}; // This closing brace stays in the same place
+
 
     eduJs.i();
 
