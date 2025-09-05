@@ -545,50 +545,55 @@ app.get('/api/courses', async (req, res) => {
 });
 
 // PUBLIC: For the course-details.html page (Preview)
-// In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
-// (You may need to merge this with your existing route for course details)
-// In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
-
-// In server.js, replace the '/api/courses/:id' route
-// In server.js, REPLACE the '/api/courses/:id' route with this one.
-
+// In server.js, REPLACE the '/api/courses/:id' route with this DEBUG version.
 app.get('/api/courses/:id', async (req, res) => {
+    console.log(`\n--- DEBUG: Course details request for ID: ${req.params.id} ---`);
     try {
-        const course = await Course.findById(req.params.id).populate('instructor').populate({
-            path: 'episodes',
-            populate: { path: 'lessons quizzes' }
-        });
+        const course = await Course.findById(req.params.id).populate('instructor');
         if (!course) {
+            console.log('--- DEBUG: Course not found in database. ---');
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        let hasAccess = false; // Simplified to a single 'hasAccess' flag
+        let hasAccess = false;
         const token = req.header('x-auth-token');
+        console.log(`1. Token received from browser: ${token ? 'Yes' : 'No'}`);
 
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const user = await User.findById(decoded.user.id);
+                console.log(`2. Token decoded for user ID: ${decoded.user.id}`);
                 
-                // Grant access if the user is an instructor OR is enrolled
-                if (user) {
-                    if (user.role === 'instructor') {
+                const user = await User.findById(decoded.user.id);
+                if (!user) {
+                   console.log(`3. User with ID ${decoded.user.id} NOT FOUND in database.`);
+                } else {
+                   console.log(`3. User found in database: ${user.email}, Role: ${user.role}`);
+                   console.log(`4. User's enrolledCourses array:`, JSON.stringify(user.enrolledCourses, null, 2));
+
+                   if (user.role === 'instructor') {
                         hasAccess = true;
-                    } else if (user.enrolledCourses.some(e => e.course.toString() === course._id.toString())) {
-                        hasAccess = true;
-                    }
+                        console.log(`5. User is an INSTRUCTOR. Granting access.`);
+                   } else {
+                        const isEnrolled = user.enrolledCourses.some(e => e.course && e.course.toString() === course._id.toString());
+                        console.log(`5. Is student enrolled in this course? ${isEnrolled}`);
+                        if (isEnrolled) {
+                            hasAccess = true;
+                        }
+                   }
                 }
             } catch (e) {
-                // Invalid token means no access
-                hasAccess = false;
+                console.log(`! TOKEN ERROR: ${e.message}`);
             }
+        } else {
+            console.log('2. No token provided. User is a visitor.');
         }
-        
-        // Send back the course and the final access decision
+
+        console.log(`--- FINAL DECISION: hasAccess is ${hasAccess} ---`);
         res.json({ success: true, course, hasAccess });
 
     } catch (error) {
-        console.error('Error fetching course details:', error.message);
+        console.error('!!! MAJOR ROUTE ERROR:', error.message);
         res.status(500).send('Server Error');
     }
 });
@@ -1391,34 +1396,29 @@ app.get('/api/student/dashboard', auth, async (req, res) => {
 // In server.js
 
 // STUDENT ENROLLED COURSES API ROUTE
-// In server.js, REPLACE your mock data route with this real one.
-
-// In server.js, replace the '/api/student/my-courses' route
 app.get('/api/student/my-courses', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).populate({
-            path: 'enrolledCourses.course', // Note the change here to populate the nested 'course' field
+            path: 'enrolledCourses.course',
             model: 'Course'
         });
-
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
         
-        // Transform the data to the format your frontend expects
-        const courses = user.enrolledCourses.map(enrollment => ({
-            ...enrollment.course.toObject(), // The full course details
-            progress: enrollment.progress,
-            status: enrollment.status
-        }));
-        
-        res.json({ success: true, courses: courses });
+        // Filter out any potential null courses and transform data for the frontend
+        const courses = user.enrolledCourses
+            .filter(enrollment => enrollment.course) // IMPORTANT: Prevents crashes if a course was deleted
+            .map(enrollment => ({
+                ...enrollment.course.toObject(),
+                progress: enrollment.progress,
+                status: enrollment.status
+            }));
+            
+        res.json({ success: true, courses });
     } catch (error) {
         console.error('Server Error:', error);
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
-
 
 // ADD OR REMOVE A COURSE FROM THE WISHLIST
 app.post('/api/user/wishlist/toggle', auth, async (req, res) => {
