@@ -122,43 +122,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== 3. PAGE-SPECIFIC LOGIC =====
     const path = window.location.pathname;
 
-// REPLACE your existing cart.html block with this one
+// In ecommerce.js, REPLACE your existing cart.html block with this one.
 
 if (path.includes('cart.html')) {
-    console.log("ecommerce.js: Now running logic for cart.html.");
-
-    const cart = Cart.get();
-    console.log("ecommerce.js: Items found in localStorage cart:", cart);
-
     const cartTableBody = document.getElementById('cart-table-body');
-    console.log("ecommerce.js: Found the <tbody> element:", cartTableBody);
-    
     const summarySubTotal = document.querySelector('.cart-summary-wrap p:first-of-type span');
     const summaryGrandTotal = document.querySelector('.cart-summary-wrap h2 span');
     const checkoutButton = document.querySelector('.cart-submit-btn-group .rbt-btn[data-text="Checkout"]');
-
-    let subtotal = 0;
+    const cart = Cart.get();
+    let grandTotal = 0;
 
     if (cartTableBody) {
         cartTableBody.innerHTML = ''; // Clear the static HTML rows
         if (cart.length === 0) {
-            console.log("ecommerce.js: Cart is empty. Displaying 'empty' message.");
-            cartTableBody.innerHTML = '<tr><td colspan="6">Your cart is empty.</td></tr>';
+            cartTableBody.innerHTML = '<tr><td colspan="5">Your cart is empty.</td></tr>'; // colspan is now 5
             if (checkoutButton) checkoutButton.classList.add('disabled');
         } else {
-            console.log("ecommerce.js: Cart has items. Building table rows...");
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
+                grandTotal += itemTotal;
                 const row = `
                     <tr>
-                        <td class="pro-thumbnail"><a href="${item.url}"><img src="/${item.thumbnail}" alt="${item.title}"></a></td>
-                        <td class="pro-title"><a href="${item.url}">${item.title}</a></td>
+                        <td class="pro-title">
+                            <a href="${item.url}" style="display: flex; align-items: center;">
+                                <img src="/${item.thumbnail}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px; margin-right: 15px;">
+                                ${item.title}
+                            </a>
+                        </td>
                         <td class="pro-price"><span>₹${item.price.toLocaleString('en-IN')}</span></td>
                         <td class="pro-quantity">
                             <div class="pro-qty">
                                 <span class="dec qtybtn" data-item-id="${item.id}">-</span>
-                                <input type="number" value="${item.quantity}" data-item-id="${item.id}" class="quantity-input">
+                                <input type="number" value="${item.quantity}" data-item-id="${item.id}" class="quantity-input" readonly>
                                 <span class="inc qtybtn" data-item-id="${item.id}">+</span>
                             </div>
                         </td>
@@ -168,19 +163,43 @@ if (path.includes('cart.html')) {
                 `;
                 cartTableBody.innerHTML += row;
             });
-             if (checkoutButton) checkoutButton.closest('button').href = 'checkout.html';
+            const checkoutLink = checkoutButton.closest('button');
+            if(checkoutLink) {
+                checkoutLink.onclick = () => window.location.href = 'checkout.html';
+            }
+        }
+    }
+
+    if (summarySubTotal) summarySubTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+    if (summaryGrandTotal) summaryGrandTotal.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+
+    // Event listener for all clicks within the cart table
+    cartTableBody.addEventListener('click', (e) => {
+        const target = e.target;
+        
+        const removeBtn = target.closest('.remove-from-cart-btn');
+        if (removeBtn) {
+            e.preventDefault();
+            const itemId = removeBtn.dataset.itemId;
+            Cart.remove(itemId);
+            window.location.reload();
         }
 
-        console.log("ecommerce.js: Updating totals.");
-        if (summarySubTotal) summarySubTotal.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
-        if (summaryGrandTotal) summaryGrandTotal.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
-
-        cartTableBody.addEventListener('click', (e) => {
-            // ... (event listener logic remains the same)
-        });
-    } else {
-        console.error("ecommerce.js: CRITICAL - Could not find the element with id='cart-table-body'.");
-    }
+        if (target.classList.contains('qtybtn')) {
+            const itemId = target.dataset.itemId;
+            const input = cartTableBody.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+            let currentValue = parseInt(input.value, 10);
+            
+            if (target.classList.contains('inc')) {
+                currentValue++;
+            } else if (target.classList.contains('dec')) {
+                currentValue--;
+            }
+            
+            Cart.updateQuantity(itemId, currentValue);
+            window.location.reload();
+        }
+    });
 }
 
 // In ecommerce.js, REPLACE the empty checkout.html block with this one.
