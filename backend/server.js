@@ -549,43 +549,34 @@ app.get('/api/courses', async (req, res) => {
 // (You may need to merge this with your existing route for course details)
 // In server.js, REPLACE your old 'GET /api/courses/:id' route with this one.
 
+// In server.js, replace the '/api/courses/:id' route
 app.get('/api/courses/:id', async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id)
-            .populate('instructor')
-            .populate({
-                path: 'episodes',
-                populate: { path: 'lessons quizzes' }
-            });
-
+        const course = await Course.findById(req.params.id).populate('instructor').populate({
+            path: 'episodes',
+            populate: { path: 'lessons quizzes' }
+        });
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
         let isEnrolled = false;
         const token = req.header('x-auth-token');
-
         if (token) {
             try {
-                // We don't need to block the request if the token is invalid,
-                // just treat the user as not logged in.
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 const user = await User.findById(decoded.user.id);
-                // Check if the user's enrolledCourses array contains this course's ID
-                if (user && user.enrolledCourses.map(id => id.toString()).includes(course._id.toString())) {
+                // Check if any enrollment object in the array matches the course ID
+                if (user && user.enrolledCourses.some(e => e.course.toString() === course._id.toString())) {
                     isEnrolled = true;
                 }
             } catch (e) {
-                // Token is invalid or expired; user is not enrolled.
                 isEnrolled = false;
             }
         }
-
-        // Send back the course data PLUS the new isEnrolled flag
         res.json({ success: true, course, isEnrolled });
-
     } catch (error) {
-        console.error('Error fetching course details:', error.message);
+        console.error(error.message);
         res.status(500).send('Server Error');
     }
 });
@@ -1390,25 +1381,29 @@ app.get('/api/student/dashboard', auth, async (req, res) => {
 // STUDENT ENROLLED COURSES API ROUTE
 // In server.js, REPLACE your mock data route with this real one.
 
+// In server.js, replace the '/api/student/my-courses' route
 app.get('/api/student/my-courses', auth, async (req, res) => {
     try {
-        // 1. Find the logged-in user by their ID (from the JWT)
-        // 2. Populate the 'enrolledCourses' field to get the full course details
         const user = await User.findById(req.user.id).populate({
-            path: 'enrolledCourses',
-            populate: { path: 'instructor', select: 'firstName lastName' }
+            path: 'enrolledCourses.course', // Note the change here to populate the nested 'course' field
+            model: 'Course'
         });
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
         
-        // 3. Send the real list of enrolled courses back to the frontend
-        res.json({ success: true, courses: user.enrolledCourses });
-
+        // Transform the data to the format your frontend expects
+        const courses = user.enrolledCourses.map(enrollment => ({
+            ...enrollment.course.toObject(), // The full course details
+            progress: enrollment.progress,
+            status: enrollment.status
+        }));
+        
+        res.json({ success: true, courses: courses });
     } catch (error) {
         console.error('Server Error:', error);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
 

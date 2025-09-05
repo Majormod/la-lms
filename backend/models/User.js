@@ -27,9 +27,20 @@ const userSchema = new mongoose.Schema({
         ref: 'Course'
     }],
     enrolledCourses: [{
+    course: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
-    }]
+    },
+    progress: {
+        type: Number,
+        default: 0
+    },
+    status: {
+        type: String,
+        default: 'active', // Can be 'active' or 'completed'
+        enum: ['active', 'completed']
+    }
+}]
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
