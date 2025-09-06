@@ -2269,246 +2269,11 @@ if (window.location.pathname.includes('edit-course.html')) {
     let currentEditingEpisodeId = null;
     let currentEditingLessonId = null;
 
-    // Add this inside your if (window.location.pathname.includes('edit-course.html')) block
+// Add this inside the "edit-course.html" block in main.js
 
-    const updatePreviewButton = (isMasterclass, courseId) => {
-        const previewBtn = document.getElementById('preview-course-btn');
-        if (!previewBtn) return;
+document.addEventListener('DOMContentLoaded', (event) => {
 
-        if (isMasterclass) {
-            previewBtn.setAttribute('data-href', `the-masterclass-details.html?courseId=${courseId}`); // Corrected filename
-        } else {
-            previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
-        }
-    };
-
-    $(document).ready(function () {
-        $('#language').selectpicker();
-    });
-
-    window.openUpdateTopicModal = function(episodeId) {
-        currentEditingEpisodeId = episodeId;
-        if (courseData) {
-            const topic = courseData.episodes.find(ep => ep._id == episodeId);
-            if (topic) {
-                document.getElementById('update-topic-title').value = topic.title;
-                document.getElementById('update-topic-summary').value = topic.summary || '';
-            }
-        }
-    }
-
-    window.openUpdateLessonModal = function(episodeId, lessonId) {
-        // --- THIS IS THE NEW LINE TO FIX THE ERROR ---
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
-        currentEditingEpisodeId = episodeId;
-        currentEditingLessonId = lessonId;
-        if (courseData) {
-            const episode = courseData.episodes.find(ep => ep._id == episodeId);
-            if (episode) {
-                const lesson = episode.lessons.find(les => les._id == lessonId);
-                if (lesson) {
-                    document.getElementById('lesson-title').value = lesson.title || '';
-                    document.getElementById('lesson-summary').value = lesson.summary || '';
-                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
-                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
-                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
-                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
-                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
-                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
-                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
-                    const modal = document.getElementById('Lesson');
-                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
-                    modal.querySelector('#save-lesson-btn').innerHTML = `
-                        <span class="icon-reverse-wrapper">
-                            <span class="btn-text">Update Lesson</span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                        </span>
-                    `;
-
-                    // START: Add this new code block
-                    const existingFilesContainer = document.getElementById('existing-exercise-files');
-                    const newFilesListContainer = document.getElementById('new-files-list');
-                    const fileInput = document.getElementById('lesson-exercise-files');
-                    // main.js -> edit-course.html block
-
-                    // Clear any previous state
-                    existingFilesContainer.innerHTML = '';
-                    newFilesListContainer.innerHTML = '';
-                    fileInput.value = ''; // Reset file input
-
-                    if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
-                        let filesHtml = '<p class="b3 mb-2">Attached Files:</p><br><ul class="list-group list-group-flush">';
-                        lesson.exerciseFiles.forEach(file => {
-                            // NOTE: The file.path should be the URL to access the file, e.g., 'uploads/courses/file.pdf'
-                            filesHtml += `
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <a href="/${file.path}" target="_blank">${file.filename}</a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-existing-file-btn"
-                                            data-course-id="${courseId}"
-                                            data-episode-id="${episodeId}"
-                                            data-lesson-id="${lessonId}"
-                                            data-file-path="${file.path}">
-                                        Remove
-                                    </button>
-                                </li>
-                            `;
-                        });
-                        filesHtml += '</ul>';
-                        existingFilesContainer.innerHTML = filesHtml;
-                    }
-                    // END: New code block
-                }
-            }
-        }
-    }
-
-    const renderCourseBuilder = (episodes) => {
-        console.trace('renderCourseBuilder was called'); // <-- ADD THIS LINE
-        const container = document.getElementById('course-builder-topics-container');
-        if (!container) return;
-
-        if (!episodes || episodes.length === 0) {
-            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
-            return;
-        }
-
-        container.innerHTML = episodes.map((episode) => {
-            const items = [
-                ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
-                ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
-                ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
-            ];
-
-            const itemsHtml = items.map(item => {
-                let iconClass = '';
-                let editTargetModal = '';
-
-                switch (item.type) {
-                    case 'lesson':
-                        iconClass = 'feather-play-circle';
-                        editTargetModal = '#Lesson';
-                        break;
-                    case 'quiz':
-                        iconClass = 'feather-help-circle';
-                        editTargetModal = '#Quiz';
-                        break;
-                    case 'assignment':
-                        iconClass = 'feather-clipboard';
-                        editTargetModal = '#Assignment';
-                        break;
-                }
-
-                return `
-                <div class="d-flex justify-content-between rbt-course-wrape mb-4">
-                    <div class="col-10 inner d-flex align-items-center gap-2">
-                        <i class="${iconClass}"></i>
-                        <h6 class="rbt-title mb-0">${item.title}</h6>
-                        ${item.exerciseFiles && item.exerciseFiles.length > 0 ? '<i class="feather-paperclip ms-2"></i>' : ''}
-                    </div>
-                    <div class="col-2 inner">
-                        <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
-                            <li>
-                                <i class="feather-trash delete-item" 
-                                   data-episode-id="${episode._id}" 
-                                   data-item-id="${item._id}" 
-                                   data-item-type="${item.type}"></i>
-                            </li>
-                            <li>
-                                <i class="feather-edit edit-item" 
-                                   data-bs-toggle="modal" 
-                                   data-bs-target="${editTargetModal}"
-                                   data-episode-id="${episode._id}" 
-                                   data-item-id="${item._id}" 
-                                   data-item-type="${item.type}"></i>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            return `
-            <div class="accordion-item card mb--20">
-                <h2 class="accordion-header card-header rbt-course">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
-                        ${episode.title}
-                    </button>
-                    <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
-                    <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
-                </h2>
-                <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
-                    <div class="accordion-body card-body">
-                        ${itemsHtml || '<p class="mb-4">No content yet. Use the buttons below to add some.</p>'}
-                        
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
-                            <div class="gap-3 d-flex flex-wrap">
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper"><span class="btn-text">Lesson</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
-                                </button>
-                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Quiz" data-episode-id="${episode._id}">
-                                    <span class="icon-reverse-wrapper"><span class="btn-text">Quiz</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
-        }).join('');
-    };
-
-// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
-// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
-document.addEventListener('click', async (e) => {
-    const deleteBtn = e.target.closest('.delete-item');
-    if (!deleteBtn) return;
-
-    // ▼▼▼ START OF FIX ▼▼▼
-    // If the button is already marked as 'in-progress', ignore the click.
-    if (deleteBtn.classList.contains('deleting')) {
-        return; 
-    }
-    // Immediately mark the button as 'in-progress' to prevent double clicks.
-    deleteBtn.classList.add('deleting');
-    // ▲▲▲ END OF FIX ▲▲▲
-
-    const { episodeId, itemId, itemType } = deleteBtn.dataset;
-    const courseId = new URLSearchParams(window.location.search).get('courseId');
-    let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); 
-
-    if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
-        try {
-            let pathSegment = itemType === 'quiz' ? 'quizzes' : `${itemType}s`;
-            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
-            const response = await fetch(url, {
-                method: 'DELETE',
-                headers: { 'x-auth-token': token }
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                courseData = result.course;
-                renderCourseBuilder(courseData.episodes);
-            } else {
-                alert(`Error: ${result.message}`);
-                // On error, we must remove the class so the user can try again.
-                deleteBtn.classList.remove('deleting');
-            }
-        } catch (error) {
-            console.error(`Error deleting ${itemType}:`, error);
-            alert(`An error occurred while deleting the ${itemTypeName}.`);
-            // Also remove the class on a critical failure.
-            deleteBtn.classList.remove('deleting');
-        }
-    } else {
-        // If the user clicks "Cancel" in the confirmation, remove the class.
-        deleteBtn.classList.remove('deleting');
-    }
-});
-
-    window.onload = function() {
-        // --- AUTH & URL CHECK ---
+           // --- AUTH & URL CHECK ---
         if (!token || (user && user.role !== 'instructor')) {
             alert("Access Denied.");
             window.location.href = '/login.html';
@@ -3557,6 +3322,261 @@ if (courseLogoInput.files.length > 0) {
                 }
             });
         }
+ 
+    const logoInput = document.getElementById('courseLogoInput');
+    const logoPreview = document.getElementById('courseLogoPreview');
+
+    if (logoInput && logoPreview) {
+        logoInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoPreview.src = event.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
+});
+
+
+    const updatePreviewButton = (isMasterclass, courseId) => {
+        const previewBtn = document.getElementById('preview-course-btn');
+        if (!previewBtn) return;
+
+        if (isMasterclass) {
+            previewBtn.setAttribute('data-href', `the-masterclass-details.html?courseId=${courseId}`); // Corrected filename
+        } else {
+            previewBtn.setAttribute('data-href', `course-details.html?courseId=${courseId}`);
+        }
+    };
+
+    $(document).ready(function () {
+        $('#language').selectpicker();
+    });
+
+    window.openUpdateTopicModal = function(episodeId) {
+        currentEditingEpisodeId = episodeId;
+        if (courseData) {
+            const topic = courseData.episodes.find(ep => ep._id == episodeId);
+            if (topic) {
+                document.getElementById('update-topic-title').value = topic.title;
+                document.getElementById('update-topic-summary').value = topic.summary || '';
+            }
+        }
+    }
+
+    window.openUpdateLessonModal = function(episodeId, lessonId) {
+        // --- THIS IS THE NEW LINE TO FIX THE ERROR ---
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        currentEditingEpisodeId = episodeId;
+        currentEditingLessonId = lessonId;
+        if (courseData) {
+            const episode = courseData.episodes.find(ep => ep._id == episodeId);
+            if (episode) {
+                const lesson = episode.lessons.find(les => les._id == lessonId);
+                if (lesson) {
+                    document.getElementById('lesson-title').value = lesson.title || '';
+                    document.getElementById('lesson-summary').value = lesson.summary || '';
+                    document.getElementById('lesson-video-source').value = lesson.vimeoUrl ? 'Vimeo' : 'Select Video Source';
+                    document.getElementById('lesson-video-url').value = lesson.vimeoUrl || '';
+                    const durationMatch = lesson.duration ? lesson.duration.match(/(\d+)\s*hr\s*(\d+)\s*min\s*(\d+)\s*sec/) : null;
+                    document.getElementById('lesson-duration-hr').value = durationMatch ? durationMatch[1] : '0';
+                    document.getElementById('lesson-duration-min').value = durationMatch ? durationMatch[2] : '0';
+                    document.getElementById('lesson-duration-sec').value = durationMatch ? durationMatch[3] : '0';
+                    document.getElementById('lesson-is-preview').checked = lesson.isPreview || false;
+                    const modal = document.getElementById('Lesson');
+                    modal.querySelector('.modal-title').textContent = 'Update Lesson';
+                    modal.querySelector('#save-lesson-btn').innerHTML = `
+                        <span class="icon-reverse-wrapper">
+                            <span class="btn-text">Update Lesson</span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                            <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                        </span>
+                    `;
+
+                    // START: Add this new code block
+                    const existingFilesContainer = document.getElementById('existing-exercise-files');
+                    const newFilesListContainer = document.getElementById('new-files-list');
+                    const fileInput = document.getElementById('lesson-exercise-files');
+                    // main.js -> edit-course.html block
+
+                    // Clear any previous state
+                    existingFilesContainer.innerHTML = '';
+                    newFilesListContainer.innerHTML = '';
+                    fileInput.value = ''; // Reset file input
+
+                    if (lesson.exerciseFiles && lesson.exerciseFiles.length > 0) {
+                        let filesHtml = '<p class="b3 mb-2">Attached Files:</p><br><ul class="list-group list-group-flush">';
+                        lesson.exerciseFiles.forEach(file => {
+                            // NOTE: The file.path should be the URL to access the file, e.g., 'uploads/courses/file.pdf'
+                            filesHtml += `
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/${file.path}" target="_blank">${file.filename}</a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-existing-file-btn"
+                                            data-course-id="${courseId}"
+                                            data-episode-id="${episodeId}"
+                                            data-lesson-id="${lessonId}"
+                                            data-file-path="${file.path}">
+                                        Remove
+                                    </button>
+                                </li>
+                            `;
+                        });
+                        filesHtml += '</ul>';
+                        existingFilesContainer.innerHTML = filesHtml;
+                    }
+                    // END: New code block
+                }
+            }
+        }
+    }
+
+    const renderCourseBuilder = (episodes) => {
+        console.trace('renderCourseBuilder was called'); // <-- ADD THIS LINE
+        const container = document.getElementById('course-builder-topics-container');
+        if (!container) return;
+
+        if (!episodes || episodes.length === 0) {
+            container.innerHTML = '<p>No topics yet. Click "Add New Topic" to get started.</p>';
+            return;
+        }
+
+        container.innerHTML = episodes.map((episode) => {
+            const items = [
+                ...(episode.lessons || []).map(item => ({ ...item, type: 'lesson' })),
+                ...(episode.quizzes || []).map(item => ({ ...item, type: 'quiz' })),
+                ...(episode.assignments || []).map(item => ({ ...item, type: 'assignment' }))
+            ];
+
+            const itemsHtml = items.map(item => {
+                let iconClass = '';
+                let editTargetModal = '';
+
+                switch (item.type) {
+                    case 'lesson':
+                        iconClass = 'feather-play-circle';
+                        editTargetModal = '#Lesson';
+                        break;
+                    case 'quiz':
+                        iconClass = 'feather-help-circle';
+                        editTargetModal = '#Quiz';
+                        break;
+                    case 'assignment':
+                        iconClass = 'feather-clipboard';
+                        editTargetModal = '#Assignment';
+                        break;
+                }
+
+                return `
+                <div class="d-flex justify-content-between rbt-course-wrape mb-4">
+                    <div class="col-10 inner d-flex align-items-center gap-2">
+                        <i class="${iconClass}"></i>
+                        <h6 class="rbt-title mb-0">${item.title}</h6>
+                        ${item.exerciseFiles && item.exerciseFiles.length > 0 ? '<i class="feather-paperclip ms-2"></i>' : ''}
+                    </div>
+                    <div class="col-2 inner">
+                        <ul class="rbt-list-style-1 rbt-course-list d-flex gap-2">
+                            <li>
+                                <i class="feather-trash delete-item" 
+                                   data-episode-id="${episode._id}" 
+                                   data-item-id="${item._id}" 
+                                   data-item-type="${item.type}"></i>
+                            </li>
+                            <li>
+                                <i class="feather-edit edit-item" 
+                                   data-bs-toggle="modal" 
+                                   data-bs-target="${editTargetModal}"
+                                   data-episode-id="${episode._id}" 
+                                   data-item-id="${item._id}" 
+                                   data-item-type="${item.type}"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            return `
+            <div class="accordion-item card mb--20">
+                <h2 class="accordion-header card-header rbt-course">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#episode-collapse-${episode._id}">
+                        ${episode.title}
+                    </button>
+                    <span class="rbt-course-icon rbt-course-edit" data-bs-toggle="modal" data-bs-target="#UpdateTopic" onclick="openUpdateTopicModal('${episode._id}')"></span>
+                    <span class="rbt-course-icon rbt-course-del" data-episode-id="${episode._id}"></span>
+                </h2>
+                <div id="episode-collapse-${episode._id}" class="accordion-collapse collapse">
+                    <div class="accordion-body card-body">
+                        ${itemsHtml || '<p class="mb-4">No content yet. Use the buttons below to add some.</p>'}
+                        
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
+                            <div class="gap-3 d-flex flex-wrap">
+                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Lesson" data-episode-id="${episode._id}">
+                                    <span class="icon-reverse-wrapper"><span class="btn-text">Lesson</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
+                                </button>
+                                <button class="rbt-btn btn-border hover-icon-reverse rbt-sm-btn-2 add-content-btn" type="button" data-bs-toggle="modal" data-bs-target="#Quiz" data-episode-id="${episode._id}">
+                                    <span class="icon-reverse-wrapper"><span class="btn-text">Quiz</span><span class="btn-icon"><i class="feather-plus-square"></i></span><span class="btn-icon"><i class="feather-plus-square"></i></span></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    };
+
+// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
+// --- DELETE ITEM (Lesson, Quiz, Assignment) ---
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-item');
+    if (!deleteBtn) return;
+
+    // ▼▼▼ START OF FIX ▼▼▼
+    // If the button is already marked as 'in-progress', ignore the click.
+    if (deleteBtn.classList.contains('deleting')) {
+        return; 
+    }
+    // Immediately mark the button as 'in-progress' to prevent double clicks.
+    deleteBtn.classList.add('deleting');
+    // ▲▲▲ END OF FIX ▲▲▲
+
+    const { episodeId, itemId, itemType } = deleteBtn.dataset;
+    const courseId = new URLSearchParams(window.location.search).get('courseId');
+    let itemTypeName = itemType.charAt(0).toUpperCase() + itemType.slice(1); 
+
+    if (confirm(`Are you sure you want to delete this ${itemTypeName}?`)) {
+        try {
+            let pathSegment = itemType === 'quiz' ? 'quizzes' : `${itemType}s`;
+            const url = `${API_BASE_URL}/api/courses/${courseId}/episodes/${episodeId}/${pathSegment}/${itemId}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'x-auth-token': token }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                courseData = result.course;
+                renderCourseBuilder(courseData.episodes);
+            } else {
+                alert(`Error: ${result.message}`);
+                // On error, we must remove the class so the user can try again.
+                deleteBtn.classList.remove('deleting');
+            }
+        } catch (error) {
+            console.error(`Error deleting ${itemType}:`, error);
+            alert(`An error occurred while deleting the ${itemTypeName}.`);
+            // Also remove the class on a critical failure.
+            deleteBtn.classList.remove('deleting');
+        }
+    } else {
+        // If the user clicks "Cancel" in the confirmation, remove the class.
+        deleteBtn.classList.remove('deleting');
+    }
+});
+
+    window.onload = function() {
     }; // End of window.onload
 }
 

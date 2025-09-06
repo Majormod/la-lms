@@ -616,7 +616,6 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-// REPLACE your existing course update route with this one
 // REPLACE your course update route one last time with this corrected version
 
 app.put(
