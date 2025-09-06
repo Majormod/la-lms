@@ -91,20 +91,6 @@ const coverPhotoUpload = multer({
     }),
 });
 
-// 5. Uploader for Course Logos
-const logoUpload = multer({
-    storage: multer.diskStorage({
-        destination: (req, file, cb) => {
-            const uploadPath = path.join(__dirname, '../frontend/static/uploads/logos');
-            fs.mkdirSync(uploadPath, { recursive: true });
-            cb(null, uploadPath);
-        },
-        filename: (req, file, cb) => {
-            cb(null, `${Date.now()}-logo-${file.originalname.replace(/\s+/g, '_')}`);
-        }
-    }),
-});
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -616,86 +602,61 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 // In server.js - Add this new route
 
 // UPDATE a course by its ID
-// REPLACE your existing course update route with this one
-app.put('/api/courses/:courseId', auth, 
-    // MODIFICATION 1: Use .fields() to accept two different files
-    multer({ 
-        storage: multer.diskStorage({
-            destination: function (req, file, cb) {
-                let dest;
-                if (file.fieldname === 'thumbnail') {
-                    dest = path.join(__dirname, '../frontend/static/uploads/thumbnails');
-                } else if (file.fieldname === 'courseLogo') {
-                    dest = path.join(__dirname, '../frontend/static/uploads/logos');
-                }
-                fs.mkdirSync(dest, { recursive: true });
-                cb(null, dest);
-            },
-            filename: function (req, file, cb) {
-                cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
-            }
-        }) 
-    }).fields([
-        { name: 'thumbnail', maxCount: 1 },
-        { name: 'courseLogo', maxCount: 1 }
-    ]), 
-    async (req, res) => {
-        try {
-            const { courseId } = req.params;
-            const course = await Course.findById(courseId);
-            
-            if (!course) {
-                return res.status(404).json({ success: false, message: 'Course not found' });
-            }
-            if (course.instructor.toString() !== req.user.id) {
-                return res.status(403).json({ success: false, message: 'User not authorized' });
-            }
-
-            // --- Update All Fields ---
-            
-            if (req.body.isMasterclass !== undefined) {
-                course.isMasterclass = req.body.isMasterclass === 'true';
-            }
-
-            course.title = req.body.title || course.title;
-            course.slug = req.body.slug || course.slug;
-            course.description = req.body.description || course.description;
-            course.originalPrice = parseFloat(req.body.originalPrice);
-            course.price = parseFloat(req.body.price);
-            course.previewVideoUrl = req.body.previewVideoUrl;
-            course.status = req.body.status || course.status;
-            course.startDate = req.body.startDate;
-            if (req.body.language) { try { course.language = JSON.parse(req.body.language); } catch (e) { course.language = []; } }
-            if (req.body.requirements) { course.requirements = req.body.requirements.split('\n').map(item => item.trim()).filter(Boolean); }
-            if (req.body.whatYoullLearn) { course.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean); }
-            if (req.body.targetedAudience) { course.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean); }
-            if (req.body.tags) { course.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean); }
-            course.duration = course.duration || {};
-            course.duration.hours = parseInt(req.body.durationHours, 10) || 0;
-            course.duration.minutes = parseInt(req.body.durationMinutes, 10) || 0;
-            course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
-            course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
-            course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
-
-            // MODIFICATION 2: Check for uploaded files in req.files
-            if (req.files) {
-                if (req.files.thumbnail && req.files.thumbnail[0]) {
-                    course.thumbnail = `uploads/thumbnails/${req.files.thumbnail[0].filename}`;
-                }
-                if (req.files.courseLogo && req.files.courseLogo[0]) {
-                    course.courseLogo = `uploads/logos/${req.files.courseLogo[0].filename}`;
-                }
-            }
-
-            const updatedCourse = await course.save();
-            res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
-
-        } catch (error) {
-            console.error('Error updating course:', error);
-            res.status(500).json({ success: false, message: 'Server error', error: error.message });
+app.put('/api/courses/:courseId', auth, thumbnailUpload.single('thumbnail'), async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const course = await Course.findById(courseId);
+        
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
         }
+        if (course.instructor.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'User not authorized' });
+        }
+
+        // --- Update All Fields ---
+        
+        // This handles the isMasterclass toggle
+        if (req.body.isMasterclass !== undefined) {
+            course.isMasterclass = req.body.isMasterclass === 'true';
+        }
+
+        // Update all other text fields from the form
+        course.title = req.body.title || course.title;
+        course.slug = req.body.slug || course.slug;
+        // ... (all your other fields are fine)
+        course.description = req.body.description || course.description;
+        course.originalPrice = parseFloat(req.body.originalPrice);
+        course.price = parseFloat(req.body.price);
+        course.previewVideoUrl = req.body.previewVideoUrl;
+        course.status = req.body.status || course.status;
+        course.startDate = req.body.startDate;
+        if (req.body.language) { try { course.language = JSON.parse(req.body.language); } catch (e) { course.language = []; } }
+        if (req.body.requirements) { course.requirements = req.body.requirements.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.whatYoullLearn) { course.whatYoullLearn = req.body.whatYoullLearn.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.targetedAudience) { course.targetedAudience = req.body.targetedAudience.split('\n').map(item => item.trim()).filter(Boolean); }
+        if (req.body.tags) { course.tags = req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean); }
+        course.duration = course.duration || {};
+        course.duration.hours = parseInt(req.body.durationHours, 10) || 0;
+        course.duration.minutes = parseInt(req.body.durationMinutes, 10) || 0;
+        course.certificateTemplate = req.body.certificateTemplate || course.certificateTemplate;
+        course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
+        course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
+
+        // Handle new thumbnail upload
+        if (req.file) {
+            // Use the correct path for the dedicated thumbnails folder
+            course.thumbnail = `uploads/thumbnails/${req.file.filename}`;
+        }
+
+        const updatedCourse = await course.save();
+        res.json({ success: true, message: 'Course updated successfully!', course: updatedCourse });
+
+    } catch (error) {
+        console.error('Error updating course:', error);
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
-);
+});
 
 // In server.js
 

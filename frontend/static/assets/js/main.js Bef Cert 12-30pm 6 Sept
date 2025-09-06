@@ -3059,12 +3059,6 @@ document.addEventListener('click', async (e) => {
                     if (discountedPriceInput) course.price ? discountedPriceInput.value = course.price : '';
                     if (videoUrlInput) videoUrlInput.value = course.previewVideoUrl || '';
                     if (thumbnailPreview && course.thumbnail) thumbnailPreview.src = `/${course.thumbnail}`;
-                    // --- ADD THESE NEW LINES FOR THE LOGO ---
-const logoPreview = document.getElementById('courseLogoPreview');
-if (logoPreview && course.courseLogo) {
-    logoPreview.src = `/${course.courseLogo}`;
-}
-// --- END OF NEW LINES ---
                     if (courseStatusSelect) courseStatusSelect.value = course.status || 'Draft';
                     
                     // Masterclass Check
@@ -3519,14 +3513,6 @@ if (logoPreview && course.courseLogo) {
                 if (thumbnailInput.files.length > 0) {
                     formData.append('thumbnail', thumbnailInput.files[0]);
                 }
-
-                // --- ADD THESE NEW LINES FOR THE LOGO ---
-const courseLogoInput = document.getElementById('courseLogoInput');
-if (courseLogoInput.files.length > 0) {
-    formData.append('courseLogo', courseLogoInput.files[0]);
-}
-// --- END OF NEW LINES ---
-
                 // MC Switch State
                 formData.append('isMasterclass', document.getElementById('is-masterclass-switch').checked);
 

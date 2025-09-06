@@ -92,6 +92,7 @@ const CourseSchema = new Schema({
     originalPrice: { type: Number },
     isFree: { type: Boolean, default: false },
     thumbnail: String,
+    courseLogo: String, 
     status: { type: String, enum: ['Draft', 'Pending', 'Published'], default: 'Draft' },
     difficultyLevel: { type: String, enum: ['All Levels', 'Beginner', 'Intermediate', 'Expert'], default: 'All Levels' },
     categories: [String],
