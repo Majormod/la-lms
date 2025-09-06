@@ -110,7 +110,7 @@ const PORT = process.env.PORT || 5000;
 
 // --- MIDDLEWARE ---
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend/static')));
 // when a URL starts with '/uploads'.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -617,8 +617,11 @@ app.get('/api/courses/edit/:id', auth, async (req, res) => {
 
 // UPDATE a course by its ID
 // REPLACE your existing course update route with this one
-app.put('/api/courses/:courseId', auth, 
-    // MODIFICATION 1: Use .fields() to accept two different files
+// REPLACE your course update route one last time with this corrected version
+
+app.put(
+    '/api/courses/:courseId', 
+    auth, 
     multer({ 
         storage: multer.diskStorage({
             destination: function (req, file, cb) {
@@ -634,7 +637,10 @@ app.put('/api/courses/:courseId', auth,
             filename: function (req, file, cb) {
                 cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
             }
-        }) 
+        }),
+        // --- THIS IS THE DEFINITIVE FIX ---
+        limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit for each file
+        
     }).fields([
         { name: 'thumbnail', maxCount: 1 },
         { name: 'courseLogo', maxCount: 1 }
@@ -677,7 +683,6 @@ app.put('/api/courses/:courseId', auth,
             course.certificateOrientation = req.body.certificateOrientation || course.certificateOrientation;
             course.includesCertificate = (req.body.certificateTemplate && req.body.certificateTemplate !== 'none');
 
-            // MODIFICATION 2: Check for uploaded files in req.files
             if (req.files) {
                 if (req.files.thumbnail && req.files.thumbnail[0]) {
                     course.thumbnail = `uploads/thumbnails/${req.files.thumbnail[0].filename}`;
