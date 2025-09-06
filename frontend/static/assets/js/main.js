@@ -5572,6 +5572,89 @@ document.querySelector('#coursecontent').addEventListener('click', (e) => {
         });
     });
 }
+
+// You can add this entire block anywhere in main.js
+if (window.location.pathname.includes('student-enrolled-courses.html')) {
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+    // This helper function creates the HTML for a single course card
+    function createCompletedCourseCard(course) {
+        return `
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="rbt-card variation-01 rbt-hover">
+                    <div class="rbt-card-img">
+                        <a href="course-details.html?courseId=${course._id}">
+                            <img src="/${course.thumbnail}" alt="Course thumbnail">
+                        </a>
+                    </div>
+                    <div class="rbt-card-body">
+                        <h4 class="rbt-card-title">
+                            <a href="course-details.html?courseId=${course._id}">${course.title}</a>
+                        </h4>
+                        <div class="rbt-progress-style-1 mb--20 mt--10">
+                            <div class="single-progress">
+                                <h6 class="rbt-title-style-2 mb--10">Complete</h6>
+                                <div class="progress">
+                                    <div class="progress-bar bar-color-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <span class="rbt-title-style-2 progress-number">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbt-card-bottom">
+                            <a class="rbt-btn btn-sm bg-primary-opacity w-100 text-center" 
+                               href="/api/certificate/${course._id}/download" 
+                               target="_blank">
+                               Download Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // When the page loads, fetch the courses and populate only the "Completed" tab
+    window.addEventListener('load', () => {
+        fetch(`${API_BASE_URL}/api/student/my-courses`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const completedCoursesContainer = document.querySelector('#contact-4 .row');
+                
+                // 1. Filter for only courses with 100% progress
+                const completedCourses = data.courses.filter(course => course.progress === 100);
+
+                // 2. Clear the container
+                if(completedCoursesContainer) {
+                    completedCoursesContainer.innerHTML = '';
+                } else {
+                    console.error('Could not find the container for completed courses.');
+                    return;
+                }
+                
+                // 3. Populate the container with completed courses
+                if (completedCourses.length > 0) {
+                    completedCourses.forEach(course => {
+                        const cardHtml = createCompletedCourseCard(course);
+                        completedCoursesContainer.innerHTML += cardHtml;
+                    });
+                } else {
+                    completedCoursesContainer.innerHTML = '<p>You have not completed any courses yet.</p>';
+                }
+            } else {
+                console.error('Failed to load courses:', data.message);
+            }
+        })
+        .catch(error => console.error('Error fetching courses:', error));
+    });
+}
+
+
 // --- INTERACTIVE STAR RATING LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
     const ratingContainer = document.querySelector('.review-form-rating');
