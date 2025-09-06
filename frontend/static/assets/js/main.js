@@ -5573,15 +5573,11 @@ document.querySelector('#coursecontent').addEventListener('click', (e) => {
     });
 }
 
-// You can add this entire block anywhere in main.js
+// REPLACE the previous block in main.js with this corrected version
+
 if (window.location.pathname.includes('student-enrolled-courses.html')) {
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = 'login.html';
-    }
-
-    // This helper function creates the HTML for a single course card
+    // Helper function to create the HTML for a single course card
     function createCompletedCourseCard(course) {
         return `
             <div class="col-lg-4 col-md-6 col-12">
@@ -5616,8 +5612,16 @@ if (window.location.pathname.includes('student-enrolled-courses.html')) {
             </div>`;
     }
 
-    // When the page loads, fetch the courses and populate only the "Completed" tab
+    // When the page loads, check for login and then fetch the courses
     window.addEventListener('load', () => {
+        // --- CHANGE IS HERE ---
+        // We moved the token check INSIDE the event listener.
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return; // Stop the function if not logged in
+        }
+
         fetch(`${API_BASE_URL}/api/student/my-courses`, {
             headers: { 'x-auth-token': token }
         })
@@ -5626,10 +5630,8 @@ if (window.location.pathname.includes('student-enrolled-courses.html')) {
             if (data.success) {
                 const completedCoursesContainer = document.querySelector('#contact-4 .row');
                 
-                // 1. Filter for only courses with 100% progress
                 const completedCourses = data.courses.filter(course => course.progress === 100);
 
-                // 2. Clear the container
                 if(completedCoursesContainer) {
                     completedCoursesContainer.innerHTML = '';
                 } else {
@@ -5637,7 +5639,6 @@ if (window.location.pathname.includes('student-enrolled-courses.html')) {
                     return;
                 }
                 
-                // 3. Populate the container with completed courses
                 if (completedCourses.length > 0) {
                     completedCourses.forEach(course => {
                         const cardHtml = createCompletedCourseCard(course);
